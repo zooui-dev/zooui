@@ -5,6 +5,10 @@ Both layers, `@zooui/nuxt` and `@zooui/theme-forest`, release to the public npm 
 `release.yml` and the `release` environment as its trusted publisher, and the run's OIDC token is the only
 credential. The theme ships no font files of its own.
 
+The two packages always release together, at one version: they're a changesets `fixed` group in
+`.changeset/config.json`, so a change to either bumps both. Each release is one GitHub release, "Zoo UI <version>"
+tagged `v<version>`, alongside the per-package tags (`@zooui/nuxt@<version>`, `@zooui/theme-forest@<version>`).
+
 1. **In each PR with a user-facing change**, record it: `changerig add -t fix -p @zooui/nuxt -m "…"` (or `-p @zooui/theme-forest`)
    (`feat` for features). The entry is written for the changelog's reader, and links its commit and PR.
 2. **To release: merge the release PR, done.** shiprig's action
@@ -17,7 +21,8 @@ credential. The theme ships no font files of its own.
      it would publish has a `## <version>` entry in its `CHANGELOG.md` (the GitHub release is made from it) and stops
      with nothing published if one doesn't, then `shiprig publish` packs each layer with pnpm (which rewrites the
      theme's `workspace:*` dependency on the base to the exact version) and npm publishes it with provenance. It
-     pushes the tags and makes a GitHub release per package from its changelog entry.
+     pushes the tags, then `shiprig forge-release` makes the one combined GitHub release (`forgeRelease` in
+     `.changeset/config.json`), marked Latest, with each package's changelog entry under its own heading.
    - Any other push does nothing.
    - **Rehearse** any time: Actions → **Release** → Run workflow, with `dry_run` ticked (the default). It shows the
      release PR it would open or what it would publish, with no approval and no secret, and changes nothing. With
