@@ -1,6 +1,6 @@
-# zooui.dev on Netlify — ready to connect, NOT connected: nothing deploys from this repository yet.
+# zooui.dev on Netlify: the `zooui` site, which deploys every push to `main` (https://zooui.dev, www redirects there).
 #
-# Connect the repository as it is: no base directory, no package directory, no build settings in Netlify's UI. Netlify
+# The site has no base directory, no package directory and no build settings in Netlify's UI. Netlify
 # reads this file from the repository root, runs `pnpm install` there (it finds pnpm-lock.yaml) for the whole
 # workspace, then the command below; both paths are relative to the root. The docs site (apps/docs) is fully
 # prerendered by `nuxi generate`: static files, no functions.
