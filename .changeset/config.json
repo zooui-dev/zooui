@@ -14,5 +14,10 @@
   "updateInternalDependencies": "patch",
   "ignore": [],
   "linked": [],
-  "fixed": []
+  "fixed": [],
+  "contributors": {
+    "exclude": [
+      "JohnCampionJr"
+    ]
+  }
 }

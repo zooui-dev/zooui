@@ -7,13 +7,13 @@ credential. The theme ships no font files of its own.
 
 1. **In each PR with a user-facing change**, record it: `changerig add -t fix -p @zooui/nuxt -m "…"` (or `-p @zooui/theme-forest`)
    (`feat` for features). The entry is written for the changelog's reader, and links its commit and PR.
-2. **To release: merge the release PR, approve the publish run, done.** shiprig's action
+2. **To release: merge the release PR, done.** shiprig's action
    (`.github/workflows/release.yml`, `rigsmith/shiprig-action`, settings in `.github/shiprig-action.jsonc`) works the
    way release-please does, on every push to `main` of zooui-dev/zooui (anywhere else it does nothing):
    - With changesets pending, it keeps a standing **release PR** (`chore: release …`) up to date: `shiprig version`
      bumps the versions and writes each package's `CHANGELOG.md`. This needs no approval and no secret.
-   - Merge that PR, and the run for the merge has something to publish: its **Publish** job waits for approval in
-     the protected `release` environment. Approve it (the run's page → Review deployments). It checks every package
+   - Merge that PR, and the run for the merge publishes: merging is the approval. Its **Publish** job runs in the
+     `release` environment, which both packages' npm trusted publishers name, so no other job can publish. It checks every package
      it would publish has a `## <version>` entry in its `CHANGELOG.md` (the GitHub release is made from it) and stops
      with nothing published if one doesn't, then `shiprig publish` packs each layer with pnpm (which rewrites the
      theme's `workspace:*` dependency on the base to the exact version) and npm publishes it with provenance. It
