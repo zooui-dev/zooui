@@ -512,7 +512,7 @@ test('PR review: a freeform nudge is written in the field\'s locale, so the next
 /** Put the page on one scheme and theme with a single reload: the scheme cookie and the stored theme first. */
 async function onScheme(page: Page, scheme: string, mode: 'light' | 'dark') {
   await page.context().addCookies([{ name: 'zooui-scheme', value: scheme, url: page.url() }])
-  await page.evaluate((m) => localStorage.setItem('zooui-color-mode', m), mode)
+  await page.addInitScript((m) => localStorage.setItem('zooui-color-mode', m), mode)
   await page.reload()
   await page.waitForLoadState('networkidle')
   await hydrated(page)
