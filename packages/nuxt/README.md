@@ -62,7 +62,7 @@ plain Nuxt UI. Three rules:
 | `ZThemeToggle` | Light / dark / system |
 | `ZRepeatingList` | A generic list editor |
 | `ZNumberInput` | One number input for money, percent, count and hours, with a calc mode |
-| `ZDateField` | A calendar-day field on `Temporal.PlainDate` |
+| `ZDateField` | A calendar-day field on `Temporal.PlainDate` or `CalendarDate`, with Nuxt UI's limit props |
 
 ## Docs
 

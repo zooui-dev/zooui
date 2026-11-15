@@ -5,18 +5,30 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
+import { createRequire } from 'node:module'
+
 import {
   applyDateShortcut,
+  checkDateLimits,
   commitDateEntry,
   dateEntryFormat,
   dateEntryFormatFor,
+  dateLimitMessage,
+  dateModelTypeOf,
   entryDay,
   FIRST_ENTRY_DATE,
   formatDateEntry,
+  fromPlainDate,
+  isDateShortcut,
   LAST_ENTRY_DATE,
   parseDateEntry,
+  toPlainDate,
   US_DATE_ENTRY,
 } from '../packages/nuxt/utils/date-entry.ts'
+
+// @internationalized/date from packages/nuxt, like temporal-polyfill. Its CommonJS build, a different copy of the
+// classes from the one date-entry.ts imports: as a product's own copy of the package would be.
+const intl = createRequire(new URL('../packages/nuxt/package.json', import.meta.url))('@internationalized/date')
 
 // The layer's own PlainDate class (temporal-polyfill lives in packages/nuxt, out of reach of this directory).
 const PlainDate = FIRST_ENTRY_DATE.constructor
@@ -370,5 +382,153 @@ describe('other formats', () => {
     assert.equal(key('+', '2026-05-12', TODAY, 'YYYY-MM-DD'), '2026-05-13')
     assert.equal(key('_', '2026-05-12'), '2026-05-11')
     assert.equal(key('.', '2026-05-12', TODAY, 'DD.MM.YYYY'), null)
+  })
+})
+
+// ── The two day types and the limits ──────────────────────────────────────────────────────────────────────────
+
+describe('dateModelTypeOf, toPlainDate and fromPlainDate', () => {
+  it('tells the two types apart, and anything else from both', () => {
+    assert.equal(dateModelTypeOf(d('2026-05-12')), 'plain-date')
+    assert.equal(dateModelTypeOf(new intl.CalendarDate(2026, 5, 12)), 'calendar-date')
+    for (const other of [null, undefined, '2026-05-12', 20260512, {}, { year: 2026, month: 5, day: 12 }])
+      assert.equal(dateModelTypeOf(other), null, String(other))
+  })
+
+  it('reads a Gregorian CalendarDate by its fields, and passes a PlainDate and null through', () => {
+    assert.equal(toPlainDate(new intl.CalendarDate(2026, 5, 12)).toString(), '2026-05-12')
+    assert.equal(toPlainDate(new intl.CalendarDate(1000, 1, 1)).toString(), '1000-01-01')
+    assert.equal(toPlainDate(new intl.CalendarDate('BC', 1, 12, 31)).toString(), '0000-12-31')
+    const plain = d('2026-05-12')
+    assert.equal(toPlainDate(plain), plain)
+    assert.equal(toPlainDate(null), null)
+    assert.equal(toPlainDate(undefined), null)
+  })
+
+  // Converted by its fields, Heisei 31-05-12 would become 0031-05-12: it fails instead.
+  it('refuses a CalendarDate in another calendar system rather than land on another day', () => {
+    for (const cal of [new intl.JapaneseCalendar(), new intl.BuddhistCalendar(), new intl.PersianCalendar()]) {
+      const other = intl.toCalendar(new intl.CalendarDate(2026, 5, 12), cal)
+      assert.throws(() => toPlainDate(other), { name: 'RangeError', message: new RegExp(`"${cal.identifier}" calendar`) })
+    }
+    assert.throws(() => toPlainDate('2026-05-12'), TypeError)
+  })
+
+  it('builds the type asked for, a CalendarDate in the caller\'s own class when it has one', () => {
+    const day = d('2026-05-12')
+    assert.equal(fromPlainDate(day, 'plain-date'), day)
+    const cal = fromPlainDate(day, 'calendar-date')
+    assert.equal(cal.toString(), '2026-05-12')
+    assert.equal(cal.calendar.identifier, 'gregory')
+    class Mine extends intl.CalendarDate {}
+    assert.ok(fromPlainDate(day, 'calendar-date', new Mine(2000, 1, 1)) instanceof Mine)
+    assert.equal(fromPlainDate(null, 'calendar-date'), null)
+  })
+
+  it('round-trips both ways by the fields alone', () => {
+    for (const s of ['1000-01-01', '2026-02-28', '2028-02-29', '9999-12-31']) {
+      assert.equal(toPlainDate(fromPlainDate(d(s), 'calendar-date')).toString(), s)
+      assert.equal(fromPlainDate(toPlainDate(intl.parseDate(s)), 'calendar-date').compare(intl.parseDate(s)), 0)
+    }
+  })
+})
+
+const weekend = (day) => day.dayOfWeek >= 6
+
+describe('checkDateLimits and dateLimitMessage', () => {
+  const limits = { minValue: d('2026-01-01'), maxValue: new intl.CalendarDate(2026, 12, 31), isDateUnavailable: weekend }
+
+  it('takes a day on or between the limits that is available', () => {
+    for (const s of ['2026-01-01', '2026-05-12', '2026-12-31']) assert.equal(checkDateLimits(d(s), limits), null, s)
+    assert.equal(checkDateLimits(d('0999-01-01')), null)
+    assert.equal(checkDateLimits(d('2026-05-16'), {}), null)
+  })
+
+  it('names why it refuses a day, and the limit crossed', () => {
+    assert.deepEqual(checkDateLimits(d('2025-12-31'), limits), { reason: 'before-min', date: d('2025-12-31'), limit: d('2026-01-01') })
+    assert.deepEqual(checkDateLimits(d('2027-01-01'), limits), { reason: 'after-max', date: d('2027-01-01'), limit: d('2026-12-31') })
+    assert.deepEqual(checkDateLimits(d('2026-05-16'), limits), { reason: 'unavailable', date: d('2026-05-16'), limit: null })
+  })
+
+  it('writes the message in the field\'s format', () => {
+    assert.equal(dateLimitMessage(checkDateLimits(d('2025-12-31'), limits)), 'Choose a date on or after 01/01/2026.')
+    assert.equal(dateLimitMessage(checkDateLimits(d('2027-01-01'), limits), 'DD.MM.YYYY'), 'Choose a date on or before 31.12.2026.')
+    assert.equal(dateLimitMessage(checkDateLimits(d('2026-05-16'), limits), 'YYYY-MM-DD'), '2026-05-16 isn\'t available.')
+  })
+})
+
+describe('applyDateShortcut with limits', () => {
+  const MIN = '2026-03-10'
+  const MAX = '2026-08-20'
+  const limited = (k, current, extra = {}, today = TODAY) =>
+    applyDateShortcut(k, current ? d(current) : null, today, US_DATE_ENTRY, { minValue: d(MIN), maxValue: d(MAX), ...extra })?.toString() ?? null
+
+  it('stops at minValue and maxValue', () => {
+    assert.equal(limited('-', MIN), MIN)
+    assert.equal(limited('m', '2026-03-15'), MIN)
+    assert.equal(limited('y', '2026-05-12'), MIN)
+    assert.equal(limited('+', MAX), MAX)
+    assert.equal(limited('h', '2026-08-05'), MAX)
+    assert.equal(limited('r', '2026-05-12'), MAX)
+    assert.equal(limited('h', '2026-05-12'), '2026-05-31')
+  })
+
+  it('takes either day type for the limits', () => {
+    const k = applyDateShortcut('r', d('2026-05-12'), TODAY, US_DATE_ENTRY, { maxValue: new intl.CalendarDate(2026, 8, 20) })
+    assert.equal(k.toString(), MAX)
+  })
+
+  it('t is today when today is allowed, else the nearest allowed day', () => {
+    assert.equal(limited('t', null, {}, d('2026-05-12')), '2026-05-12')
+    assert.equal(limited('t', null, {}, d('2026-01-05')), MIN)
+    assert.equal(limited('t', null), MAX) // TODAY is November 12, after August 20
+    // Saturday the 16th: Monday the 18th.
+    assert.equal(limited('t', null, { isDateUnavailable: weekend }, d('2026-05-16')), '2026-05-18')
+    // Clamped to a maxValue that is a Saturday: the Friday before.
+    assert.equal(limited('t', null, { maxValue: d('2026-08-22'), isDateUnavailable: weekend }), '2026-08-21')
+  })
+
+  it('skips unavailable days: + and - to the next and previous available day', () => {
+    const opts = { isDateUnavailable: weekend }
+    assert.equal(limited('+', '2026-05-15', opts), '2026-05-18') // Friday → Monday
+    assert.equal(limited('-', '2026-05-18', opts), '2026-05-15') // Monday → Friday
+  })
+
+  it('m, h, y and r land on the first or last available day of the period, and again goes on', () => {
+    const opts = { isDateUnavailable: weekend }
+    assert.equal(limited('m', '2026-08-12', opts), '2026-08-03') // August 1 is a Saturday
+    assert.equal(limited('m', '2026-08-03', opts), '2026-07-01') // there already: July's
+    assert.equal(limited('h', '2026-05-12', opts), '2026-05-29') // May 31 is a Sunday
+    assert.equal(limited('h', '2026-05-29', opts), '2026-06-30')
+    const free = (k, s) => applyDateShortcut(k, d(s), TODAY, US_DATE_ENTRY, opts)?.toString()
+    assert.equal(free('y', '2022-05-12'), '2022-01-03') // January 1, 2022 is a Saturday
+    assert.equal(free('y', '2022-01-03'), '2021-01-01')
+    assert.equal(free('r', '2022-05-12'), '2022-12-30') // December 31, 2022 is a Saturday
+    assert.equal(free('r', '2022-12-30'), '2023-12-29')
+  })
+
+  it('is null, not a step past the limits, when no allowed day is in reach', () => {
+    assert.equal(limited('+', '2026-08-21', { maxValue: d('2026-08-23'), isDateUnavailable: weekend }), null)
+    assert.equal(limited('t', null, { isDateUnavailable: () => true }), null)
+    assert.equal(limited('t', null, { minValue: d('2026-09-01') }), null) // minValue after maxValue
+    // Unavailable as far as it looks (a year): null rather than a search to 9999.
+    let calls = 0
+    assert.equal(applyDateShortcut('+', d('2026-05-12'), TODAY, US_DATE_ENTRY, { isDateUnavailable: () => ++calls > 0 }), null)
+    assert.ok(calls < 400, `${calls} calls`)
+  })
+
+  it('without limits, the same days as before', () => {
+    for (const k of ['t', 'm', 'h', 'y', 'r', '+', '-'])
+      for (const s of ['2026-05-12', '1000-01-01', '9999-12-31'])
+        assert.equal(applyDateShortcut(k, d(s), TODAY, US_DATE_ENTRY, {})?.toString(), key(k, s), `${k} from ${s}`)
+  })
+})
+
+describe('isDateShortcut', () => {
+  it('names the shortcut keys, never the format\'s separator', () => {
+    for (const k of ['t', 'T', 'm', 'h', 'y', 'r', '+', '=', '-', '_']) assert.equal(isDateShortcut(k), true, k)
+    for (const k of ['a', '5', '/', 'Enter', ' ']) assert.equal(isDateShortcut(k), false, k)
+    assert.equal(isDateShortcut('-', 'YYYY-MM-DD'), false)
+    assert.equal(isDateShortcut('_', 'YYYY-MM-DD'), true)
   })
 })
