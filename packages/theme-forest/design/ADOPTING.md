@@ -67,7 +67,7 @@ Corner style is an attribute, not a file: `<html data-corners="tight">`. (Not in
 ## Making a change that should reach every product
 
 1. Edit the design source's file in **this** folder — the canonical copy. Schemes and the raw ramps have one copy, in the theme's `../schemes/` (`ramps.css` for the ramps, which `tokens.css` imports): edit them there.
-2. Record the change for `@zooui/theme-forest` (`changerig add -p @zooui/theme-forest`; see "Releasing" in `packages/nuxt/README.md`): the design source versions with the theme package.
+2. Record the change for `@zooui/theme-forest` (`changerig add -p @zooui/theme-forest`; see `docs/releasing.md`): the design source versions with the theme package.
 3. Non-Nuxt products take the change by upgrading `@zooui/theme-forest` and importing `@zooui/theme-forest/design/*` (or by copying `design/*.css` and `schemes/` over what's there: nothing to merge, because nobody edited them). Nuxt products take it by upgrading `@zooui/theme-forest`.
 
 Because products never fork the design source, the copy is a straight overwrite — the reason the layering rule matters more than the tooling. However you move the files (submodule, npm package, a copy script in CI, or by hand) the guarantee is the same.
