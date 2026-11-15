@@ -93,7 +93,7 @@ jobs:
         run: npm install -g @rigsmith/shiprig@1.27.0
       # With no publish-script the action skips the publish path, rehearsal included. The script isn't run in a dry
       # run (shiprig's own `publish --dry-run` stands in for it), so it needs no token.
-      - uses: rigsmith/shiprig-action@adb0cf43d100d33f10fc2c0e95a4d3fd11740bf0  # v0.8.0
+      - uses: rigsmith/shiprig-action@cead07e2afc339c686ce9c31c511cd3bdbc4b9e5  # v0.8.1
         with:
           dry-run: true
           publish-script: shiprig publish --yes
@@ -125,9 +125,9 @@ jobs:
       # version: something to release (changesets, or a releaseAs first release); publish: nothing pending, and a
       # version npm doesn't have or a tag that's missing; none: neither.
       - id: mode
-        uses: rigsmith/shiprig-action/select-mode@adb0cf43d100d33f10fc2c0e95a4d3fd11740bf0  # v0.8.0
+        uses: rigsmith/shiprig-action/select-mode@cead07e2afc339c686ce9c31c511cd3bdbc4b9e5  # v0.8.1
       - if: steps.mode.outputs.mode == 'version'
-        uses: rigsmith/shiprig-action/version@adb0cf43d100d33f10fc2c0e95a4d3fd11740bf0  # v0.8.0
+        uses: rigsmith/shiprig-action/version@cead07e2afc339c686ce9c31c511cd3bdbc4b9e5  # v0.8.1
 
   # Only when there's something to publish: in the `release` environment, publishes, tags and
   # makes the GitHub releases.
@@ -168,7 +168,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
       # Pinned to the commit, not the tag, which could be moved: this step can publish.
-      - uses: rigsmith/shiprig-action/publish@adb0cf43d100d33f10fc2c0e95a4d3fd11740bf0  # v0.8.0
+      - uses: rigsmith/shiprig-action/publish@cead07e2afc339c686ce9c31c511cd3bdbc4b9e5  # v0.8.1
         with:
           script: ${{ secrets.NPM_TOKEN != '' && 'shiprig publish --yes --npm-auth env:NPM_TOKEN' || 'shiprig publish --yes' }}
         env:
