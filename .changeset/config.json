@@ -14,10 +14,20 @@
   "updateInternalDependencies": "patch",
   "ignore": [],
   "linked": [],
-  "fixed": [],
+  "fixed": [
+    [
+      "@zooui/nuxt",
+      "@zooui/theme-forest"
+    ]
+  ],
   "contributors": {
     "exclude": [
       "JohnCampionJr"
     ]
+  },
+  "forgeRelease": {
+    "mode": "combined",
+    "name": "Zoo UI ${version}",
+    "tag": "v${version}"
   }
 }
