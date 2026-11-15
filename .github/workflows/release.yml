@@ -4,22 +4,17 @@
 #   - Something to release (changesets pending, or a first release in `releaseAs`): keep a standing
 #     "chore: release …" PR up to date, where `shiprig version` writes each package's CHANGELOG.md entry (and bumps
 #     the versions, from changesets). Nothing is published.
-#   - The push that merges that PR: the publish job waits for approval in the protected `release` environment, then
-#     publishes to npm, pushes the tags and makes a GitHub release per package from its changelog entry.
+#   - The push that merges that PR: the publish job publishes to npm, pushes the tags and makes a GitHub release per
+#     package from its changelog entry. Merging the release PR is the approval.
 #   - Any other push: nothing happens.
 #
-# So a release is: merge the release PR, approve the publish run, done.
+# So a release is: merge the release PR, done.
 #
-# Two jobs, so only a real release waits for approval or sees a secret. `version` decides the mode with the action's
+# Two jobs, so only a real release runs in the `release` environment. `version` decides the mode with the action's
 # `select-mode` sub-action and, in version mode, opens or updates the PR with the `version` sub-action, using only
 # GITHUB_TOKEN: it has no environment and no secrets. `publish` runs only when `select-mode` says so (nothing pending,
 # and a version npm doesn't have yet or a tag that's missing, which after the release PR merges is that merge), in the
-# `release` environment, whose required reviewers approve each run.
-#
-# The first release, 0.1.0: both packages are already at 0.1.0 and have never been published, and the public
-# repository has no changesets. `releaseAs` in .github/shiprig-action.jsonc names each at that version, so the first
-# push opens a "chore: release 0.1.0" PR in which `shiprig version --release-as <pkg>=0.1.0` writes each `## 0.1.0`
-# changelog entry ("Initial release") without bumping anything. Merging it publishes 0.1.0, once approved.
+# `release` environment, which each package's npm trusted publisher names: no other job can publish.
 #
 # Rehearsal: Actions → Release → Run workflow. `dry_run` is on by default: the `rehearse` job runs the whole action
 # with its dry-run input (`shiprig version --dry-run`, or the changelog check and `shiprig publish --dry-run`), with no
@@ -34,14 +29,12 @@
 # doesn't.
 #
 # Auth: npm trusted publishing. Each package names this workflow (release.yml, environment `release`) as its trusted
-# publisher on npm, and shiprig publishes with the run's OIDC token (no auth named, `id-token: write`). A trusted
-# publisher can only be set on a package that exists, so 0.1.0 was published by hand; when its release PR merged, this
-# workflow found 0.1.0 already on npm, skipped it, and made the tags and GitHub releases. If the `release`
+# publisher on npm, and shiprig publishes with the run's OIDC token (no auth named, `id-token: write`). If the `release`
 # environment ever holds NPM_TOKEN, the publish uses that instead (`--npm-auth env:NPM_TOKEN`): shiprig tries OIDC
 # whenever no auth is named, and doesn't fall back to a token when that exchange fails.
 #
 # Needs, in zooui-dev/zooui: Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests"
-# (for the release PR), and the `release` environment with required reviewers.
+# (for the release PR), and the `release` environment (no protection rules: merging the release PR is the approval).
 name: Release
 
 on:
@@ -50,7 +43,7 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: Rehearse only (the action's dry-run, no approval, no secrets); untick to do what a push to main does
+        description: Rehearse only (the action's dry-run, no environment, no secrets); untick to do what a push to main does
         type: boolean
         default: true
 
@@ -59,8 +52,8 @@ permissions: {}
 
 # One at a time, never cancelled, and every push gets its run: a running job could leave the release PR half-updated
 # or publish without tagging, and by default a newer push drops a waiting run. `queue: max` keeps them waiting, first
-# in first out; each run checks out its own commit. A publish waiting for approval holds the queue until it's
-# approved or rejected. A rehearsal changes nothing, so it has a queue of its own, and can run while a publish waits.
+# in first out; each run checks out its own commit. A rehearsal changes nothing, so it has a queue of its own, and can
+# run while a publish runs.
 concurrency:
   group: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && 'release-rehearsal' || 'release' }}
   cancel-in-progress: false
@@ -134,13 +127,13 @@ jobs:
       - if: steps.mode.outputs.mode == 'version'
         uses: rigsmith/shiprig-action/version@306b93ff985c35dcd6b19c30dd77015ac013a950  # v0.7.0
 
-  # Only when there's something to publish: waits for approval in the `release` environment, then publishes, tags and
+  # Only when there's something to publish: in the `release` environment, publishes, tags and
   # makes the GitHub releases.
   publish:
     name: Publish
     needs: version
     if: needs.version.outputs.mode == 'publish'
-    environment: release   # protected: required reviewers approve each run
+    environment: release   # named by each package's npm trusted publisher
     runs-on: ubuntu-latest   # GitHub-hosted: npm refuses provenance from a self-hosted runner
     timeout-minutes: 15
     permissions:
