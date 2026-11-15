@@ -1,7 +1,9 @@
 import { defineConfig, devices } from '@playwright/test'
+import { playwrightPort } from '../../scripts/playwright-port.mjs'
 
 // Runs against the PRODUCTION build (.output). `pnpm build` first — this config does not build.
-const PORT = 3204
+// PLAYWRIGHT_PORT, or a free port: a fixed one collides with a concurrent run of this suite.
+const PORT = playwrightPort()
 
 export default defineConfig({
   testDir: './tests',
