@@ -1,5 +1,12 @@
 # @zooui/theme-forest
 
+## 0.2.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @zooui/nuxt@0.2.0
+
 ## 0.1.1
 
 ### 📖 Documentation
