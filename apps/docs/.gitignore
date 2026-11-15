@@ -1,0 +1,10 @@
+node_modules
+.nuxt
+.output
+# `nuxi generate`'s symlink to .output/public
+dist
+.data
+*.log
+.env
+test-results
+playwright-report

@@ -1,0 +1,77 @@
+<!-- @dsCard group="Components" viewport="700x1180" name="Core components" subtitle="Every primitive, light theme" -->
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+<style>body{margin:0;padding:16px;background:var(--bg);color:var(--fg);font:var(--type-body)} .sec{display:flex;flex-direction:column;gap:10px;padding:12px 0;border-bottom:1px solid var(--border)} .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}</style>
+</head><body><div id="root"></div>
+<script>
+// Fallback when the compiled bundle isn't present yet: load the sibling .jsx sources directly.
+window.__zooReady = (async () => {
+  let found = null;
+  for (const k of Object.keys(window)) { try { const v = window[k]; if (v && typeof v === "object" && v.Button && v.QuotaMeter) { found = v; break; } } catch (e) {} }
+  if (found) return found;
+  const names = ["Button","Input","Select","Switch","Segmented","ThemeToggle","Tag","Kicker","Card","Tabs","CodeBlock","Identifier","EcosystemMark","QuotaMeter","Status","DataTable","Dialog","Drawer","Toast","Tooltip","Banner","TokenReveal","Nav"];
+  let src = "";
+  for (const n of names) { const t = await (await fetch(n + ".jsx")).text(); src += t.replace(/import\s+[\s\S]*?from\s+["'][^"']+["'];?/g, "").replace(/\bexport\s+(?=function|const|class|default)/g, "") + "\n"; }
+  src += "window.__ForestLocal = {" + names.join(",") + "};";
+  try { eval(Babel.transform(src, { presets: [["react", { runtime: "classic" }]] }).code); } catch (e) { document.body.insertAdjacentHTML("beforeend", "<pre>" + e.message + "</pre>"); throw e; }
+  return window.__ForestLocal;
+})();
+</script>
+<script type="text/plain" id="app-src">
+window.__zooReady.then((NS) => {
+const { Button, Input, Select, Switch, Segmented, ThemeToggle, Tag, Kicker, Card, Tabs, CodeBlock, Identifier, EcosystemMark, QuotaMeter, Status, DataTable, Dialog, Drawer, Toast, Tooltip, Banner, TokenReveal, Nav } = NS;
+const tok = "tk_a8f3c21e9d4b7f01";
+const root = "https://acme.example.com/t/" + tok;
+function App() {
+  const [tab, setTab] = React.useState("setup");
+  const [eco, setEco] = React.useState("all");
+  const [on, setOn] = React.useState(true);
+  const rows = [
+    { id: "1", name: "@acme/ui-kit", eco: "npm", versions: 14, latest: "2.3.1", size: "48 MB", when: "2h ago" },
+    { id: "2", name: "Acme.Core", eco: "nuget", versions: 31, latest: "5.0.2", size: "312 MB", when: "yesterday" },
+    { id: "3", name: "Acme.Installer", eco: "winget", versions: 6, latest: "1.9.0", size: "1.4 GB", when: "3d ago" },
+  ];
+  const cols = [
+    { key: "name", label: "Package", render: r => <span style={{display:"inline-flex",gap:8,alignItems:"center"}}><EcosystemMark ecosystem={r.eco} /><Identifier kind="plain">{r.name}</Identifier></span> },
+    { key: "latest", label: "Latest", render: r => <Identifier kind="version">{r.latest}</Identifier> },
+    { key: "versions", label: "Versions", num: true },
+    { key: "size", label: "On disk", num: true },
+    { key: "when", label: "Last publish", render: r => <span style={{color:"var(--fg-muted)"}}>{r.when}</span> },
+  ];
+  return <div>
+    <div className="sec" style={{paddingTop:0}}><Nav links={[{label:"Feeds",current:true},{label:"Billing"},{label:"Docs"}]} right={<ThemeToggle value="light" />} /></div>
+    <div className="sec"><Kicker>Buttons</Kicker><div className="row"><Button variant="primary">Create feed</Button><Button>Revoke</Button><Button variant="ghost">Cancel</Button><Button variant="danger">Delete feed</Button><Button variant="primary" size="sm">Copy</Button><Button size="lg">Upgrade plan</Button><Button disabled>Disabled</Button><Button iconOnly title="More">⋯</Button></div></div>
+    <div className="sec"><Kicker>Code</Kicker>
+      <CodeBlock variant="line" code={`winget source add -n acme -a ${root}/winget/ -t "Microsoft.Rest"`} token={tok} lang="winget" />
+      <CodeBlock variant="block" lang=".npmrc" token={tok} code={`registry=${root}/npm/\n//acme.example.com/:_authToken=${tok}\nalways-auth=true`} />
+      <div style={{font:"var(--type-body-sm)",color:"var(--fg-muted)"}}>Inline: <CodeBlock variant="inline" code="@acme/ui-kit" /> published as <Identifier kind="version">2.3.1</Identifier> · <Identifier kind="hash">sha256:9f2a…e77b</Identifier></div>
+    </div>
+    <div className="sec"><Kicker>Ecosystems</Kicker><div className="row" style={{gap:16}}>{EcosystemMark.ECOSYSTEMS.map(e => <EcosystemMark key={e} ecosystem={e} withLabel />)}</div><div className="row">{EcosystemMark.ECOSYSTEMS.map(e => <EcosystemMark key={e} ecosystem={e} size="lg" />)}</div></div>
+    <div className="sec"><Kicker>Quota & status</Kicker>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}><QuotaMeter used={3.2} quota={10} /><QuotaMeter used={9.1} quota={10} /><QuotaMeter used={10} quota={10} /></div>
+      <QuotaMeter used={41} quota={50} size="lg" />
+      <div className="row" style={{gap:16}}>{Status.STATES.map(s => <Status key={s} state={s} />)}<Status state="warn" pill>91% used</Status><Status state="suspended" pill /></div>
+    </div>
+    <div className="sec"><Kicker>Table</Kicker>
+      <div className="row"><Tabs tabs={[{value:"setup",label:"Client setup"},{value:"tokens",label:"Tokens",count:3},{value:"activity",label:"Activity"}]} value={tab} onChange={setTab} /><span style={{flex:1}} /><Segmented options={["all","npm","nuget","winget"]} value={eco} onChange={setEco} /></div>
+      <DataTable columns={cols} rows={rows} defaultOpen={["1"]} renderDetail={r => <div style={{display:"flex",flexDirection:"column",gap:6,font:"var(--type-body-sm)"}}><div className="row"><Identifier kind="version">2.3.1</Identifier><span style={{color:"var(--fg-muted)"}}>2h ago · token <Tag>ci-main</Tag></span></div><div className="row"><Identifier kind="version">2.3.0</Identifier><span style={{color:"var(--fg-muted)"}}>4d ago · token <Tag>ci-main</Tag></span><Button size="sm" variant="ghost">Remove</Button></div></div>} />
+    </div>
+    <div className="sec"><Kicker>Forms</Kicker><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,alignItems:"end"}}><Input label="Feed name" placeholder="acme-internal" hint="Lowercase, dashes." /><Select label="Quota" options={["10 GB","50 GB","200 GB"]} /><Input label="Token" mono defaultValue={tok} error="This token was revoked." /></div><div className="row"><Switch checked={on} onChange={setOn} label="Email me at 90% quota" /><Tag tone="accent">read</Tag><Tag>publish</Tag><Tag tone="warn">near limit</Tag><Tag tone="danger">suspended</Tag><Tag tone="dark">ci-main</Tag><Tooltip label="Last used 2h ago"><Tag>hover me</Tag></Tooltip></div></div>
+    <div className="sec"><Kicker>Notices</Kicker>
+      <Banner tone="danger" title="Storage limit reached — 10.0 of 10 GB" actions={<><Button size="sm">Prune versions</Button><Button size="sm" variant="primary">Upgrade</Button></>}>New publishes are refused. Installs and restores keep working.</Banner>
+      <div className="row"><Toast>Token revoked.</Toast><Toast tone="warn" action="Undo">Version 2.3.0 removed.</Toast></div>
+      <TokenReveal token={tok} name="ci-main" onAck={() => {}} />
+    </div>
+    <div className="sec" style={{borderBottom:0}}><Kicker>Overlays</Kicker><div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:12,alignItems:"start"}}>
+      <Dialog inline tone="danger" title="Delete acme-internal?" actions={<><Button variant="ghost">Cancel</Button><Button variant="danger">Delete feed</Button></>}><p style={{font:"var(--type-body-sm)",color:"var(--fg-muted)"}}>142 packages and 3.2 GB will be removed. Every client pointed at this feed will fail on its next restore. This cannot be undone.</p><Input mono placeholder="type acme-internal to confirm" /></Dialog>
+      <Card kicker="Usage" title="3.2 GB of 10 GB" elevation="sm"><QuotaMeter used={3.2} quota={10} showValue={false} /><div style={{font:"var(--type-body-sm)",color:"var(--fg-muted)"}}>142 packages · 1,204 versions · +180 MB this month</div></Card>
+    </div></div>
+  </div>;
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+});
+</script>
+<script>eval(Babel.transform(document.getElementById("app-src").textContent, { presets: [["react", { runtime: "classic" }]] }).code);</script></body></html>

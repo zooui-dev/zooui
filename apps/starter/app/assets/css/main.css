@@ -1,0 +1,6 @@
+/* The product's one Tailwind entry: Forest's stylesheet (Tailwind, Nuxt UI, Zoo UI's base, Forest's ramps, fonts), then the
+   product's accent scheme — the one piece of styling a Forest product owns. Pick a scheme from
+   @zooui/theme-forest/schemes/ and claim it in the layer README's scheme table so no two products share one.
+   Slate · Cobalt is unassigned; it stands in here until this starter becomes a product. */
+@import "@zooui/theme-forest/assets/css/forest.css";
+@import "@zooui/theme-forest/schemes/slate-cobalt.css";

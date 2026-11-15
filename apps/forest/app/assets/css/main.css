@@ -1,0 +1,11 @@
+/* The app's one Tailwind entry: Forest's stylesheet (Zoo UI's base, then Forest's ramps as palettes). */
+@import "@zooui/theme-forest/assets/css/forest.css";
+
+/* Ink · Indigo, this app's scheme. A scheme only
+   redefines raw ramps, so importing it after the layer is all it takes. */
+@import "@zooui/theme-forest/schemes/ink-indigo.css";
+
+/* The specimens live in the baseline app so both pages render ONE source. They are outside this app's root,
+   so Tailwind cannot discover them: without this, classes used only there (gap-5, sm:w-36, sm:flex-row …) are
+   never generated and the page renders with the right colors and no spacing. */
+@source "../../../../kitchen-sink/app/components";

@@ -1,0 +1,55 @@
+/* Ember · Amber — overrides only the ramps; the semantic layer, components and dark mode are untouched. */
+:root {
+  --pine-0: #ffffff;
+  --pine-50: #f8f7f4;
+  --pine-100: #f0eeea;
+  --pine-150: #e8e5df;
+  --pine-200: #dbd7cf;
+  --pine-300: #bfb9ae;
+  --pine-400: #968f84;
+  --pine-500: #716b61;
+  --pine-600: #544f47;
+  --pine-700: #3a3630;
+  --pine-800: #282522;
+  --pine-900: #1c1a17;
+  --pine-950: #110f0d;
+  --teal-100: #fdeadb;
+  --teal-200: #fbcfae;
+  --teal-300: #f0a769;
+  --teal-400: #e07f2e;
+  --teal-500: #a85410;
+  --teal-600: #8a4309;
+  --teal-700: #6d3407;
+  --teal-800: #4e2506;
+  --teal-900: #301704;
+  --amber-100: #fdf6d4;
+  --amber-300: #f2d64b;
+  --amber-500: #b39405;
+  --amber-700: #7a6508;
+  --amber-900: #3d3208;
+
+  /* status: success and info chosen to sit AWAY from this scheme's accent, so neither reads as the
+     primary. amber accent: green and blue both sit clear of it. Values are Tailwind's green and blue palettes, literal. */
+  --success-50: oklch(98.2% 0.018 155.826);
+  --success-100: oklch(96.2% 0.044 156.743);
+  --success-200: oklch(92.5% 0.084 155.995);
+  --success-300: oklch(87.1% 0.15 154.449);
+  --success-400: oklch(79.2% 0.209 151.711);
+  --success-500: oklch(72.3% 0.219 149.579);
+  --success-600: oklch(62.7% 0.194 149.214);
+  --success-700: oklch(52.7% 0.154 150.069);
+  --success-800: oklch(44.8% 0.119 151.328);
+  --success-900: oklch(39.3% 0.095 152.535);
+  --success-950: oklch(26.6% 0.065 152.934);
+  --info-50: oklch(97% 0.014 254.604);
+  --info-100: oklch(93.2% 0.032 255.585);
+  --info-200: oklch(88.2% 0.059 254.128);
+  --info-300: oklch(80.9% 0.105 251.813);
+  --info-400: oklch(70.7% 0.165 254.624);
+  --info-500: oklch(62.3% 0.214 259.815);
+  --info-600: oklch(54.6% 0.245 262.881);
+  --info-700: oklch(48.8% 0.243 264.376);
+  --info-800: oklch(42.4% 0.199 265.638);
+  --info-900: oklch(37.9% 0.146 265.522);
+  --info-950: oklch(28.2% 0.091 267.935);
+}

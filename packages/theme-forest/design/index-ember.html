@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Forest — Ember · Amber</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../schemes/ember.css">
+<style>
+  body { padding: 0 0 64px; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 32px; }
+  section { padding: 32px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 16px; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .swatches { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sw { display: flex; flex-direction: column; gap: 4px; min-width: 58px; }
+  .sw > i { height: 34px; border-radius: var(--radius-sm); box-shadow: inset 0 0 0 1px var(--border-strong); }
+  .sw > span { font: var(--type-code-sm); color: var(--fg-muted); }
+  h2 { font: var(--type-h2); letter-spacing: var(--tracking-display); }
+</style>
+<style>
+/* header: wrap rather than overflow; the scheme links shrink and scroll */
+.ui-nav { flex-wrap: wrap; height: auto; min-height: var(--row-h); padding-top: 6px; padding-bottom: 6px; column-gap: var(--space-4); row-gap: 6px; }
+.ui-nav > .links { min-width: 0; overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; }
+.ui-nav > .links::-webkit-scrollbar { display: none; }
+.ui-nav > .right { flex: none; margin-left: auto; }
+</style>
+</head>
+<body>
+<nav class="ui-nav">
+  <a class="brand" href="#"><span class="br">[</span><span class="wm">pine</span><span class="br">]</span></a>
+  <div class="links"><a href="index.html">Teal</a><a href="index-slate-cobalt.html">Cobalt</a><a href="index-graphite-violet.html">Violet</a><a href="index-paper-olive.html">Olive</a><a href="index-ink-indigo.html">Indigo</a><a href="index-ink-indigo-authored.html">Indigo+</a><a href="index-ember.html" aria-current="page">Ember</a></div>
+  <div class="right">
+    <div class="ui-seg" role="group" aria-label="Corners">
+      <button type="button" data-corners-set="soft" aria-pressed="true">Soft</button>
+      <button type="button" data-corners-set="tight" aria-pressed="false">Tight</button>
+      <button type="button" data-corners-set="flat" aria-pressed="false">Flat</button>
+    </div>
+    <div class="ui-seg" role="group" aria-label="Theme">
+      <button type="button" data-set="light" aria-pressed="true">Light</button>
+      <button type="button" data-set="dark" aria-pressed="false">Dark</button>
+      <button type="button" data-set="system" aria-pressed="false">System</button>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<section>
+  <div class="ui-kicker">Ember · Amber</div>
+  <h1 style="font: var(--type-display); letter-spacing: var(--tracking-display); max-width: 20ch;">Ink, one accent, and a terminal.</h1>
+  <p style="color: var(--fg-muted); max-width: 62ch;">Warm brown-gray with a burnt-amber accent. The one scheme where accent and caution share a hue family, so the shape-coded status glyphs and the hatch do more of the work — the warn ramp is pushed to gold to keep them apart. Switch theme in the header; switch scheme with the links beside the wordmark.</p>
+</section>
+
+<section>
+  <div class="ui-kicker">color · neutrals</div>
+  <div class="swatches">
+    <div class="sw"><i style="background:var(--pine-0)"></i><span>0</span></div>
+    <div class="sw"><i style="background:var(--pine-50)"></i><span>50</span></div>
+    <div class="sw"><i style="background:var(--pine-100)"></i><span>100</span></div>
+    <div class="sw"><i style="background:var(--pine-150)"></i><span>150</span></div>
+    <div class="sw"><i style="background:var(--pine-200)"></i><span>200</span></div>
+    <div class="sw"><i style="background:var(--pine-300)"></i><span>300</span></div>
+    <div class="sw"><i style="background:var(--pine-400)"></i><span>400</span></div>
+    <div class="sw"><i style="background:var(--pine-500)"></i><span>500</span></div>
+    <div class="sw"><i style="background:var(--pine-600)"></i><span>600</span></div>
+    <div class="sw"><i style="background:var(--pine-700)"></i><span>700</span></div>
+    <div class="sw"><i style="background:var(--pine-800)"></i><span>800</span></div>
+    <div class="sw"><i style="background:var(--pine-900)"></i><span>900</span></div>
+    <div class="sw"><i style="background:var(--pine-950)"></i><span>950</span></div>
+  </div>
+  <div class="ui-kicker">color · accent and signals</div>
+  <div class="swatches">
+    <div class="sw"><i style="background:var(--teal-100)"></i><span>acc 100</span></div>
+    <div class="sw"><i style="background:var(--teal-300)"></i><span>300</span></div>
+    <div class="sw"><i style="background:var(--teal-500)"></i><span>500</span></div>
+    <div class="sw"><i style="background:var(--teal-700)"></i><span>700</span></div>
+    <div class="sw"><i style="background:var(--teal-900)"></i><span>900</span></div>
+    <div class="sw"><i style="background:var(--amber-300)"></i><span>amber 300</span></div>
+    <div class="sw"><i style="background:var(--amber-500)"></i><span>500</span></div>
+    <div class="sw"><i style="background:var(--red-300)"></i><span>red 300</span></div>
+    <div class="sw"><i style="background:var(--red-500)"></i><span>500</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="ui-kicker">type</div>
+  <div style="font: var(--type-h1); letter-spacing: var(--tracking-display);">Display — the display face, 500</div>
+  <h3>UI heading — the sans face, 600</h3>
+  <p style="max-width: 62ch;">Body copy at 14/1.5. The feed is over its storage quota, so new publishes are refused. Installs and restores continue as normal.</p>
+  <p style="font: var(--type-body-sm); color: var(--fg-muted); max-width: 62ch;">Small body, muted — table meta, timestamps, hints.</p>
+  <div style="font: var(--type-code);">$ pine build --watch <span style="color: var(--accent-text);">--token=tk_a8f3…c21e</span></div>
+  <div class="row" style="gap:8px;"><span class="ui-ident">@scope/package-name</span><span class="ui-ident" data-kind="version">2.3.1</span><span class="ui-ident" data-kind="hash">sha256:9f2a…e77b</span></div>
+</section>
+
+<section id="components">
+  <h2>Buttons</h2>
+  <div class="row">
+    <button class="ui-btn" data-variant="primary" type="button">Primary action</button>
+    <button class="ui-btn" data-variant="secondary" type="button">Secondary</button>
+    <button class="ui-btn" data-variant="ghost" type="button">Ghost</button>
+    <button class="ui-btn" data-variant="danger" type="button">Delete</button>
+    <button class="ui-btn" data-variant="primary" data-size="sm" type="button">Small</button>
+    <button class="ui-btn" data-variant="secondary" data-size="lg" type="button">Large</button>
+    <button class="ui-btn" data-variant="secondary" data-icon="true" type="button" title="More">⋯</button>
+    <button class="ui-btn" data-variant="secondary" type="button" disabled>Disabled</button>
+  </div>
+</section>
+
+<section>
+  <h2>Code</h2>
+  <div class="ui-code" data-wrap="true">
+    <span class="prompt">$</span>
+    <pre>pine deploy --source https://acme.example/t/<span class="tok">tk_a8f3c21e9d4b7f01</span>/main/
+<span class="cmt"># then, as before:</span>
+pine status</pre>
+    <button class="copy" type="button">Copy</button>
+  </div>
+  <div class="ui-code">
+    <span class="lang">.config</span>
+    <pre>registry=https://acme.example/t/tk_a8f3c21e9d4b7f01/npm/
+always-auth=true</pre>
+    <button class="copy" type="button">Copy</button>
+  </div>
+  <p style="font: var(--type-body-sm); color: var(--fg-muted);">Inline: install <code class="ui-ident">@acme/ui-kit</code> at <code class="ui-ident" data-kind="version">2.3.1</code>.</p>
+</section>
+
+<section>
+  <h2>Meter and status</h2>
+  <div class="grid3">
+    <span class="ui-meter"><span class="track"><span class="fill" style="width:32%"></span><span class="mark" style="left:80%"></span></span><span class="value">3.2 / 10 GB</span></span>
+    <span class="ui-meter" data-level="warn"><span class="track"><span class="fill" style="width:91%"></span><span class="mark" style="left:80%"></span></span><span class="value">9.1 / 10 GB</span></span>
+    <span class="ui-meter" data-level="over" data-hatch="true"><span class="track"><span class="fill" style="width:100%"></span></span><span class="value">10 / 10 GB</span></span>
+  </div>
+  <span class="ui-meter" data-size="lg"><span class="track"><span class="fill" style="width:82%"></span><span class="mark" style="left:80%"></span></span><span class="value">41 / 50 GB</span></span>
+  <div class="row" style="gap:20px;">
+    <span class="ui-status" data-state="healthy"><span class="glyph"></span>Healthy</span>
+    <span class="ui-status" data-state="warn"><span class="glyph"></span>Near limit</span>
+    <span class="ui-status" data-state="suspended"><span class="glyph"></span>Stopped</span>
+    <span class="ui-status" data-state="unreachable"><span class="glyph"></span>Unreachable</span>
+    <span class="ui-status" data-state="quiet"><span class="glyph"></span>Quiet</span>
+    <span class="ui-status" data-state="warn" data-pill="true"><span class="glyph"></span>91% used</span>
+  </div>
+</section>
+
+<section>
+  <h2>Table</h2>
+  <div class="row">
+    <div class="ui-tabs" role="tablist">
+      <button role="tab" aria-selected="true" type="button">Packages</button>
+      <button role="tab" aria-selected="false" type="button">Tokens <span style="margin-left:6px;font:var(--type-code-sm);color:var(--fg-subtle)">3</span></button>
+      <button role="tab" aria-selected="false" type="button">Activity</button>
+    </div>
+    <span style="flex:1"></span>
+    <div class="ui-seg" role="group" aria-label="Filter">
+      <button type="button" aria-pressed="true">All</button>
+      <button type="button" aria-pressed="false">Recent</button>
+      <button type="button" aria-pressed="false">Large</button>
+    </div>
+  </div>
+  <table class="ui-table">
+    <thead><tr><th>Name</th><th>Latest</th><th class="num">Versions</th><th class="num">On disk</th><th>Last publish</th></tr></thead>
+    <tbody>
+      <tr><td><span class="ui-ident" data-kind="plain">@acme/ui-kit</span></td><td><span class="ui-ident" data-kind="version">2.3.1</span></td><td class="num">14</td><td class="num">48 MB</td><td style="color:var(--fg-muted)">2h ago</td></tr>
+      <tr><td><span class="ui-ident" data-kind="plain">Acme.Core</span></td><td><span class="ui-ident" data-kind="version">5.0.2</span></td><td class="num">31</td><td class="num">312 MB</td><td style="color:var(--fg-muted)">yesterday</td></tr>
+      <tr><td><span class="ui-ident" data-kind="plain">Acme.Installer</span></td><td><span class="ui-ident" data-kind="version">1.9.0</span></td><td class="num">6</td><td class="num">1.4 GB</td><td style="color:var(--fg-muted)">3d ago</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Forms</h2>
+  <div class="grid3">
+    <div class="ui-field"><label for="f1">Name</label><input class="ui-input" id="f1" placeholder="acme-internal"><div class="hint">Lowercase, dashes.</div></div>
+    <div class="ui-field"><label for="f2">Quota</label><select class="ui-input ui-select" id="f2"><option>10 GB</option><option>50 GB</option><option>250 GB</option></select><div class="hint">Taken from the account pool.</div></div>
+    <div class="ui-field"><label for="f3">Token</label><input class="ui-input" data-mono="true" id="f3" value="tk_a8f3c21e9d4b7f01" aria-invalid="true"><div class="hint" data-error="true">This token was revoked.</div></div>
+  </div>
+  <div class="row">
+    <label style="display:inline-flex;align-items:center;gap:8px;font:var(--type-body-sm);cursor:pointer;"><button class="ui-switch" type="button" role="switch" aria-checked="true"></button><span>Email me at 90% of quota</span></label>
+    <span class="ui-tag" data-tone="accent">read</span>
+    <span class="ui-tag">publish</span>
+    <span class="ui-tag" data-tone="warn">near limit</span>
+    <span class="ui-tag" data-tone="danger">stopped</span>
+    <span class="ui-tag" data-tone="dark">ci-main</span>
+    <span class="ui-tip" tabindex="0"><span class="ui-tag">hover me</span><span class="bubble" role="tooltip">Last used 2h ago</span></span>
+  </div>
+</section>
+
+<section id="patterns">
+  <h2>Notices</h2>
+  <div class="ui-banner" data-tone="danger" role="alert">
+    <div></div>
+    <div class="body"><div class="title">Storage limit reached — 10.0 of 10 GB</div><p>New publishes are refused. Installs and restores keep working.</p></div>
+    <div class="actions"><button class="ui-btn" data-variant="secondary" data-size="sm" type="button">Prune</button><button class="ui-btn" data-variant="primary" data-size="sm" type="button">Upgrade</button></div>
+  </div>
+  <div class="ui-banner" data-tone="warn" role="status">
+    <div></div>
+    <div class="body"><div class="title">91% of quota used</div><p>About 9 days of headroom at the current rate.</p></div>
+    <div class="actions"><button class="ui-btn" data-variant="secondary" data-size="sm" type="button">Review</button></div>
+  </div>
+  <div class="row">
+    <div class="ui-toast" role="status">Token revoked.</div>
+    <div class="ui-toast" data-tone="warn" role="status">Version 2.3.0 removed.<button class="act" type="button">Undo</button></div>
+  </div>
+</section>
+
+<section>
+  <h2>Cards and overlays</h2>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start;">
+    <section class="ui-card" data-elev="sm">
+      <div class="kicker">usage</div>
+      <div class="title">3.2 GB of 10 GB</div>
+      <span class="ui-meter"><span class="track"><span class="fill" style="width:32%"></span></span></span>
+      <div style="font:var(--type-body-sm);color:var(--fg-muted)">142 packages · 1,204 versions · +180 MB this month</div>
+    </section>
+    <div class="ui-dialog" role="dialog" data-tone="danger">
+      <div class="title">Delete acme-internal?</div>
+      <p style="font:var(--type-body-sm);color:var(--fg-muted)">142 packages and 3.2 GB will be removed. Every client pointed at this feed will fail on its next restore. This cannot be undone.</p>
+      <input class="ui-input" data-mono="true" placeholder="type acme-internal to confirm">
+      <div class="actions"><button class="ui-btn" data-variant="ghost" type="button">Cancel</button><button class="ui-btn" data-variant="danger" type="button">Delete</button></div>
+    </div>
+  </div>
+</section>
+
+<section style="border-bottom:0;">
+  <h2>The hatch</h2>
+  <div class="row" style="gap:16px;">
+    <div style="width:120px;height:52px;color:var(--fg);background:var(--hatch);border-radius:var(--radius-sm);"></div>
+    <div style="width:120px;height:52px;color:var(--warn);background:var(--hatch);border-radius:var(--radius-sm);"></div>
+    <div style="width:120px;height:52px;color:var(--danger);background:var(--hatch);border-radius:var(--radius-sm);"></div>
+    <p style="font:var(--type-body-sm);color:var(--fg-muted);max-width:34ch;">Consumed, over, or blocked. The system's one texture — it reads as “filled” without relying on color.</p>
+  </div>
+</section>
+
+</div>
+
+<script>
+(function () {
+  var seg = document.querySelector('.ui-seg[aria-label="Theme"]');
+  var stored = null;
+  try { stored = localStorage.getItem('pine-theme'); } catch (e) {}
+  function apply(v) {
+    var root = document.documentElement;
+    if (v === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', v);
+    seg.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.set === v ? 'true' : 'false'); });
+    try { localStorage.setItem('pine-theme', v); } catch (e) {}
+  }
+  seg.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) apply(b.dataset.set); });
+  var cseg = document.querySelector('.ui-seg[aria-label="Corners"]');
+  var cstored = null;
+  try { cstored = localStorage.getItem('pine-corners'); } catch (e) {}
+  function corners(v) {
+    if (v === 'soft') document.documentElement.removeAttribute('data-corners');
+    else document.documentElement.setAttribute('data-corners', v);
+    cseg.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.cornersSet === v ? 'true' : 'false'); });
+    try { localStorage.setItem('pine-corners', v); } catch (e) {}
+  }
+  cseg.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) corners(b.dataset.cornersSet); });
+  corners(cstored || 'soft');
+  apply(stored || 'light');
+  document.querySelectorAll('.ui-code .copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var pre = btn.parentElement.querySelector('pre');
+      try { navigator.clipboard.writeText(pre.innerText); } catch (e) {}
+      btn.textContent = 'Copied'; btn.dataset.done = 'true';
+      setTimeout(function () { btn.textContent = 'Copy'; delete btn.dataset.done; }, 1600);
+    });
+  });
+  document.querySelectorAll('.ui-switch').forEach(function (s) {
+    s.addEventListener('click', function () { s.setAttribute('aria-checked', s.getAttribute('aria-checked') === 'true' ? 'false' : 'true'); });
+  });
+  document.querySelectorAll('.ui-seg:not([aria-label="Theme"]), .ui-tabs').forEach(function (g) {
+    g.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      var attr = g.classList.contains('ui-tabs') ? 'aria-selected' : 'aria-pressed';
+      g.querySelectorAll('button').forEach(function (x) { x.setAttribute(attr, 'false'); });
+      b.setAttribute(attr, 'true');
+    });
+  });
+})();
+</script>
+</body>
+</html>

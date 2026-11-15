@@ -1,0 +1,18 @@
+{
+  "$schema": "https://rigsmith.dev/schemas/changeset-config.json",
+  "changelog": [
+    "@changesets/changelog-github",
+    {
+      "repo": "zooui-dev/zooui"
+    }
+  ],
+  "baseBranch": "main",
+  "access": "public",
+  "node": {
+    "provenance": "always"
+  },
+  "updateInternalDependencies": "patch",
+  "ignore": [],
+  "linked": [],
+  "fixed": []
+}

@@ -1,0 +1,42 @@
+/* Forest's raw color ramps — the one copy. The Nuxt theme (assets/css/theme.css) and the design source
+   (design/tokens.css) both import this file. A scheme file redefines some of these; nothing else in the Nuxt theme
+   reads the design source's semantic tokens, because Nuxt UI has its own semantic layer and v2's whole point is to
+   keep it. */
+:root {
+  /* base ramps — slightly green-tinted grays ("pine") */
+  --pine-0: #ffffff;
+  --pine-50: #f6f7f4;
+  --pine-100: #eef0eb;
+  --pine-150: #e4e7e1;
+  --pine-200: #d6dad3;
+  --pine-300: #b9bfb8;
+  --pine-400: #8f978f;
+  --pine-500: #6b736c;
+  --pine-600: #4f5651;
+  --pine-700: #363c39;
+  --pine-800: #252b29;
+  --pine-900: #191e1d;
+  --pine-950: #0e1211;
+  /* accent — teal */
+  --teal-100: #d9f3ee;
+  --teal-200: #a9e3d8;
+  --teal-300: #5fcdbb;
+  --teal-400: #2fb8a3;
+  --teal-500: #117d72;
+  --teal-600: #0f6259;
+  --teal-700: #0d504a;
+  --teal-800: #0f4842;
+  --teal-900: #0b302d;
+  /* signal — amber (near limit) */
+  --amber-100: #fbeed3;
+  --amber-300: #f0c15e;
+  --amber-500: #d08a12;
+  --amber-700: #8a5a08;
+  --amber-900: #43300a;
+  /* danger — clay red */
+  --red-100: #fbe1dd;
+  --red-300: #f0968a;
+  --red-500: #d2453a;
+  --red-700: #9a2d25;
+  --red-900: #4a1712;
+}

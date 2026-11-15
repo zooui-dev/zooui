@@ -1,0 +1,16 @@
+// Settings for shiprig's GitHub Action (rigsmith/shiprig-action, run by .github/workflows/release.yml). Separate from
+// shiprig's own release-pipeline config, .changeset/release.jsonc.
+{
+  "$schema": "https://raw.githubusercontent.com/rigsmith/shiprig-action/main/schema/shiprig-action.json",
+
+  // Zoo UI's first release. Both packages are at 0.1.0 on disk and have never been published, and there are no
+  // changesets, so there is nothing to bump. Naming each at its current version makes the action open a
+  // "chore: release 0.1.0" version PR anyway, in which `shiprig version --release-as <pkg>=0.1.0` writes each
+  // package's `## 0.1.0` changelog entry ("Initial release") and bumps nothing. Merging it lets the next run publish.
+  // Once the entries exist (or the tags do) the action counts 0.1.0 as released and skips these, so they can stay
+  // until someone tidies them. Both are named: they are separate packages, and naming one doesn't bring the other.
+  "releaseAs": {
+    "@zooui/nuxt": "0.1.0",
+    "@zooui/theme-forest": "0.1.0",
+  },
+}

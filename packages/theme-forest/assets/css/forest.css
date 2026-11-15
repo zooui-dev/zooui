@@ -1,0 +1,7 @@
+/* Forest — the stylesheet a Forest product imports as the first line of its one Tailwind entry: Zoo UI's base
+   (Tailwind, Nuxt UI, the Z* components' sources, color-scheme, data-accent) and then Forest's theme (typefaces,
+   ramps as palettes, the default scheme, the ground). It goes with this package's layer, `@zooui/theme-forest`, which
+   carries the theme's app.config half; the base layer fails the build if the two are mixed up. A product with its
+   own look imports `@zooui/nuxt/assets/css/base.css` instead and extends `@zooui/nuxt`. */
+@import "@zooui/nuxt/assets/css/base.css";
+@import "./theme.css";

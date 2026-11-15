@@ -1,0 +1,180 @@
+# Releases Zoo UI's Nuxt layers (@zooui/nuxt and @zooui/theme-forest) with shiprig's own GitHub Action,
+# rigsmith/shiprig-action, the way release-please works. On every push to main of zooui-dev/zooui:
+#
+#   - Something to release (changesets pending, or a first release in `releaseAs`): keep a standing
+#     "chore: release …" PR up to date, where `shiprig version` writes each package's CHANGELOG.md entry (and bumps
+#     the versions, from changesets). Nothing is published.
+#   - The push that merges that PR: the publish job waits for approval in the protected `release` environment, then
+#     publishes to npm, pushes the tags and makes a GitHub release per package from its changelog entry.
+#   - Any other push: nothing happens.
+#
+# So a release is: merge the release PR, approve the publish run, done.
+#
+# Two jobs, so only a real release waits for approval or sees a secret. `version` decides the mode with the action's
+# `select-mode` sub-action and, in version mode, opens or updates the PR with the `version` sub-action, using only
+# GITHUB_TOKEN: it has no environment and no secrets. `publish` runs only when `select-mode` says so (nothing pending,
+# and a version npm doesn't have yet or a tag that's missing, which after the release PR merges is that merge), in the
+# `release` environment, whose required reviewers approve each run.
+#
+# The first release, 0.1.0: both packages are already at 0.1.0 and have never been published, and the public
+# repository has no changesets. `releaseAs` in .github/shiprig-action.jsonc names each at that version, so the first
+# push opens a "chore: release 0.1.0" PR in which `shiprig version --release-as <pkg>=0.1.0` writes each `## 0.1.0`
+# changelog entry ("Initial release") without bumping anything. Merging it publishes 0.1.0, once approved.
+#
+# Rehearsal: Actions → Release → Run workflow. `dry_run` is on by default: the `rehearse` job runs the whole action
+# with its dry-run input (`shiprig version --dry-run`, or the changelog check and `shiprig publish --dry-run`), with no
+# environment and no secrets, and opens, pushes, publishes and tags nothing. Unticked, a manual run does what a push
+# does: the way to retry a publish that failed or was rejected.
+#
+# Publishing: `shiprig publish` packs each package with pnpm, which rewrites the theme's `workspace:*` dependency on
+# the base to the exact version, and npm publishes the tarball, with access public (.changeset/config.json) and npm
+# provenance (`node.provenance: "always"` there): npm links each tarball to this run, which it accepts only from a
+# public repository on a GitHub-hosted runner, with `id-token: write`. Before it runs, the publish sub-action checks
+# each package it would tag has a `## <version>` entry in its CHANGELOG.md, and stops with nothing published if one
+# doesn't.
+#
+# Auth: npm trusted publishing. Each package names this workflow (release.yml, environment `release`) as its trusted
+# publisher on npm, and shiprig publishes with the run's OIDC token (no auth named, `id-token: write`). A trusted
+# publisher can only be set on a package that exists, so 0.1.0 was published by hand; when its release PR merged, this
+# workflow found 0.1.0 already on npm, skipped it, and made the tags and GitHub releases. If the `release`
+# environment ever holds NPM_TOKEN, the publish uses that instead (`--npm-auth env:NPM_TOKEN`): shiprig tries OIDC
+# whenever no auth is named, and doesn't fall back to a token when that exchange fails.
+#
+# Needs, in zooui-dev/zooui: Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests"
+# (for the release PR), and the `release` environment with required reviewers.
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Rehearse only (the action's dry-run, no approval, no secrets); untick to do what a push to main does
+        type: boolean
+        default: true
+
+# Nothing at the workflow level; each job asks for what it needs.
+permissions: {}
+
+# One at a time, never cancelled, and every push gets its run: a running job could leave the release PR half-updated
+# or publish without tagging, and by default a newer push drops a waiting run. `queue: max` keeps them waiting, first
+# in first out; each run checks out its own commit. A publish waiting for approval holds the queue until it's
+# approved or rejected. A rehearsal changes nothing, so it has a queue of its own, and can run while a publish waits.
+concurrency:
+  group: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && 'release-rehearsal' || 'release' }}
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  # A manual run with dry_run ticked: the whole action, rehearsed. No environment, no secrets.
+  rehearse:
+    name: Rehearse (dry run)
+    if: github.repository == 'zooui-dev/zooui' && github.ref_name == 'main' && github.event_name == 'workflow_dispatch' && inputs.dry_run
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read   # which version PR it would open or update
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # shiprig finds the last release from its tags
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.22.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      # Pinned, so a release runs the shiprig it was tested with. 1.26.0 or later: it publishes a pnpm workspace with
+      # pnpm, reads node.provenance, and writes a first release at the version on disk (`--release-as`), which this
+      # workflow needs; shiprig-action itself asks only for 1.21.0. Locally it's the rigsmith binary in ~/.local/bin;
+      # npm ships the same build.
+      - name: Install shiprig
+        run: npm install -g @rigsmith/shiprig@1.26.0
+      # With no publish-script the action skips the publish path, rehearsal included. The script isn't run in a dry
+      # run (shiprig's own `publish --dry-run` stands in for it), so it needs no token.
+      - uses: rigsmith/shiprig-action@306b93ff985c35dcd6b19c30dd77015ac013a950  # v0.7.0
+        with:
+          dry-run: true
+          publish-script: shiprig publish --yes
+
+  # Every push to main (and a manual run with dry_run unticked): decide what to do, and keep the release PR current.
+  version:
+    name: Release PR
+    if: github.repository == 'zooui-dev/zooui' && github.ref_name == 'main' && (github.event_name == 'push' || !inputs.dry_run)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write        # the release PR's branch and commits
+      pull-requests: write   # open and update the release PR
+    outputs:
+      mode: ${{ steps.mode.outputs.mode }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # shiprig finds the last release from its tags
+          persist-credentials: false   # the action writes through the GitHub API, never with git
+      - uses: pnpm/action-setup@v6   # on PATH for shiprig in a pnpm workspace; nothing is installed
+        with:
+          version: 11.22.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Install shiprig
+        run: npm install -g @rigsmith/shiprig@1.26.0   # pinned; see the rehearse job
+      # version: something to release (changesets, or a releaseAs first release); publish: nothing pending, and a
+      # version npm doesn't have or a tag that's missing; none: neither.
+      - id: mode
+        uses: rigsmith/shiprig-action/select-mode@306b93ff985c35dcd6b19c30dd77015ac013a950  # v0.7.0
+      - if: steps.mode.outputs.mode == 'version'
+        uses: rigsmith/shiprig-action/version@306b93ff985c35dcd6b19c30dd77015ac013a950  # v0.7.0
+
+  # Only when there's something to publish: waits for approval in the `release` environment, then publishes, tags and
+  # makes the GitHub releases.
+  publish:
+    name: Publish
+    needs: version
+    if: needs.version.outputs.mode == 'publish'
+    environment: release   # protected: required reviewers approve each run
+    runs-on: ubuntu-latest   # GitHub-hosted: npm refuses provenance from a self-hosted runner
+    timeout-minutes: 15
+    permissions:
+      contents: write        # the tags and the GitHub releases
+      pull-requests: write   # "released in" comments on the PRs that shipped
+      id-token: write        # npm provenance, and trusted publishing once it is set up
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # shiprig finds the last release from its tags
+          persist-credentials: false   # the action pushes the tags through the GitHub API
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.22.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      # pnpm resolves the `workspace:*` ranges it rewrites from the installed workspace.
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Install shiprig
+        run: npm install -g @rigsmith/shiprig@1.26.0   # pinned; see the rehearse job
+      # `shiprig publish` makes annotated tags (`git tag -a`) in the checkout after npm has accepted the tarballs, and an
+      # annotated tag needs a tagger: without one, the release is out with no tags and no GitHub releases, and a re-run
+      # can't publish it again. The action falls back to a bot identity when none is set; this doesn't rely on that.
+      # It needs no credentials, so it works with `persist-credentials: false`.
+      - name: Git identity for the tags
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+      # Pinned to the commit, not the tag, which could be moved: this step can publish.
+      - uses: rigsmith/shiprig-action/publish@306b93ff985c35dcd6b19c30dd77015ac013a950  # v0.7.0
+        with:
+          script: ${{ secrets.NPM_TOKEN != '' && 'shiprig publish --yes --npm-auth env:NPM_TOKEN' || 'shiprig publish --yes' }}
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

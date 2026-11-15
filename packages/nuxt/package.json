@@ -1,0 +1,60 @@
+{
+  "name": "@zooui/nuxt",
+  "version": "0.1.0",
+  "description": "Zoo UI for Nuxt: a theme-free Nuxt layer with Nuxt UI as it ships, Zoo UI's Z* components and colored-edge surfaces, and the mechanisms every product needs, all on Nuxt UI's tokens so they take the product's own colors. Add a theme layer such as @zooui/theme-forest for a ready-made look.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zooui-dev/zooui.git",
+    "directory": "packages/nuxt"
+  },
+  "homepage": "https://zooui.dev",
+  "bugs": {
+    "url": "https://github.com/zooui-dev/zooui/issues"
+  },
+  "type": "module",
+  "main": "./nuxt.config.ts",
+  "files": [
+    "nuxt.config.ts",
+    "stylesheet-guard.js",
+    "stylesheet-guard.d.ts",
+    "assets",
+    "components",
+    "composables",
+    "utils",
+    "testing"
+  ],
+  "exports": {
+    ".": "./nuxt.config.ts",
+    "./assets/css/*": "./assets/css/*",
+    "./date-entry": {
+      "types": "./utils/date-entry.ts",
+      "default": "./utils/date-entry.ts"
+    },
+    "./testing/find-conflicts": {
+      "types": "./testing/find-conflicts.d.ts",
+      "default": "./testing/find-conflicts.js"
+    }
+  },
+  "dependencies": {
+    "@iconify-json/lucide": "^1.2.133",
+    "@internationalized/date": "^3.12.4",
+    "@nuxt/ui": "~4.11.1",
+    "decimal.js": "^10.6.0",
+    "tailwindcss": "^4.0.0",
+    "temporal-polyfill": "^1.0.5"
+  },
+  "peerDependencies": {
+    "nuxt": "^4.1.0",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "vue": "^3.5.42"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

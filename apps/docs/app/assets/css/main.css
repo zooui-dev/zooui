@@ -1,0 +1,3 @@
+/* The site's one Tailwind entry: the Forest theme's stylesheet (Zoo UI's base, then Forest), as any Forest product's.
+   The default scheme (teal) comes with it; the other seven are scoped to `:root[data-scheme]` by nuxt.config.ts. */
+@import "@zooui/theme-forest/assets/css/forest.css";

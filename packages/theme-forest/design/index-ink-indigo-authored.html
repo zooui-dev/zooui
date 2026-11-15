@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en" data-corners="flat">
+<head>
+<meta charset="utf-8">
+<title>Forest — Ink · Indigo, authored</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../schemes/ink-indigo.css">
+<style>
+/* ---- The three decisions this page pushes harder ------------------------
+   1. Mono-led interface. The mono face carries every label, control, header
+      and number; the sans face is reserved for running prose only. In a tool
+      whose job is copying values, the interface should look like the thing
+      it serves.
+   2. Real contrast at display size. The display face at 600 and −0.05em, very large,
+      against 10.5px tracked mono. Nothing in between.
+   3. An asymmetric measure. Content sits in a 640px column against a live
+      vertical rule; annotations hang in the right margin. Rules are 2px at
+      section boundaries, and no component carries a shadow — edges only.
+   ---------------------------------------------------------------------- */
+
+body { padding: 0 0 96px; }
+
+.page {
+  max-width: 1080px; margin: 0 auto;
+  display: grid; grid-template-columns: minmax(0, 640px) 1fr;
+  column-gap: 40px; padding: 0 40px;
+}
+.page > * { grid-column: 1; }
+.page > aside {
+  grid-column: 2; align-self: start;
+  border-left: 1px solid var(--border);
+  padding: 2px 0 2px 16px; margin-top: 4px;
+  font: var(--type-code-sm); color: var(--fg-subtle);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  text-wrap: pretty; hyphens: none;
+}
+
+/* the live rule at the column edge */
+.page::before {
+  content: ""; grid-row: 1 / -1; grid-column: 1;
+  justify-self: end; width: 1px; margin-right: -20px;
+  background: linear-gradient(var(--border) 0 55%, transparent);
+}
+
+section { padding: 40px 0 0; display: flex; flex-direction: column; gap: 14px; }
+section + section { border-top: 2px solid var(--fg); margin-top: 40px; }
+
+/* mono-led: every interface string is code */
+.ui-btn, .ui-tabs > button, .ui-seg > button, .ui-field > label, .ui-field > .hint,
+.ui-table th, .ui-card > .title, .ui-banner > .body > .title, .ui-dialog > .title,
+.ui-nav > .links > a, .ui-status, .ui-toast {
+  font-family: var(--font-mono);
+  font-feature-settings: var(--features-mono);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.ui-btn { text-transform: lowercase; font-size: var(--text-xs); }
+.ui-field > label, .ui-table th { text-transform: uppercase; letter-spacing: 0.1em; font-size: var(--text-2xs); }
+.ui-card > .title, .ui-banner > .body > .title, .ui-dialog > .title { font-size: var(--text-md); letter-spacing: -0.01em; text-transform: none; }
+.ui-nav > .links > a { font-size: var(--text-xs); text-transform: lowercase; }
+.ui-field > .hint { font-size: var(--text-2xs); text-transform: none; letter-spacing: 0.04em; }
+
+/* edges, not shadows */
+.ui-card, .ui-dialog, .ui-banner, .ui-toast { box-shadow: none; }
+.ui-card, .ui-dialog { border: 1px solid var(--border-strong); }
+.ui-banner { border-left-width: 0; }
+
+.kicker-line { display: flex; align-items: baseline; gap: 12px; }
+.kicker-line > span:last-child { flex: 1; height: 1px; background: var(--border); }
+.display {
+  font-family: var(--font-display); font-weight: 600;
+  font-size: clamp(44px, 7vw, 76px); line-height: 0.92;
+  letter-spacing: -0.05em; text-wrap: balance;
+}
+.prose { font: var(--type-body); color: var(--fg-muted); max-width: 54ch; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+.sw { display: flex; flex-direction: column; gap: 4px; min-width: 52px; }
+.sw > i { height: 30px; box-shadow: inset 0 0 0 1px var(--border-strong); }
+.sw > span { font: var(--type-code-sm); color: var(--fg-muted); }
+h2 { font-family: var(--font-mono); font-size: var(--text-xs); font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-muted); }
+</style>
+<style>
+/* header: wrap rather than overflow; the scheme links shrink and scroll */
+.ui-nav { flex-wrap: wrap; height: auto; min-height: var(--row-h); padding-top: 6px; padding-bottom: 6px; column-gap: var(--space-4); row-gap: 6px; }
+.ui-nav > .links { min-width: 0; overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; }
+.ui-nav > .links::-webkit-scrollbar { display: none; }
+.ui-nav > .right { flex: none; margin-left: auto; }
+</style>
+</head>
+<body>
+
+<nav class="ui-nav" style="border-bottom-width:2px;border-bottom-color:var(--fg);">
+  <a class="brand" href="#"><span class="br">[</span><span class="wm">pine</span><span class="br">]</span></a>
+  <div class="links"><a href="index.html">Teal</a><a href="index-slate-cobalt.html">Cobalt</a><a href="index-graphite-violet.html">Violet</a><a href="index-paper-olive.html">Olive</a><a href="index-ink-indigo.html">Indigo</a><a href="index-ink-indigo-authored.html" aria-current="page">Indigo+</a><a href="index-ember.html">Ember</a></div>
+  <div class="right">
+    <div class="ui-seg" role="group" aria-label="Theme">
+      <button type="button" data-set="light" aria-pressed="true">light</button>
+      <button type="button" data-set="dark" aria-pressed="false">dark</button>
+      <button type="button" data-set="system" aria-pressed="false">system</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+
+  <section style="padding-top:56px;">
+    <div class="kicker-line"><span class="ui-kicker">variant · authored</span><span></span></div>
+    <h1 class="display">The mono<br>does the talking.</h1>
+    <p class="prose">Same tokens, same components, three decisions pushed past the safe setting: the monospace face carries the whole interface and the sans is demoted to prose; display type jumps to 76px against 10px labels with nothing in between; and the page sits in a 640px column against a live rule, with annotations hanging in the margin.</p>
+    <div class="row" style="padding-top:6px;">
+      <button class="ui-btn" data-variant="primary" type="button">primary action</button>
+      <button class="ui-btn" data-variant="secondary" type="button">secondary</button>
+      <button class="ui-btn" data-variant="ghost" type="button">ghost</button>
+      <button class="ui-btn" data-variant="danger" type="button">delete</button>
+    </div>
+  </section>
+  <aside>the sans appears in this paragraph and nowhere else</aside>
+
+  <section>
+    <h2>Ramps</h2>
+    <div class="row" style="gap:5px;">
+      <div class="sw"><i style="background:var(--pine-0)"></i><span>0</span></div>
+      <div class="sw"><i style="background:var(--pine-100)"></i><span>100</span></div>
+      <div class="sw"><i style="background:var(--pine-200)"></i><span>200</span></div>
+      <div class="sw"><i style="background:var(--pine-300)"></i><span>300</span></div>
+      <div class="sw"><i style="background:var(--pine-400)"></i><span>400</span></div>
+      <div class="sw"><i style="background:var(--pine-500)"></i><span>500</span></div>
+      <div class="sw"><i style="background:var(--pine-600)"></i><span>600</span></div>
+      <div class="sw"><i style="background:var(--pine-700)"></i><span>700</span></div>
+      <div class="sw"><i style="background:var(--pine-800)"></i><span>800</span></div>
+      <div class="sw"><i style="background:var(--pine-900)"></i><span>900</span></div>
+      <div class="sw"><i style="background:var(--pine-950)"></i><span>950</span></div>
+    </div>
+    <div class="row" style="gap:5px;">
+      <div class="sw"><i style="background:var(--teal-100)"></i><span>a100</span></div>
+      <div class="sw"><i style="background:var(--teal-200)"></i><span>200</span></div>
+      <div class="sw"><i style="background:var(--teal-300)"></i><span>300</span></div>
+      <div class="sw"><i style="background:var(--teal-400)"></i><span>400</span></div>
+      <div class="sw"><i style="background:var(--teal-500)"></i><span>500</span></div>
+      <div class="sw"><i style="background:var(--teal-600)"></i><span>600</span></div>
+      <div class="sw"><i style="background:var(--teal-700)"></i><span>700</span></div>
+      <div class="sw"><i style="background:var(--amber-500)"></i><span>warn</span></div>
+      <div class="sw"><i style="background:var(--red-500)"></i><span>danger</span></div>
+    </div>
+  </section>
+  <aside>indigo 500 is the primary fill · 5.85:1 on white</aside>
+
+  <section>
+    <h2>Type</h2>
+    <div class="display" style="font-size:52px;">Ink Indigo</div>
+    <div style="font:var(--type-code);letter-spacing:0.01em;">interface strings live here — 13/1.6 mono, medium</div>
+    <div style="font:var(--type-code-sm);text-transform:uppercase;letter-spacing:0.12em;color:var(--fg-muted);">labels and headers · 10.5px · tracked wide</div>
+    <p class="prose">And prose stays in the sans at 14/1.5, because a paragraph set in monospace is a paragraph nobody reads. That is the whole rule: if a person might copy it, type it, or scan it as data, it is mono; if they read it as a sentence, it is sans.</p>
+  </section>
+  <aside>one rule, consistently applied</aside>
+
+  <section>
+    <h2>Code</h2>
+    <div class="ui-code" data-wrap="true">
+      <span class="prompt">$</span>
+      <pre>pine deploy --source https://acme.example/t/<span class="tok">tk_a8f3c21e9d4b7f01</span>/main/
+<span class="cmt"># then, as before:</span>
+pine status</pre>
+      <button class="copy" type="button">copy</button>
+    </div>
+    <p class="prose">The code surface stays near-black in both themes. This variant sets <code class="ui-ident" data-kind="plain">data-corners="flat"</code> on the root, so every corner in the system squares off — the code surface reads as a plate set into the column rather than a card floating on it.</p>
+  </section>
+  <aside>data-corners="flat" on the html element — one attribute, no overrides</aside>
+
+  <section>
+    <h2>Data</h2>
+    <table class="ui-table">
+      <thead><tr><th>name</th><th>latest</th><th class="num">versions</th><th class="num">on disk</th><th>last publish</th></tr></thead>
+      <tbody>
+        <tr><td><span class="ui-ident" data-kind="plain">@acme/ui-kit</span></td><td><span class="ui-ident" data-kind="version">2.3.1</span></td><td class="num">14</td><td class="num">48 MB</td><td style="color:var(--fg-muted)">2h ago</td></tr>
+        <tr><td><span class="ui-ident" data-kind="plain">Acme.Core</span></td><td><span class="ui-ident" data-kind="version">5.0.2</span></td><td class="num">31</td><td class="num">312 MB</td><td style="color:var(--fg-muted)">yesterday</td></tr>
+        <tr><td><span class="ui-ident" data-kind="plain">Acme.Installer</span></td><td><span class="ui-ident" data-kind="version">1.9.0</span></td><td class="num">6</td><td class="num">1.4 GB</td><td style="color:var(--fg-muted)">3d ago</td></tr>
+      </tbody>
+    </table>
+    <div class="row" style="gap:18px;padding-top:4px;">
+      <span class="ui-status" data-state="healthy"><span class="glyph"></span>healthy</span>
+      <span class="ui-status" data-state="warn"><span class="glyph"></span>near limit</span>
+      <span class="ui-status" data-state="suspended"><span class="glyph"></span>stopped</span>
+      <span class="ui-status" data-state="unreachable"><span class="glyph"></span>unreachable</span>
+    </div>
+    <span class="ui-meter" data-size="lg"><span class="track"><span class="fill" style="width:82%;"></span><span class="mark" style="left:80%"></span></span><span class="value">41 / 50 GB</span></span>
+  </section>
+  <aside>headers uppercase mono · numbers tabular</aside>
+
+  <section>
+    <h2>Controls</h2>
+    <div class="pair">
+      <div class="ui-field"><label for="a1">feed name</label><input class="ui-input" id="a1" data-mono="true" placeholder="acme-internal"><div class="hint">lowercase, dashes</div></div>
+      <div class="ui-field"><label for="a2">quota</label><select class="ui-input ui-select" id="a2"><option>10 GB</option><option>50 GB</option><option>250 GB</option></select><div class="hint">from the account pool</div></div>
+    </div>
+    <div class="row">
+      <label style="display:inline-flex;align-items:center;gap:8px;font:var(--type-code-sm);text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;"><button class="ui-switch" type="button" role="switch" aria-checked="true"></button><span>notify at 90%</span></label>
+      <span class="ui-tag" data-tone="accent">read</span>
+      <span class="ui-tag">publish</span>
+      <span class="ui-tag" data-tone="warn">near limit</span>
+      <span class="ui-tag" data-tone="dark">ci-main</span>
+    </div>
+  </section>
+  <aside>controls read as keys, not as chrome</aside>
+
+  <section>
+    <h2>Notices</h2>
+    <div class="ui-banner" data-tone="danger" role="alert">
+      <div></div>
+      <div class="body"><div class="title">storage limit reached — 10.0 of 10 GB</div><p>New publishes are refused. Installs and restores keep working.</p></div>
+      <div class="actions"><button class="ui-btn" data-variant="secondary" data-size="sm" type="button">prune</button><button class="ui-btn" data-variant="primary" data-size="sm" type="button">upgrade</button></div>
+    </div>
+    <div class="pair">
+      <section class="ui-card">
+        <div class="kicker">usage</div>
+        <div class="title">3.2 GB of 10 GB</div>
+        <span class="ui-meter"><span class="track"><span class="fill" style="width:32%;"></span></span></span>
+        <div style="font:var(--type-body-sm);color:var(--fg-muted)">142 packages · 1,204 versions</div>
+      </section>
+      <div class="ui-dialog" role="dialog" data-tone="danger">
+        <div class="title">delete acme-internal?</div>
+        <p style="font:var(--type-body-sm);color:var(--fg-muted)">142 packages and 3.2 GB will be removed. Every client pointed at this feed will fail on its next restore. This cannot be undone.</p>
+        <div class="actions"><button class="ui-btn" data-variant="ghost" type="button">cancel</button><button class="ui-btn" data-variant="danger" type="button">delete</button></div>
+      </div>
+    </div>
+  </section>
+  <aside>flat edges · the hatch still carries “over”</aside>
+
+  <section>
+    <h2>Verdict</h2>
+    <p class="prose">This variant is narrower in application than the default: the mono-led interface is right for a console and wrong for a marketing site, and the 640px column wants a page with one thing on it. That is the point — it is a decision, not a setting. Keep the default for breadth; take this one when the product is a tool and you want it to look authored.</p>
+  </section>
+  <aside>opinion has a cost; that is what makes it an opinion</aside>
+
+</div>
+
+<script>
+(function () {
+  var seg = document.querySelector('.ui-seg[aria-label="Theme"]');
+  var stored = null;
+  try { stored = localStorage.getItem('pine-theme'); } catch (e) {}
+  function apply(v) {
+    var root = document.documentElement;
+    if (v === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', v);
+    seg.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.set === v ? 'true' : 'false'); });
+    try { localStorage.setItem('pine-theme', v); } catch (e) {}
+  }
+  seg.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) apply(b.dataset.set); });
+  apply(stored || 'light');
+  document.querySelectorAll('.ui-code .copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var pre = btn.parentElement.querySelector('pre');
+      try { navigator.clipboard.writeText(pre.innerText); } catch (e) {}
+      btn.textContent = 'copied'; btn.dataset.done = 'true';
+      setTimeout(function () { btn.textContent = 'copy'; delete btn.dataset.done; }, 1600);
+    });
+  });
+  document.querySelectorAll('.ui-switch').forEach(function (s) {
+    s.addEventListener('click', function () { s.setAttribute('aria-checked', s.getAttribute('aria-checked') === 'true' ? 'false' : 'true'); });
+  });
+})();
+</script>
+</body>
+</html>

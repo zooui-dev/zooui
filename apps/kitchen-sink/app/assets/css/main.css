@@ -1,0 +1,3 @@
+/* Nuxt UI's own entry, untouched: Tailwind, then Nuxt UI's theme (default primary green, neutral slate). */
+@import "tailwindcss";
+@import "@nuxt/ui";

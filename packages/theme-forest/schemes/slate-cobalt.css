@@ -1,0 +1,50 @@
+/* Slate · Cobalt — overrides only the two ramps; the semantic layer, components and dark mode are untouched. */
+:root {
+  --pine-0: #ffffff;
+  --pine-50: #f5f6f9;
+  --pine-100: #eceef3;
+  --pine-150: #e2e5ec;
+  --pine-200: #d3d8e2;
+  --pine-300: #b5bccb;
+  --pine-400: #8b94a6;
+  --pine-500: #677083;
+  --pine-600: #4c5464;
+  --pine-700: #343b48;
+  --pine-800: #232935;
+  --pine-900: #171c26;
+  --pine-950: #0d1118;
+  --teal-100: #dde6fd;
+  --teal-200: #b8cdfb;
+  --teal-300: #7fa6f5;
+  --teal-400: #4c82ee;
+  --teal-500: #2a63d8;
+  --teal-600: #1f4eb4;
+  --teal-700: #1a3e8f;
+  --teal-800: #172f68;
+  --teal-900: #101f43;
+
+  /* status: success and info chosen to sit AWAY from this scheme's accent, so neither reads as the
+     primary. blue accent: info leaves blue for cyan. Values are Tailwind's green and cyan palettes, literal. */
+  --success-50: oklch(98.2% 0.018 155.826);
+  --success-100: oklch(96.2% 0.044 156.743);
+  --success-200: oklch(92.5% 0.084 155.995);
+  --success-300: oklch(87.1% 0.15 154.449);
+  --success-400: oklch(79.2% 0.209 151.711);
+  --success-500: oklch(72.3% 0.219 149.579);
+  --success-600: oklch(62.7% 0.194 149.214);
+  --success-700: oklch(52.7% 0.154 150.069);
+  --success-800: oklch(44.8% 0.119 151.328);
+  --success-900: oklch(39.3% 0.095 152.535);
+  --success-950: oklch(26.6% 0.065 152.934);
+  --info-50: oklch(98.4% 0.019 200.873);
+  --info-100: oklch(95.6% 0.045 203.388);
+  --info-200: oklch(91.7% 0.08 205.041);
+  --info-300: oklch(86.5% 0.127 207.078);
+  --info-400: oklch(78.9% 0.154 211.53);
+  --info-500: oklch(71.5% 0.143 215.221);
+  --info-600: oklch(60.9% 0.126 221.723);
+  --info-700: oklch(52% 0.105 223.128);
+  --info-800: oklch(45% 0.085 224.283);
+  --info-900: oklch(39.8% 0.07 227.392);
+  --info-950: oklch(30.2% 0.056 229.695);
+}

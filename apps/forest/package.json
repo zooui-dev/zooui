@@ -1,0 +1,30 @@
+{
+  "name": "forest",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxi dev",
+    "build": "nuxi build",
+    "preview": "node .output/server/index.mjs",
+    "typecheck": "nuxi typecheck",
+    "postinstall": "nuxi prepare",
+    "test": "playwright test"
+  },
+  "dependencies": {
+    "nuxt": "^4.5.2",
+    "vue": "^3.5.42"
+  },
+  "devDependencies": {
+    "@iconify-json/lucide": "^1.2.133",
+    "@nu-grid/nuxt": "^0.4.4",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^25.9.6",
+    "@vueuse/nuxt": "^14.4.0",
+    "@zooui/nuxt": "workspace:*",
+    "@zooui/theme-forest": "workspace:*",
+    "temporal-polyfill": "^1.0.5",
+    "typescript": "^5.9.3",
+    "vue-tsc": "^3.3.11"
+  }
+}

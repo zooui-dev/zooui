@@ -1,0 +1,52 @@
+/* Teal — the default scheme, already in ramps.css (which the theme and design/tokens.css import).
+   Published here so all six schemes are symmetrical: a product that wants
+   the default can link this explicitly and stay consistent with the others. */
+:root {
+  --pine-0: #ffffff;
+  --pine-50: #f6f7f4;
+  --pine-100: #eef0eb;
+  --pine-150: #e4e7e1;
+  --pine-200: #d6dad3;
+  --pine-300: #b9bfb8;
+  --pine-400: #8f978f;
+  --pine-500: #6b736c;
+  --pine-600: #4f5651;
+  --pine-700: #363c39;
+  --pine-800: #252b29;
+  --pine-900: #191e1d;
+  --pine-950: #0e1211;
+  --teal-100: #d9f3ee;
+  --teal-200: #a9e3d8;
+  --teal-300: #5fcdbb;
+  --teal-400: #2fb8a3;
+  --teal-500: #117d72;
+  --teal-600: #0f6259;
+  --teal-700: #0d504a;
+  --teal-800: #0f4842;
+  --teal-900: #0b302d;
+
+  /* status: success and info chosen to sit AWAY from this scheme's accent, so neither reads as the
+     primary. teal accent: info moves off blue-green to sky. Values are Tailwind's green and sky palettes, literal. */
+  --success-50: oklch(98.2% 0.018 155.826);
+  --success-100: oklch(96.2% 0.044 156.743);
+  --success-200: oklch(92.5% 0.084 155.995);
+  --success-300: oklch(87.1% 0.15 154.449);
+  --success-400: oklch(79.2% 0.209 151.711);
+  --success-500: oklch(72.3% 0.219 149.579);
+  --success-600: oklch(62.7% 0.194 149.214);
+  --success-700: oklch(52.7% 0.154 150.069);
+  --success-800: oklch(44.8% 0.119 151.328);
+  --success-900: oklch(39.3% 0.095 152.535);
+  --success-950: oklch(26.6% 0.065 152.934);
+  --info-50: oklch(97.7% 0.013 236.62);
+  --info-100: oklch(95.1% 0.026 236.824);
+  --info-200: oklch(90.1% 0.058 230.902);
+  --info-300: oklch(82.8% 0.111 230.318);
+  --info-400: oklch(74.6% 0.16 232.661);
+  --info-500: oklch(68.5% 0.169 237.323);
+  --info-600: oklch(58.8% 0.158 241.966);
+  --info-700: oklch(50% 0.134 242.749);
+  --info-800: oklch(44.3% 0.11 240.79);
+  --info-900: oklch(39.1% 0.09 240.876);
+  --info-950: oklch(29.3% 0.066 243.157);
+}

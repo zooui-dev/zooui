@@ -1,0 +1,26 @@
+{
+  "name": "starter",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxi dev",
+    "build": "nuxi build",
+    "preview": "node .output/server/index.mjs",
+    "typecheck": "nuxi typecheck",
+    "postinstall": "nuxi prepare",
+    "test": "playwright test"
+  },
+  "dependencies": {
+    "@zooui/theme-forest": "workspace:*",
+    "nuxt": "^4.5.2",
+    "vue": "^3.5.42"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^25.9.6",
+    "@zooui/nuxt": "workspace:*",
+    "typescript": "^5.9.3",
+    "vue-tsc": "^3.3.11"
+  }
+}

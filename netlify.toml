@@ -1,0 +1,27 @@
+# zooui.dev on Netlify — ready to connect, NOT connected: nothing deploys from this repository yet.
+#
+# Connect the repository as it is: no base directory, no package directory, no build settings in Netlify's UI. Netlify
+# reads this file from the repository root, runs `pnpm install` there (it finds pnpm-lock.yaml) for the whole
+# workspace, then the command below; both paths are relative to the root. The docs site (apps/docs) is fully
+# prerendered by `nuxi generate`: static files, no functions.
+#
+# pnpm's version comes from `packageManager` in the root package.json (Netlify enables Corepack for it), the same
+# 11.22.0 the workflows install. Node's from NODE_VERSION below, the 24 the workflows use.
+
+[build]
+  command = "pnpm -C apps/docs generate"
+  # Not .output/public: on Netlify (NETLIFY is set) Nitro builds with its netlify-static preset, which writes the
+  # site to apps/docs/dist. Off Netlify, `nuxi generate` makes dist a link to .output/public, so the path holds both
+  # ways.
+  publish = "apps/docs/dist"
+
+[build.environment]
+  NODE_VERSION = "24"
+
+# Prerendered pages are served as /path/index.html; any path with no file gets the generated 404.html, which Netlify
+# serves for a missing page by default.
+
+[[headers]]
+  for = "/_nuxt/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

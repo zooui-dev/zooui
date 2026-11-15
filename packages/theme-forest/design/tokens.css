@@ -1,0 +1,321 @@
+/* ======================================================================
+   Forest — tokens and base element styles ONLY.
+   This is what a Tailwind application imports (via tailwind.css). It carries
+   no component classes, so a build-step app gets the design language without
+   inheriting a parallel stylesheet it would then have to maintain.
+   The ui-* layer lives in components.css, for consumers with no build step
+   (Go templ, plain HTML, email). See ADOPTING.md.
+   ====================================================================== */
+
+/* The raw color ramps (--pine-*, --teal-*, --amber-*, --red-*) have one copy, in the theme's schemes/ramps.css,
+   which the Nuxt theme imports too. A scheme file linked after this sheet redefines some of them. */
+@import "../schemes/ramps.css";
+
+/* Typefaces — the same six ROLE HOOKS as the Nuxt theme (assets/css/theme.css): one family and one OpenType set
+   per role, --zoo-font-{sans,mono,display} and --zoo-features-{sans,mono,display}. Every rule here that sets a face
+   reads them through --font-* and --features-*, so overriding a hook swaps a face AND its set together.
+   No font files ship here: the stacks name Inter and JetBrains Mono first and fall back to system faces, so a page
+   that loads no webfont gets the system ones (readme.md, "Typefaces", says how to load either set of faces).
+   The defaults sit in a cascade layer so that any unlayered override wins whatever the order of the stylesheets.
+   Sets: Inter `normal` (its fontsource builds carry no ss/cv sets); JetBrains Mono `"calt" 0`, which turns its code
+   ligatures off so pasted text reads as typed. */
+@layer base {
+  :root {
+    --zoo-font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --zoo-font-display: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --zoo-font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --zoo-features-sans: normal;
+    --zoo-features-display: normal;
+    --zoo-features-mono: "calt" 0;
+  }
+}
+
+:root {
+  --font-display: var(--zoo-font-display);
+  --font-sans: var(--zoo-font-sans);
+  --font-mono: var(--zoo-font-mono);
+  /* OpenType feature sets, one per face. Tabular figures come from `font-variant-numeric: tabular-nums` beside the
+     sans set, since a set held in a hook can't have "tnum" appended to it. */
+  --features-display: var(--zoo-features-display);
+  --features-sans: var(--zoo-features-sans);
+  --features-sans-tabular: var(--zoo-features-sans);
+  --features-mono: var(--zoo-features-mono);
+}
+
+
+/* Forest's semantic color tokens. Light is the default; dark via [data-theme="dark"] or system preference when no explicit choice ([data-theme="system"] or none). */
+:root {
+  /* semantic — light */
+  --bg: var(--pine-50);
+  --bg-sunken: var(--pine-100);
+  --bg-raised: var(--pine-0);
+  --bg-overlay: rgba(22, 26, 25, 0.55);
+  --bg-code: var(--pine-900);
+  --bg-code-inline: var(--pine-100);
+  --fg: var(--pine-900);
+  --fg-muted: var(--pine-600);
+  /* NON-TEXT ONLY. Cannot reach 4.5:1 on any surface in either theme —
+     use it for rules, tick outlines, meter marks and disabled chrome.
+     Quiet prose is --fg-muted, made quieter by type size, not color. */
+  --fg-subtle: var(--pine-400);
+  --fg-on-code: var(--pine-100);
+  --fg-on-code-muted: var(--pine-400);
+  --fg-on-accent: #ffffff;
+  --border: var(--pine-200);
+  --border-strong: var(--pine-300);
+  --border-code: var(--pine-600);
+  --accent: var(--teal-500);
+  --accent-hover: var(--teal-600);
+  --accent-active: var(--teal-700);
+  --accent-soft: var(--teal-100);
+  --accent-text: var(--teal-700);
+  --accent-on-code: var(--teal-300);
+  --ok: var(--teal-500);
+  --ok-soft: var(--teal-100);
+  --ok-text: var(--teal-700);
+  --warn: var(--amber-500);
+  --warn-soft: var(--amber-100);
+  --warn-text: var(--amber-700);
+  --danger: var(--red-500);
+  --danger-soft: var(--red-100);
+  --danger-text: var(--red-700);
+  --danger-hover: var(--red-700);
+  --stopped: var(--pine-500);
+  --stopped-soft: var(--pine-150);
+  --meter-track: var(--pine-150);
+  --meter-fill: var(--pine-700);
+  --hatch: repeating-linear-gradient(135deg, transparent 0 3px, currentColor 3px 4px);
+  --shadow-sm: 0 1px 2px rgba(22, 26, 25, 0.06), 0 0 0 1px rgba(22, 26, 25, 0.04);
+  --shadow-md: 0 4px 12px rgba(22, 26, 25, 0.10), 0 0 0 1px rgba(22, 26, 25, 0.05);
+  --shadow-lg: 0 16px 40px rgba(22, 26, 25, 0.18), 0 0 0 1px rgba(22, 26, 25, 0.06);
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  --selection: var(--teal-200);
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  --bg: var(--pine-900);
+  --bg-sunken: var(--pine-950);
+  --bg-raised: var(--pine-800);
+  --bg-overlay: rgba(0, 0, 0, 0.6);
+  --bg-code: var(--pine-950);
+  --bg-code-inline: var(--pine-700);
+  --fg: var(--pine-100);
+  --fg-muted: var(--pine-400);
+  --fg-subtle: var(--pine-500);
+  --fg-on-code: var(--pine-100);
+  --fg-on-code-muted: var(--pine-400);
+  --fg-on-accent: var(--pine-950);
+  --border: var(--pine-700);
+  --border-strong: var(--pine-600);
+  --border-code: var(--pine-600);
+  --accent: var(--teal-400);
+  --accent-hover: var(--teal-300);
+  --accent-active: var(--teal-200);
+  --accent-soft: var(--teal-900);
+  --accent-text: var(--teal-300);
+  --accent-on-code: var(--teal-300);
+  --ok: var(--teal-400);
+  --ok-soft: var(--teal-900);
+  --ok-text: var(--teal-300);
+  --warn: var(--amber-300);
+  --warn-soft: var(--amber-900);
+  --warn-text: var(--amber-300);
+  --danger: var(--red-300);
+  --danger-soft: var(--red-900);
+  --danger-text: var(--red-300);
+  --danger-hover: var(--red-100);
+  --stopped: var(--pine-500);
+  --stopped-soft: var(--pine-700);
+  --meter-track: var(--pine-700);
+  --meter-fill: var(--pine-200);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --selection: var(--teal-800);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    --bg: var(--pine-900);
+    --bg-sunken: var(--pine-950);
+    --bg-raised: var(--pine-800);
+    --bg-overlay: rgba(0, 0, 0, 0.6);
+    --bg-code: var(--pine-950);
+    --bg-code-inline: var(--pine-700);
+    --fg: var(--pine-100);
+    --fg-muted: var(--pine-400);
+    --fg-subtle: var(--pine-500);
+    --fg-on-code: var(--pine-100);
+    --fg-on-code-muted: var(--pine-400);
+    --fg-on-accent: var(--pine-950);
+    --border: var(--pine-700);
+    --border-strong: var(--pine-600);
+    --border-code: var(--pine-600);
+    --accent: var(--teal-400);
+    --accent-hover: var(--teal-300);
+    --accent-active: var(--teal-200);
+    --accent-soft: var(--teal-900);
+    --accent-text: var(--teal-300);
+    --accent-on-code: var(--teal-300);
+    --ok: var(--teal-400);
+    --ok-soft: var(--teal-900);
+    --ok-text: var(--teal-300);
+    --warn: var(--amber-300);
+    --warn-soft: var(--amber-900);
+    --warn-text: var(--amber-300);
+    --danger: var(--red-300);
+    --danger-soft: var(--red-900);
+    --danger-text: var(--red-300);
+    --danger-hover: var(--red-100);
+    --stopped: var(--pine-500);
+    --stopped-soft: var(--pine-700);
+    --meter-track: var(--pine-700);
+    --meter-fill: var(--pine-200);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    --selection: var(--teal-800);
+    color-scheme: dark;
+  }
+}
+
+
+:root {
+  /* sizes */
+  --text-2xs: 10.5px;
+  --text-xs: 11.5px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 26px;
+  --text-3xl: 34px;
+  --text-4xl: 46px;
+  --text-5xl: 64px;
+  /* leading */
+  --leading-tight: 1.1;
+  --leading-snug: 1.25;
+  --leading-normal: 1.5;
+  --leading-code: 1.6;
+  /* tracking */
+  --tracking-display: -0.025em;
+  --tracking-kicker: 0.08em;
+  /* weights */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  /* composites */
+  --type-display: var(--weight-medium) var(--text-4xl) / var(--leading-tight) var(--font-display);
+  --type-h1: var(--weight-medium) var(--text-3xl) / var(--leading-tight) var(--font-display);
+  --type-h2: var(--weight-medium) var(--text-2xl) / var(--leading-snug) var(--font-display);
+  --type-h3: var(--weight-semibold) var(--text-lg) / var(--leading-snug) var(--font-sans);
+  --type-body: var(--weight-regular) var(--text-md) / var(--leading-normal) var(--font-sans);
+  --type-body-sm: var(--weight-regular) var(--text-sm) / var(--leading-normal) var(--font-sans);
+  --type-label: var(--weight-medium) var(--text-sm) / 1.2 var(--font-sans);
+  --type-kicker: var(--weight-medium) var(--text-xs) / 1.2 var(--font-mono);
+  --type-code: var(--weight-regular) var(--text-sm) / var(--leading-code) var(--font-mono);
+  --type-code-sm: var(--weight-regular) var(--text-xs) / var(--leading-code) var(--font-mono);
+  --type-ident: var(--weight-medium) var(--text-sm) / 1.3 var(--font-mono);
+}
+
+
+:root {
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  /* Corner style. --radius-scale is the one dial: 1 = soft (default),
+     0.5 = tight, 0 = flat. Switch it with data-corners on <html> or on any
+     container (see the rules below) — those rules re-declare the radii, which
+     is required for a per-region override to take effect. */
+  --radius-scale: 1;
+  --radius-xs: calc(3px * var(--radius-scale));
+  --radius-sm: calc(5px * var(--radius-scale));
+  --radius-md: calc(8px * var(--radius-scale));
+  --radius-lg: calc(12px * var(--radius-scale));
+  /* pills stay pills unless corners are flat, where they square off with the rest */
+  --radius-pill: calc(999px * var(--radius-scale));
+  --row-h: 40px;
+  --row-h-dense: 32px;
+  --control-h: 32px;
+  --control-h-lg: 40px;
+  --border-w: 1px;
+  --content-max: 1120px;
+  --measure: 60ch;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur: 180ms;
+}
+
+
+
+/* Corner style switches — put on <html> for the whole system, or on any
+   container to change one region.
+
+   The radius tokens MUST be re-declared here, not just --radius-scale. A var()
+   inside a custom-property declaration is resolved at the element that declares
+   it, so --radius-sm computes to calc(5px * 1) at :root and descendants inherit
+   that already-resolved value. Setting --radius-scale further down would change
+   the scale and nothing else. Re-declaring the radii makes them re-resolve
+   against the local scale, which is what makes region scope work at all. */
+[data-corners="flat"] { --radius-scale: 0;
+  --radius-xs: calc(3px * var(--radius-scale));
+  --radius-sm: calc(5px * var(--radius-scale));
+  --radius-md: calc(8px * var(--radius-scale));
+  --radius-lg: calc(12px * var(--radius-scale));
+  --radius-pill: calc(999px * var(--radius-scale)); }
+[data-corners="tight"] { --radius-scale: 0.5;  /* 1.5 / 2.5 / 4 / 6 — a chamfer, not a curve */
+  --radius-xs: calc(3px * var(--radius-scale));
+  --radius-sm: calc(5px * var(--radius-scale));
+  --radius-md: calc(8px * var(--radius-scale));
+  --radius-lg: calc(12px * var(--radius-scale));
+  --radius-pill: calc(999px * var(--radius-scale)); }
+[data-corners="soft"] { --radius-scale: 1;
+  --radius-xs: calc(3px * var(--radius-scale));
+  --radius-sm: calc(5px * var(--radius-scale));
+  --radius-md: calc(8px * var(--radius-scale));
+  --radius-lg: calc(12px * var(--radius-scale));
+  --radius-pill: calc(999px * var(--radius-scale)); }
+
+/* Base element styles: minimal, semantic. Components carry their own styling. */
+/* The type is set on BODY, not HTML, on purpose.
+   font: var(--type-body) is 14px. Setting it on html would make 1rem = 14px, which
+   silently shrinks every rem-based value Tailwind emits — text sizes, container
+   widths, radii, blur, and any arbitrary rem — to 87.5% of intent. Core tokens are
+   all px, so nothing here needs a 14px root. Leaving html at the UA size keeps
+   Tailwind's rem scale honest while body still renders 14px content. */
+/* Base element styles live in @layer base INSIDE this file, not only when
+   imported with layer(base). A plain <link rel="stylesheet"> cannot be layered
+   from the outside, so an unlayered copy of these rules beats every Tailwind
+   utility: h1's `font:` shorthand then wins over .type-display and over an
+   explicit text-[38px], and it resets font-feature-settings on the way past.
+   Layering here makes the file safe to load by any mechanism.
+
+   Note the declaration order within each heading rule: `font:` is a shorthand
+   that resets font-feature-settings, so features must come AFTER it. */
+@layer base {
+  html { background: var(--bg); color: var(--fg); }
+  body { margin: 0; font: var(--type-body); font-feature-settings: var(--features-sans); font-optical-sizing: auto; font-synthesis: none; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; color: inherit; background: inherit; }
+  /* Real italics come from the ital axis. font-synthesis: none above means a missing
+     face fails visibly rather than being faked with a slant or a smear of weight. */
+  em, i, cite, var { font-style: italic; font-feature-settings: var(--features-sans); }
+  ::selection { background: var(--selection); }
+  a { color: var(--accent-text); text-decoration: underline; text-decoration-color: color-mix(in oklab, var(--accent-text) 40%, transparent); text-underline-offset: 2px; }
+  a:hover { color: var(--accent-hover); text-decoration-color: currentColor; }
+  code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.93em; font-feature-settings: var(--features-mono); }
+  :focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-xs); }
+  h1, h2, h3, h4 { margin: 0; font-weight: var(--weight-medium); letter-spacing: var(--tracking-display); text-wrap: pretty; }
+  h1 { font: var(--type-h1); font-feature-settings: var(--features-display); letter-spacing: var(--tracking-display); }
+  h2 { font: var(--type-h2); font-feature-settings: var(--features-display); letter-spacing: var(--tracking-display); }
+  h3 { font: var(--type-h3); font-feature-settings: var(--features-sans); letter-spacing: 0; }
+  p { margin: 0; text-wrap: pretty; }
+  hr { border: 0; border-top: var(--border-w) solid var(--border); margin: var(--space-6) 0; }
+}

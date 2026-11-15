@@ -1,0 +1,57 @@
+/* Zoo UI's BASE stylesheet: Tailwind, Nuxt UI, the Z* components' sources, and the few mechanisms every product needs
+   whatever it looks like. No colors, typefaces or ground — those are a theme's (Forest's theme.css, and forest.css for the two together).
+   A product with its own look imports this as the first line of its one Tailwind entry and adds its own @theme
+   tokens, @utility rules and @layer base rules after it. */
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+/* The layer's components live outside any app's root, so the layer declares their source — otherwise an app sees
+   the components but not their styles. */
+@source "../../components";
+
+/* Zoo UI's hatch: diagonal stripes in currentColor, so whatever sets the text color sets the stripe. ZQuotaMeter's
+   over-limit fill, and the theme's striped alert edge. Same pattern as core's --hatch. */
+@utility hatch {
+  background-image: repeating-linear-gradient(135deg, transparent 0 3px, currentColor 3px 4px);
+}
+
+@layer base {
+  /* `color-scheme` on the root, for light-dark(). color-mode only toggles the `dark` class, and Nuxt UI declares
+     color-scheme on <body> — but tokens are declared on :root, and a production build (Lightning CSS) compiles
+     light-dark() into variables it defines only where color-scheme is declared. Without these two rules a token
+     like `--color-x: light-dark(#fff, #000)` resolves to nothing in production while dev looks right. On the page
+     itself they change nothing (body already carries the same scheme); the browser's page scrollbar follows dark
+     mode. */
+  :root { color-scheme: light; }
+  .dark { color-scheme: dark; }
+
+  /* Per-section accent, `data-accent`. A container names a hue (`<main data-accent="teal">`) and everything in it
+     paints with six ROLES instead of a hard-coded hue — the contract components read:
+       --accent         solid: an icon tile, a band's rule, a colored edge
+       --accent-on      text or icon on the solid
+       --accent-strong  titles and labels in the accent
+       --accent-soft    a band or panel tint
+       --accent-muted   chips
+       --accent-line    a rule or border in the accent
+     Each role carries its light and dark value in one declaration (light-dark(), hence color-scheme above).
+     The PRODUCT supplies the hues: for each name, eight stops `--a-50 … --a-950` (inputs to the roles below; a hue
+     may point a stop elsewhere, as a cyan hue might set --a-600 to cyan-500), or a role outright. Until it does, the
+     stops are Nuxt UI's primary, so an unmapped name still reads as the product's brand rather than as nothing.
+     Hue rules have this rule's specificity and come after it, so they win in @layer base or unlayered. */
+  [data-accent] {
+    --a-50: var(--ui-color-primary-50);
+    --a-100: var(--ui-color-primary-100);
+    --a-200: var(--ui-color-primary-200);
+    --a-400: var(--ui-color-primary-400);
+    --a-500: var(--ui-color-primary-500);
+    --a-600: var(--ui-color-primary-600);
+    --a-800: var(--ui-color-primary-800);
+    --a-950: var(--ui-color-primary-950);
+    --accent: light-dark(var(--a-600), var(--a-400));
+    --accent-on: light-dark(#fff, var(--a-950));
+    --accent-strong: light-dark(var(--a-800), var(--a-200));
+    --accent-soft: light-dark(var(--a-50), color-mix(in oklab, var(--a-500) 12%, transparent));
+    --accent-muted: light-dark(var(--a-100), color-mix(in oklab, var(--a-500) 24%, transparent));
+    --accent-line: light-dark(var(--a-200), color-mix(in oklab, var(--a-500) 40%, transparent));
+  }
+}

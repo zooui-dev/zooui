@@ -1,0 +1,16 @@
+/* ======================================================================
+   Forest — a portable interface system (Zoo UI's Forest theme, design source).
+
+   Convenience entry: tokens + the ui-* component layer.
+
+   Tailwind apps      → import tailwind.css instead (tokens only, no ui-* layer)
+   No build step      → link this file and use the ui-* classes
+                        (Go templ, plain HTML, email)
+
+   See ADOPTING.md — pick ONE route per application, never both.
+   ====================================================================== */
+/* Unlayered on purpose: this entry is for consumers with no Tailwind, so there
+   are no utilities for the base rules to override. Tailwind apps import
+   tailwind.css instead, which layers tokens.css into @layer base. */
+@import "./tokens.css";
+@import "./components.css";

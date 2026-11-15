@@ -1,0 +1,64 @@
+/* The app's one Tailwind entry: the theme-free base (Tailwind, Nuxt UI, the Z* components' sources, color-scheme and
+   the data-accent roles), then the product's own styling — here a cut of a product's stylesheet: a type scale, value
+   tokens written with light-dark(), a data-accent hue map, a utility and base rules. */
+@import "@zooui/nuxt/assets/css/base.css";
+
+@theme {
+  /* The product's type scale, one notch up: overriding Tailwind's own tokens after the base */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.25rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.375rem;
+
+  /* The value language: each token's dark value beside its light one. Resolves in a production build only because
+     the base declares color-scheme on the root. */
+  --color-val-input: light-dark(var(--color-sky-900), var(--color-sky-200));
+  --color-val-input-bg: light-dark(#dbeef3, color-mix(in oklab, var(--color-sky-500) 22%, transparent));
+  --color-val-input-line: light-dark(var(--color-sky-600), var(--color-sky-500));
+
+  --color-brand-navy: #131353;
+}
+
+/* The product's hue map for data-accent (the roles are the base's). Cyan points two stops elsewhere and sets one
+   role outright. */
+@layer base {
+  [data-accent='teal'] {
+    --a-50: var(--color-teal-50);
+    --a-100: var(--color-teal-100);
+    --a-200: var(--color-teal-200);
+    --a-400: var(--color-teal-400);
+    --a-500: var(--color-teal-500);
+    --a-600: var(--color-teal-600);
+    --a-800: var(--color-teal-800);
+    --a-950: var(--color-teal-950);
+  }
+  [data-accent='cyan'] {
+    --a-50: var(--color-cyan-50);
+    --a-100: var(--color-cyan-100);
+    --a-200: var(--color-cyan-200);
+    --a-400: var(--color-cyan-300);
+    --a-500: var(--color-cyan-500);
+    --a-600: var(--color-cyan-500);
+    --a-800: var(--color-cyan-700);
+    --a-950: var(--color-cyan-950);
+    --accent-on: var(--color-cyan-950);
+  }
+}
+
+/* The small uppercase heading over a panel, in the current section's accent. */
+@utility section-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-strong, var(--color-slate-600));
+}
+
+@layer base {
+  .tabular,
+  td.num {
+    font-variant-numeric: tabular-nums;
+  }
+}

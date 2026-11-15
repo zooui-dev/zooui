@@ -1,0 +1,22 @@
+# Zoo UI workspace. One install, so the layers and the apps that extend them share a single copy of Vue, Nuxt and
+# Nuxt UI (two installs would load two Vues). Products live in their own repositories and consume the layers as
+# packages.
+#   packages/nuxt          — @zooui/nuxt, the theme-free base layer: Nuxt UI, the Z* components, the shared mechanisms
+#   packages/theme-forest  — @zooui/theme-forest, the Forest theme: a layer that extends the base with Forest's look
+#   apps/forest            — builds and browser-tests the Forest theme, on the kitchen sink's specimens
+#   apps/base              — browser-tests the base alone, as a product with its own look uses it
+#   apps/starter           — the smallest product on the Forest theme: copy it to start one
+#   apps/kitchen-sink      — Nuxt UI's defaults, untouched: the baseline the layers are judged against
+packages:
+  - packages/*
+  - apps/*
+
+allowBuilds:
+  '@parcel/watcher': true
+  esbuild: true
+  # vue-demi's postinstall wires its Vue 3 re-export (transitive via @nuxt/ui).
+  vue-demi: true
+
+minimumReleaseAgeExclude:
+  # nu-grid, for apps/forest's grid fixture (published the same day it was added)
+  - '@nu-grid/nuxt@0.4.3'

@@ -1,0 +1,31 @@
+{
+  // shiprig release pipeline — `shiprig release` cuts a release of Zoo UI's Nuxt layers: @zooui/nuxt (the theme-free
+  // base) and @zooui/theme-forest (the Forest theme, which extends it).
+  //
+  //   version (bump + changelog) → commit → publish (pnpm, to npm) → tag → push
+  //
+  // Only those two release: every other package in the workspace (the apps under apps/) is `private`, which changerig
+  // ignores. The theme ships no font files of its own (its default faces come from fontsource dependencies), so it is
+  // as public as the base. Two confirm gates guard the irreversible steps, the publish and the push. Preview the
+  // whole run, with no network and no git, with `shiprig release --dry-run`; in CI, pass `--yes` to skip the gates.
+  //
+  // Releases go out from GitHub, through shiprig's action (.github/workflows/release.yml), which versions in its own
+  // version PR and publishes with `shiprig publish`; it doesn't read this file. This is the same release run from a
+  // checkout. Its publish fails outside GitHub Actions, by design: .changeset/config.json sets `node.provenance` to
+  // "always", and npm provenance can only be made there.
+  "tool": "shiprig",
+
+  // No `build` step: the layers publish their source (Nuxt layers are consumed as source), so there is nothing to
+  // compile first.
+  "order": ["version", "commit", "publish", "tag", "push"],
+
+  "steps": {
+    // shiprig's own publish (`shiprig publish --no-git-tag`): in a pnpm workspace it packs each package with pnpm,
+    // which rewrites `workspace:*` specifiers (the theme's dependency on the base) to concrete versions, and npm
+    // publishes the tarball, base before theme, with access public (.changeset/config.json, and publishConfig).
+    "publish": { "confirm": "Publish ${versions} to npm?" },
+
+    // Pushing the release commit and its tags is the other irreversible step.
+    "push": { "confirm": true },
+  },
+}

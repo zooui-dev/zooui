@@ -1,0 +1,177 @@
+/* Forest — Tailwind v4 theme.
+   Usage:  @import "tailwindcss";  @import "./tailwind.css";
+   tokens.css holds the tokens (single source of truth); this maps them onto Tailwind's
+   namespaces so bg-raised, text-fg-muted, border-border-strong, rounded-md, type-h1 resolve.
+
+   Imports tokens.css, NOT styles.css: styles.css also pulls in components.css (the ui-*
+   layer), which a Tailwind app must never ship — every class there duplicates a utility. */
+/* tokens.css layers its own base rules (Design 1.7.0), so it is imported PLAINLY. `layer(base)` here would nest
+   them as base.base, and preflight — directly in base — outranks a sublayer: `code`/`pre` lost their mono
+   features and 0.93em to preflight's `font-feature-settings: normal` (verified computed; this is the "side
+   effect" 1.7.2 describes). Plain, they sit in base after preflight and win. */
+@import "./tokens.css";
+
+/* Three-state dark mode: data-theme="dark" wins; no attribute follows the OS. dark: variant matches both. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *), @media (prefers-color-scheme: dark) { &:where(:not([data-theme="light"] *):not([data-theme="light"])) });
+
+@theme inline {
+  /* Explicit 4px spacing scale. With the type set on body (not html) the root
+     stays at the UA size, so Tailwind's default 0.25rem already resolves to 4px —
+     this pin is belt-and-braces, and it keeps the scale correct even if a host
+     app changes the root font-size. */
+  --spacing: 4px;
+  /* fonts */
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  /* semantic colors → bg-*, text-*, border-*, fill-* */
+  --color-bg: var(--bg);
+  --color-sunken: var(--bg-sunken);
+  --color-raised: var(--bg-raised);
+  --color-overlay: var(--bg-overlay);
+  --color-code: var(--bg-code);
+  --color-code-inline: var(--bg-code-inline);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-on-code: var(--fg-on-code);
+  --color-on-code-muted: var(--fg-on-code-muted);
+  --color-on-accent: var(--fg-on-accent);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-border-code: var(--border-code);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-active: var(--accent-active);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-text: var(--accent-text);
+  --color-accent-on-code: var(--accent-on-code);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-ok-text: var(--ok-text);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-warn-text: var(--warn-text);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-text: var(--danger-text);
+  --color-danger-hover: var(--danger-hover);
+  --color-stopped: var(--stopped);
+  --color-stopped-soft: var(--stopped-soft);
+  --color-meter-track: var(--meter-track);
+  --color-meter-fill: var(--meter-fill);
+  --color-selection: var(--selection);
+  /* raw ramps, for the rare case */
+  --color-pine-*: initial;
+  --color-pine-50: var(--pine-50); --color-pine-100: var(--pine-100); --color-pine-150: var(--pine-150); --color-pine-200: var(--pine-200); --color-pine-300: var(--pine-300); --color-pine-400: var(--pine-400); --color-pine-500: var(--pine-500); --color-pine-600: var(--pine-600); --color-pine-700: var(--pine-700); --color-pine-800: var(--pine-800); --color-pine-900: var(--pine-900); --color-pine-950: var(--pine-950);
+  --color-teal-*: initial;
+  --color-teal-100: var(--teal-100); --color-teal-300: var(--teal-300); --color-teal-500: var(--teal-500); --color-teal-700: var(--teal-700); --color-teal-900: var(--teal-900);
+  /* radii → rounded-xs/sm/md/lg/pill */
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-pill: var(--radius-pill);
+  /* shadows → shadow-sm/md/lg */
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  /* text sizes → text-2xs … text-5xl
+     Each colliding size clears --text-*--line-height with `initial`. Tailwind v4 pairs every
+     --text-* with a default line-height ratio (text-sm carries 1.42857), and
+     overriding only the size leaves that ratio in place — so a bare text-sm
+     would silently impose a leading Forest never chose. In this system leading is
+     its own axis: the --leading-* tokens, applied by the type-* composites or by
+     an explicit leading-* utility. A size utility changes size and nothing else.
+
+     `initial` is @theme's "remove this key" value, not a CSS value — Tailwind
+     omits the line-height declaration entirely rather than emitting
+     `line-height: initial`. Preferred over `inherit`, which emits a real
+     declaration that would compete with a type-* composite's line-height on the
+     same element and let generated order decide. Only the eight sizes that
+     collide with a Tailwind default need clearing; --text-2xs and --text-md are
+     Forest-only keys with no paired ratio. */
+  --text-2xs: var(--text-2xs); --text-xs: var(--text-xs); --text-xs--line-height: initial;
+  --text-sm: var(--text-sm); --text-sm--line-height: initial;
+  --text-md: var(--text-md); --text-lg: var(--text-lg); --text-lg--line-height: initial;
+  --text-xl: var(--text-xl); --text-xl--line-height: initial;
+  --text-2xl: var(--text-2xl); --text-2xl--line-height: initial;
+  --text-3xl: var(--text-3xl); --text-3xl--line-height: initial;
+  --text-4xl: var(--text-4xl); --text-4xl--line-height: initial;
+  --text-5xl: var(--text-5xl); --text-5xl--line-height: initial;
+  --tracking-display: var(--tracking-display);
+  --tracking-kicker: var(--tracking-kicker);
+  --leading-tight: var(--leading-tight); --leading-snug: var(--leading-snug); --leading-normal: var(--leading-normal); --leading-code: var(--leading-code);
+  /* sizes used as tokens */
+  --spacing-row: var(--row-h);
+  --spacing-row-dense: var(--row-h-dense);
+  --spacing-control: var(--control-h);
+  --spacing-control-lg: var(--control-h-lg);
+  --container-content: var(--content-max);
+  --ease-out: var(--ease-out);
+}
+
+/* Composite type styles → one class each.
+   All eleven are declared EXPLICITLY. The functional form `@utility type-* {
+   font: --value(--type-*) }` looks like it covers them, but --value() resolves
+   against @theme keys and the --type-* composites live in :root — they are
+   `font` shorthand strings, not a theme namespace. That form matched nothing, so
+   any composite without an explicit rule below silently generated no CSS: the
+   class was valid, the markup looked right, and the element just inherited body
+   type. Add a rule here when you add a composite. */
+@utility type-body { font: var(--type-body); font-feature-settings: var(--features-sans); }
+@utility type-body-sm { font: var(--type-body-sm); font-feature-settings: var(--features-sans); }
+@utility type-label { font: var(--type-label); font-feature-settings: var(--features-sans); }
+@utility type-h3 { font: var(--type-h3); letter-spacing: 0; font-feature-settings: var(--features-sans); }
+@utility type-display { font: var(--type-display); letter-spacing: var(--tracking-display); font-feature-settings: var(--features-display); }
+@utility type-h1 { font: var(--type-h1); letter-spacing: var(--tracking-display); font-feature-settings: var(--features-display); }
+@utility type-h2 { font: var(--type-h2); letter-spacing: var(--tracking-display); font-feature-settings: var(--features-display); }
+@utility type-kicker { font: var(--type-kicker); letter-spacing: var(--tracking-kicker); text-transform: uppercase; font-feature-settings: var(--features-mono); }
+@utility type-code { font: var(--type-code); font-feature-settings: var(--features-mono); }
+@utility type-code-sm { font: var(--type-code-sm); font-feature-settings: var(--features-mono); }
+@utility type-ident { font: var(--type-ident); font-feature-settings: var(--features-mono); }
+/* OpenType feature sets */
+@utility features-display { font-feature-settings: var(--features-display); }
+@utility features-sans { font-feature-settings: var(--features-sans); }
+@utility features-sans-tabular { font-feature-settings: var(--features-sans-tabular); font-variant-numeric: tabular-nums; }
+@utility features-mono { font-feature-settings: var(--features-mono); }
+/* the hatch */
+@utility hatch { background-image: var(--hatch); }
+/* focus ring as a utility */
+/* Uses Tailwind's shared box-shadow formula rather than setting box-shadow
+   directly: a plain box-shadow: var(--focus-ring) is replaced by any shadow
+   utility Tailwind generates later on the same element (aria-pressed:shadow-sm
+   on a segmented option, for instance), so the ring silently vanished exactly
+   when it mattered. Same appearance as --focus-ring; now composes. */
+@utility focus-ring {
+  &:focus-visible {
+    outline: none;
+    --tw-ring-offset-shadow: 0 0 0 2px var(--bg);
+    --tw-ring-shadow: 0 0 0 4px var(--accent);
+    box-shadow: var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+  }
+}
+
+
+/* Corner style. The radius tokens in tokens.css are multiples of --radius-scale,
+   so Tailwind's rounded-* utilities follow the dial automatically.
+   Flatten everything:  <html data-corners="flat">
+   Flatten one region:  <div class="corners-flat"> … </div> */
+@utility corners-flat { --radius-scale: 0;
+  --radius-xs: calc(3px * var(--radius-scale));
+  --radius-sm: calc(5px * var(--radius-scale));
+  --radius-md: calc(8px * var(--radius-scale));
+  --radius-lg: calc(12px * var(--radius-scale));
+  --radius-pill: calc(999px * var(--radius-scale)); }
+@utility corners-tight { --radius-scale: 0.5;
+  --radius-xs: calc(3px * var(--radius-scale));
+  --radius-sm: calc(5px * var(--radius-scale));
+  --radius-md: calc(8px * var(--radius-scale));
+  --radius-lg: calc(12px * var(--radius-scale));
+  --radius-pill: calc(999px * var(--radius-scale)); }
+@utility corners-soft { --radius-scale: 1;
+  --radius-xs: calc(3px * var(--radius-scale));
+  --radius-sm: calc(5px * var(--radius-scale));
+  --radius-md: calc(8px * var(--radius-scale));
+  --radius-lg: calc(12px * var(--radius-scale));
+  --radius-pill: calc(999px * var(--radius-scale)); }

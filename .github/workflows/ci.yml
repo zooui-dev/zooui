@@ -1,0 +1,93 @@
+# Lints the workspace and runs the script tests (scripts/*.test.mjs: scheme tables and links, Z* icon list, stylesheet guard),
+# then builds, type-checks and runs each app's Playwright suite against the production build (.output), as locally:
+# the kitchen sink (Nuxt UI untouched), the Forest theme's app, the base's own app (a product with its own
+# look on the theme-free base), and the starter (a product on the Forest theme). The docs site (zooui.dev) is generated
+# as static files (.output/public) and tested as served; it is never deployed from here.
+#
+# Nothing here needs a registry secret: the layers are workspace packages and no app depends on a private
+# registry, so pull requests from forks run like any other. Checkout does not persist GITHUB_TOKEN either.
+#
+# It runs only on a pull request labeled `ci`: adding the label starts a run, and every later push to that PR runs
+# again while the label stays. Pushes to main and unlabeled PRs run nothing. Adding some other label to a `ci` PR
+# runs nothing either: the job skips, and as concurrency sits on the job, a skipped run never cancels a live one.
+# To check a branch with no labeled PR (main, say), start it by hand: Actions → CI → Run workflow.
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apps:
+    name: Kitchen sink + Forest + base + starter
+    if: >-
+      github.event_name == 'workflow_dispatch' || (
+      contains(github.event.pull_request.labels.*.name, 'ci') &&
+      (github.event.action != 'labeled' || github.event.label.name == 'ci'))
+    concurrency:
+      group: ci-${{ github.ref }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false   # nothing here pushes; don't leave GITHUB_TOKEN in .git/config
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.22.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      # allow-listed dependency builds only (pnpm-workspace.yaml allowBuilds), plus each app's postinstall
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Cheap checks first, so a lint or script failure doesn't wait on three builds.
+      - name: Lint
+        run: pnpm lint
+      - name: Scripts — test
+        run: pnpm scripts:test
+
+      - name: Install Playwright's Chromium
+        run: pnpm --filter kitchen-sink exec playwright install --with-deps chromium
+
+      - name: Kitchen sink — build
+        run: pnpm ks:build
+      - name: Kitchen sink — typecheck
+        run: pnpm ks:typecheck
+      - name: Kitchen sink — test
+        run: pnpm ks:test
+
+      - name: Forest — build
+        run: pnpm forest:build
+      - name: Forest — typecheck
+        run: pnpm forest:typecheck
+      - name: Forest — test
+        run: pnpm forest:test
+
+      - name: Base — build
+        run: pnpm base:build
+      - name: Base — typecheck
+        run: pnpm base:typecheck
+      - name: Base — test
+        run: pnpm base:test
+
+      - name: Starter — build
+        run: pnpm starter:build
+      - name: Starter — typecheck
+        run: pnpm starter:typecheck
+      - name: Starter — test
+        run: pnpm starter:test
+
+      - name: Docs — build
+        run: pnpm docs:build
+      - name: Docs — typecheck
+        run: pnpm docs:typecheck
+      - name: Docs — test
+        run: pnpm docs:test

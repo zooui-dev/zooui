@@ -1,0 +1,41 @@
+{
+  "name": "zooui",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.22.0",
+  "scripts": {
+    "dev": "pnpm -C apps/forest dev --port 3001",
+    "build": "pnpm -C apps/forest build",
+    "test": "pnpm -C apps/forest test",
+    "lint": "eslint .",
+    "scripts:test": "node --test 'scripts/*.test.mjs'",
+    "forest:dev": "pnpm -C apps/forest dev --port 3001",
+    "forest:build": "pnpm -C apps/forest build",
+    "forest:typecheck": "pnpm -C apps/forest typecheck",
+    "forest:test": "pnpm -C apps/forest test",
+    "base:dev": "pnpm -C apps/base dev --port 3004",
+    "base:build": "pnpm -C apps/base build",
+    "base:typecheck": "pnpm -C apps/base typecheck",
+    "base:test": "pnpm -C apps/base test",
+    "starter:dev": "pnpm -C apps/starter dev --port 3002",
+    "starter:build": "pnpm -C apps/starter build",
+    "starter:typecheck": "pnpm -C apps/starter typecheck",
+    "starter:test": "pnpm -C apps/starter test",
+    "ks:dev": "pnpm -C apps/kitchen-sink dev --port 3003",
+    "ks:build": "pnpm -C apps/kitchen-sink build",
+    "ks:typecheck": "pnpm -C apps/kitchen-sink typecheck",
+    "ks:test": "pnpm -C apps/kitchen-sink test",
+    "docs:dev": "pnpm -C apps/docs dev --port 3005",
+    "docs:build": "pnpm -C apps/docs build",
+    "docs:typecheck": "pnpm -C apps/docs typecheck",
+    "docs:test": "pnpm -C apps/docs test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@nuxt/eslint-config": "^1.17.0",
+    "eslint": "^10.14.0",
+    "typescript": "^5.9.3"
+  }
+}

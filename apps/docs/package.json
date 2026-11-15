@@ -1,0 +1,31 @@
+{
+  "name": "docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxi dev",
+    "build": "nuxi generate",
+    "generate": "nuxi generate",
+    "preview": "node tests/serve.mjs",
+    "typecheck": "nuxi typecheck",
+    "postinstall": "nuxi prepare",
+    "test": "playwright test"
+  },
+  "dependencies": {
+    "@nuxt/content": "^3.16.2",
+    "nuxt": "^4.5.2",
+    "nuxt-component-meta": "^0.19.0",
+    "vue": "^3.5.42"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^25.9.6",
+    "@vue/compiler-sfc": "^3.5.42",
+    "@zooui/nuxt": "workspace:*",
+    "@zooui/theme-forest": "workspace:*",
+    "decimal.js": "^10.6.0",
+    "typescript": "^5.9.3",
+    "vue-tsc": "^3.3.11"
+  }
+}
