@@ -117,7 +117,7 @@ test('calc hands a Decimal model back a Decimal of its own class', async ({ page
   await expect(model(page, 'adjustment')).toHaveText('Money 200.25')
 })
 
-// The product lists only its own icons and does not scan; the chevrons come from the layer's registration (README,
+// The product lists only its own icons and does not scan; the chevrons come from the layer's registration (docs/mechanisms.md,
 // "Z* icons in the client bundle": they are also Nuxt UI defaults, so this holds the outcome, not which list did it).
 test('its chevrons come from the client bundle: no request for icon data', async ({ page }) => {
   const requests: string[] = []

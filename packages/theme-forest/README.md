@@ -135,7 +135,7 @@ JetBrains Mono. Its own conflict checks can sit beside `findConflicts`.
 
 ## Colored edges
 
-`@zooui/nuxt` gives cards and overlays a 3px edge in their color ([its colored edges](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/README.md#colored-edges)).
+`@zooui/nuxt` gives cards and overlays a 3px edge in their color ([its colored edges](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/accents-and-edges.md#colored-edges)).
 Forest adds the same edge to the two surfaces Nuxt UI already colors, through `app.config.ts`, so there is nothing
 new to learn:
 
@@ -184,5 +184,5 @@ giving each component as a utility string), specimen pages, and React reference 
 and the scheme files (`schemes/`) with the Nuxt theme. [`design/ADOPTING.md`](design/ADOPTING.md) says which of the
 three routes to use, and why only one per app.
 
-Releasing is shared with the base: [`@zooui/nuxt`'s README](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/README.md#releasing). Record design source
+Releasing is shared with the base: [docs/releasing.md](https://github.com/zooui-dev/zooui/blob/main/docs/releasing.md). Record design source
 changes with `changerig add -p @zooui/theme-forest`.

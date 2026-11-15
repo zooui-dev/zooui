@@ -43,7 +43,7 @@ const SCHEMES = ['teal', 'slate-cobalt', 'graphite-violet', 'paper-olive', 'ink-
 
 async function onScheme(page: Page, scheme: string, mode: 'light' | 'dark') {
   await page.context().addCookies([{ name: 'zooui-scheme', value: scheme, url: page.url() }])
-  await page.evaluate((m) => localStorage.setItem('zooui-color-mode', m), mode)
+  await page.addInitScript((m) => localStorage.setItem('zooui-color-mode', m), mode)
   await page.reload()
   await page.waitForLoadState('networkidle')
   await hydrated(page)

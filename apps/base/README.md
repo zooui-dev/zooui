@@ -10,4 +10,4 @@ pnpm base:build && pnpm base:test
 ```
 
 The tests run against the production build. They check that none of Forest's look arrives, and that every `Z*`
-component paints in the product's colors in both modes. The full list is in `packages/nuxt/README.md`, "The tests".
+component paints in the product's colors in both modes. The full list is in `packages/nuxt/docs/testing.md`.

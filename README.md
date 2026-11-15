@@ -85,7 +85,7 @@ Each app has `<app>:dev`, `<app>:build`, `<app>:typecheck` and `<app>:test`, for
 
 ## More
 
-- [`packages/nuxt/README.md`](packages/nuxt/README.md): the theme-free layer, its components, and releasing.
+- [`packages/nuxt/README.md`](packages/nuxt/README.md): the theme-free layer and its components; [`docs/`](docs/) has releasing and upgrading Nuxt UI.
 - [`packages/theme-forest/README.md`](packages/theme-forest/README.md): Forest's colors, schemes, typefaces and edges.
 - [`packages/theme-forest/design/readme.md`](packages/theme-forest/design/readme.md): the design source, for pages without Nuxt.
 - The docs site (`apps/docs`), not yet published.

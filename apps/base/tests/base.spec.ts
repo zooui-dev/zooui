@@ -243,7 +243,7 @@ test('UFormField labels still name their inputs after hydration (production buil
 
 // The outcome a product needs: Z* icons rendered on the client (ZThemeToggle's, ZTokenReveal's check) come from the
 // client bundle, though the app lists only its own icons and does not `scan`. The layer registers them; today each
-// is also a Nuxt UI default icon, which Nuxt UI bundles too, so this cannot yet tell the two apart (README, "Z*
+// is also a Nuxt UI default icon, which Nuxt UI bundles too, so this cannot yet tell the two apart (docs/mechanisms.md, "Z*
 // icons in the client bundle"). scripts/check-icons.test.mjs keeps the layer's list complete.
 test('Z* icons come from the client bundle: they render with no request for icon data', async ({ page }) => {
   const requests: string[] = []

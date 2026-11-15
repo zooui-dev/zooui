@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 const setDark = async (page: Page) => {
-  await page.evaluate(() => { localStorage.setItem('zooui-color-mode', 'dark') })
+  await page.addInitScript(() => { localStorage.setItem('zooui-color-mode', 'dark') })
   await page.reload()
   await page.waitForLoadState('networkidle')
   await expect(page.locator('html')).toHaveClass(/dark/)
@@ -52,7 +52,7 @@ const belowAA = (ratios: Record<string, number>) =>
 /** Put the page on one scheme and theme with a single reload: the scheme cookie and the stored theme first. */
 async function onScheme(page: Page, scheme: string, mode: 'light' | 'dark') {
   await page.context().addCookies([{ name: 'zooui-scheme', value: scheme, url: page.url() }])
-  await page.evaluate((m) => localStorage.setItem('zooui-color-mode', m), mode)
+  await page.addInitScript((m) => localStorage.setItem('zooui-color-mode', m), mode)
   await page.reload()
   await page.waitForLoadState('networkidle')
   if (mode === 'dark') await expect(page.locator('html')).toHaveClass(/dark/)
