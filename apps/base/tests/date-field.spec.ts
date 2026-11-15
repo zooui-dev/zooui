@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { findConflicts } from '@zooui/nuxt/testing/find-conflicts'
 
 // ZDateField on the theme-free base, in a product (specimens/DateFieldSpecimen.vue), against the
@@ -142,4 +142,167 @@ test('ZDateField\'s icons come from the client bundle: a field mounted in the br
   await expect(remind.getByRole('textbox')).toHaveValue('11/12/2026')
   await page.waitForLoadState('networkidle')
   expect(requests).toEqual([])
+})
+
+// ── Either type of day, and Nuxt UI's limits (pages/date-field-types.vue) ─────────────────────────────────────
+// Each model hands back its own type: the page writes the type beside the day. The limited fields take March 10 to
+// August 20, 2026 (a CalendarDate and a PlainDate), with weekends unavailable; today (November 12) is after them.
+
+async function typesPage(page: Page) {
+  await page.goto('/date-field-types')
+  await page.waitForLoadState('networkidle')
+  await page.waitForFunction(() => !!(document.querySelector('#__nuxt') as { __vue_app__?: unknown } | null)?.__vue_app__)
+}
+const box = (page: Page, label: string) => page.getByRole('textbox', { name: label, exact: true })
+const cell = (page: Page, iso: string) => panel(page).locator(`[data-slot="cellTrigger"][data-value="${iso}"]:not([data-outside-view])`)
+async function commit(input: Locator, text: string) {
+  await input.click()
+  await input.press('ControlOrMeta+a')
+  await input.pressSequentially(text)
+  await input.press('Enter')
+}
+/** The text of what the input's aria-describedby names. */
+const description = (input: Locator) => input.evaluate((el) =>
+  (el.getAttribute('aria-describedby') ?? '').split(' ').filter(Boolean).map((id) => document.getElementById(id)?.textContent?.trim() ?? `(no #${id})`).join(' | '))
+
+test('a CalendarDate model hands back CalendarDates: typed, picked, a shortcut, cleared and typed again', async ({ page }) => {
+  await typesPage(page)
+  const input = box(page, 'CalendarDate')
+  const model = page.getByTestId('cal-model')
+  await expect(input).toHaveValue('05/12/2026')
+  await commit(input, '7/4/2026')
+  await expect(model).toHaveText('CalendarDate 2026-07-04')
+  await input.locator('..').getByRole('button', { name: 'Choose a date' }).click()
+  await cell(page, '2026-07-20').click()
+  await expect(model).toHaveText('CalendarDate 2026-07-20')
+  await input.press('+')
+  await expect(model).toHaveText('CalendarDate 2026-07-21')
+  await input.locator('..').getByRole('button', { name: 'Clear date' }).click()
+  await expect(model).toHaveText('null')
+  // Cleared, it keeps the type it held.
+  await commit(input, '5')
+  await expect(model).toHaveText('CalendarDate 2026-11-05')
+  await expect(page.getByTestId('cal-events').locator('li')).toHaveText([
+    'CalendarDate 2026-07-04', 'CalendarDate 2026-07-20', 'CalendarDate 2026-07-21', 'null', 'CalendarDate 2026-11-05',
+  ])
+})
+
+test('model-type: a null model told calendar-date hands back CalendarDates', async ({ page }) => {
+  await typesPage(page)
+  const input = box(page, 'From null')
+  const model = page.getByTestId('from-null-model')
+  await expect(model).toHaveText('null')
+  await commit(input, '0512')
+  await expect(model).toHaveText('CalendarDate 2026-05-12')
+  await input.press('t')
+  await expect(model).toHaveText('CalendarDate 2026-11-12')
+})
+
+test('a PlainDate model still hands back PlainDates', async ({ page }) => {
+  await typesPage(page)
+  const input = box(page, 'PlainDate')
+  const model = page.getByTestId('plain-model')
+  await commit(input, '7/4/2026')
+  await expect(model).toHaveText('PlainDate 2026-07-04')
+  await input.press('+')
+  await input.locator('..').getByRole('button', { name: 'Clear date' }).click()
+  await expect(model).toHaveText('null')
+  await commit(input, '5')
+  await expect(model).toHaveText('PlainDate 2026-11-05')
+  await expect(page.getByTestId('plain-events').locator('li')).toHaveText(['PlainDate 2026-07-04', 'PlainDate 2026-07-05', 'null', 'PlainDate 2026-11-05'])
+})
+
+test('limits: a typed date before minValue or after maxValue keeps the date there was and marks the field invalid', async ({ page }) => {
+  await typesPage(page)
+  const input = box(page, 'Limited')
+  const field = page.locator('[data-types="limited"]')
+  const model = page.getByTestId('limited-model')
+  const problem = page.getByTestId('limited-problem')
+  await expect(input).toHaveAttribute('aria-invalid', 'false')
+
+  await commit(input, '3/9/2026')
+  await expect(input).toHaveValue('05/12/2026')
+  await expect(model).toHaveText('CalendarDate 2026-05-12')
+  await expect(input).toHaveAttribute('aria-invalid', 'true')
+  await expect(problem).toHaveText('before-min CalendarDate 2026-03-09 CalendarDate 2026-03-10')
+  // The product shows `invalid`'s message in its UFormField, and the input is described by it.
+  await expect(field.getByText('Choose a date on or after 03/10/2026.')).toBeVisible()
+  expect(await description(input)).toBe('Choose a date on or after 03/10/2026.')
+  // An edit takes the mark away.
+  await input.pressSequentially('8')
+  await expect(input).toHaveAttribute('aria-invalid', 'false')
+  await expect(problem).toHaveText('none')
+
+  await commit(input, '8/21/2026')
+  await expect(input).toHaveValue('05/12/2026')
+  await expect(problem).toHaveText('after-max CalendarDate 2026-08-21 CalendarDate 2026-08-20')
+  await commit(input, '3/10/2026')
+  await expect(model).toHaveText('CalendarDate 2026-03-10')
+  await expect(input).toHaveAttribute('aria-invalid', 'false')
+
+  // Outside a UFormField the field marks itself, with the message for screen readers.
+  const bare = page.getByRole('textbox', { name: 'Bare limited' })
+  await commit(bare, '8/21/2026')
+  await expect(bare).toHaveValue('05/12/2026')
+  await expect(bare).toHaveAttribute('aria-invalid', 'true')
+  expect(await description(bare)).toBe('Choose a date on or before 08/20/2026.')
+  await bare.pressSequentially('1')
+  await expect(bare).not.toHaveAttribute('aria-invalid', 'true')
+})
+
+test('limits: the shortcut keys stop at minValue and maxValue, and t at the nearest allowed day', async ({ page }) => {
+  await typesPage(page)
+  const input = box(page, 'Limited')
+  await commit(input, '3/11/2026')
+  for (const [key, shown] of [
+    ['-', '03/10/2026'],
+    ['-', '03/10/2026'],
+    ['m', '03/10/2026'],
+    ['y', '03/10/2026'],
+    ['r', '08/20/2026'],
+    ['+', '08/20/2026'],
+    ['h', '08/20/2026'],
+    ['m', '08/03/2026'], // August 1 is a Saturday
+    ['t', '08/20/2026'], // today, November 12, is after maxValue
+  ]) {
+    await input.press(key!)
+    await expect(input, key).toHaveValue(shown!)
+  }
+  await expect(page.getByTestId('limited-model')).toHaveText('CalendarDate 2026-08-20')
+  await expect(input).toHaveAttribute('aria-invalid', 'false')
+})
+
+test('limits: unavailable days are disabled in the calendar, refused when typed, and skipped by + and -', async ({ page }) => {
+  await typesPage(page)
+  const input = box(page, 'Limited')
+  const model = page.getByTestId('limited-model')
+  await commit(input, '5/15/2026') // a Friday
+  await input.press('+')
+  await expect(input).toHaveValue('05/18/2026')
+  await input.press('-')
+  await expect(input).toHaveValue('05/15/2026')
+
+  await commit(input, '5/16/2026')
+  await expect(input).toHaveValue('05/15/2026')
+  await expect(input).toHaveAttribute('aria-invalid', 'true')
+  await expect(page.getByTestId('limited-problem')).toHaveText('unavailable CalendarDate 2026-05-16 null')
+  await expect(page.locator('[data-types="limited"]').getByText('05/16/2026 isn\'t available.')).toBeVisible()
+
+  await input.locator('..').getByRole('button', { name: 'Choose a date' }).click()
+  await expect(panel(page)).toContainText('May 2026')
+  await expect(cell(page, '2026-05-16')).toHaveAttribute('data-unavailable', '')
+  await expect(cell(page, '2026-05-16')).toHaveAttribute('aria-disabled', 'true')
+  await expect(cell(page, '2026-05-15')).not.toHaveAttribute('aria-disabled', 'true')
+  await cell(page, '2026-05-16').click({ force: true })
+  await expect(model).toHaveText('CalendarDate 2026-05-15')
+  await cell(page, '2026-05-19').click()
+  await expect(model).toHaveText('CalendarDate 2026-05-19')
+
+  // minValue and maxValue disable the days outside them.
+  await commit(input, '3/10/2026')
+  await input.locator('..').getByRole('button', { name: 'Choose a date' }).click()
+  await expect(cell(page, '2026-03-09')).toHaveAttribute('data-disabled', '')
+  await expect(cell(page, '2026-03-10')).not.toHaveAttribute('data-disabled', '')
+  // isDateUnavailable was only ever handed the model's type.
+  await expect(page.getByTestId('wrong-type')).toHaveText('')
 })

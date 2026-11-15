@@ -13,6 +13,12 @@
 // server route, a domain package). Temporal is the polyfill's own `/implementation`, never the bare entry, which
 // resolves to `globalThis.Temporal` where an engine has one: one class wherever this runs, the same one
 // a database client or serializer in the product hands out.
+//
+// THE TWO DAY TYPES. Everything here works in PlainDate. A field may also hold an @internationalized/date
+// CalendarDate, the type Nuxt UI's UCalendar and UInputDate use: toPlainDate and fromPlainDate convert by the fields
+// alone (year, month, day), and only a Gregorian one is accepted, since another calendar's year and month are not the
+// ISO ones and converting them by their fields would land on a different day.
+import { CalendarDate } from '@internationalized/date'
 import { Temporal } from 'temporal-polyfill/implementation'
 
 type PlainDate = Temporal.PlainDate
@@ -209,14 +215,63 @@ export function commitDateEntry(text: string, current: PlainDate | null, today: 
  *
  * Pressing m, h, y or r again keeps walking, so "hhh" is the end of the month after next. The walk stops at
  * FIRST_ENTRY_DATE and LAST_ENTRY_DATE, so a shortcut never lands on a day the field can't read back.
+ *
+ * With `limits`, it also stops at `minValue` and `maxValue`, and skips the days `isDateUnavailable` refuses:
+ *
+ * - `m` and `y` land on the first available day of the month or year, `h` and `r` on the last; pressed there, they
+ *   go on to the month or year before (m, y) or after (h, r), as they do from the 1st or the 31st.
+ * - `+` and `-` go to the next or previous available day.
+ * - `t` is today, or the nearest allowed day to it: `minValue` when today is before it, `maxValue` when today is
+ *   after it, and the next available day when today is unavailable (the one before, at `maxValue`).
+ *
+ * Unavailable days are looked through for a year at most. When no allowed day is in reach it returns null, as for a
+ * key that isn't a shortcut: isDateShortcut tells the two apart.
  */
-export function applyDateShortcut(key: string, current: PlainDate | null, today: PlainDate, format: DateEntryFormat | string = US_DATE_ENTRY): PlainDate | null {
+export function applyDateShortcut(
+  key: string,
+  current: PlainDate | null,
+  today: PlainDate,
+  format: DateEntryFormat | string = US_DATE_ENTRY,
+  limits?: DateLimits,
+): PlainDate | null {
   if (key === formatOf(format).separator) return null
-  const next = shortcutTarget(key, current ?? today, today)
-  if (!next) return null
-  if (Temporal.PlainDate.compare(next, FIRST_ENTRY_DATE) < 0) return FIRST_ENTRY_DATE
-  if (Temporal.PlainDate.compare(next, LAST_ENTRY_DATE) > 0) return LAST_ENTRY_DATE
-  return next
+  const k = key.toLowerCase()
+  const base = current ?? today
+  const target = shortcutTarget(k, base, today)
+  if (!target) return null
+  const { lo, hi } = bounds(limits)
+  if (Temporal.PlainDate.compare(lo, hi) > 0) return null
+  const unavailable = limits?.isDateUnavailable
+  const walk = WALK[k]!
+  const inward = INWARD[k]
+  const day = nearestAllowed(target, inward ?? walk, lo, hi, unavailable)
+  if (!inward || !day || Temporal.PlainDate.compare(day, base) * walk > 0) return day
+  // The first available day of the month is where m already is (or after it): the month before's, as from the 1st.
+  const again = nearestAllowed(shortcutTarget(k, target.add({ days: walk }), today)!, inward, lo, hi, unavailable)
+  return again && Temporal.PlainDate.compare(again, base) * walk > 0 ? again : day
+}
+
+// Which way each key moves, and for the period keys, which way to look for an available day from the period's edge.
+const WALK: Record<string, 1 | -1> = { 't': 1, 'h': 1, 'r': 1, '+': 1, '=': 1, 'm': -1, 'y': -1, '-': -1, '_': -1 }
+const INWARD: Record<string, 1 | -1> = { m: 1, y: 1, h: -1, r: -1 }
+const UNAVAILABLE_SEARCH_DAYS = 366
+
+// `target` pulled inside lo..hi, then the nearest available day from it: `step`'s way, or back into the bounds when
+// it was pulled in. Null when there is none within the bounds and the search's year.
+function nearestAllowed(target: PlainDate, step: 1 | -1, lo: PlainDate, hi: PlainDate, unavailable?: ((date: PlainDate) => boolean) | null) {
+  const dir = Temporal.PlainDate.compare(target, hi) > 0 ? -1 : Temporal.PlainDate.compare(target, lo) < 0 ? 1 : step
+  let day = clamp(target, lo, hi)
+  for (let i = 0; unavailable?.(day); i++) {
+    day = day.add({ days: dir })
+    if (i >= UNAVAILABLE_SEARCH_DAYS || Temporal.PlainDate.compare(day, lo) < 0 || Temporal.PlainDate.compare(day, hi) > 0) return null
+  }
+  return day
+}
+
+/** Whether `key` is one of applyDateShortcut's keys in this format (its separator never is), so a field can take the
+ *  key even when the shortcut has no allowed day to go to. */
+export function isDateShortcut(key: string, format: DateEntryFormat | string = US_DATE_ENTRY): boolean {
+  return key !== formatOf(format).separator && Object.hasOwn(WALK, key.toLowerCase())
 }
 
 function shortcutTarget(key: string, base: PlainDate, today: PlainDate): PlainDate | null {
@@ -241,5 +296,124 @@ function shortcutTarget(key: string, base: PlainDate, today: PlainDate): PlainDa
       return base.subtract({ days: 1 })
     default:
       return null
+  }
+}
+
+// ── The two day types ───────────────────────────────────────────────────────────────────────────────────────────
+
+/** What a field holds and hands back: a Temporal.PlainDate, or an @internationalized/date CalendarDate. */
+export type DateModelType = 'plain-date' | 'calendar-date'
+
+/** The part of an @internationalized/date CalendarDate read here. Matched by shape, not by class, so a CalendarDate
+ *  from the product's own copy of the package is read the same as one from Nuxt UI's. */
+export interface CalendarDateLike {
+  readonly calendar: { readonly identifier: string }
+  readonly era: string
+  readonly year: number
+  readonly month: number
+  readonly day: number
+}
+
+/** A day in either type. */
+export type EntryDate = PlainDate | CalendarDateLike
+
+/** Which of the two types `value` is, or null for anything else (null included). */
+export function dateModelTypeOf(value: unknown): DateModelType | null {
+  if (value instanceof Temporal.PlainDate) return 'plain-date'
+  if (!value || typeof value !== 'object') return null
+  const v = value as Partial<CalendarDateLike>
+  return typeof v.calendar?.identifier === 'string' && typeof v.year === 'number' && typeof v.month === 'number' && typeof v.day === 'number'
+    ? 'calendar-date'
+    : null
+}
+
+/**
+ * The day as a PlainDate: a PlainDate as it is, a Gregorian CalendarDate by its fields, null for null. A CalendarDate
+ * in any other calendar system (Japanese, Buddhist, Persian …) throws a RangeError rather than land on another day:
+ * convert it first with @internationalized/date's `toCalendar(date, new GregorianCalendar())`.
+ */
+export function toPlainDate(value: EntryDate | null | undefined): PlainDate | null {
+  if (value == null) return null
+  if (value instanceof Temporal.PlainDate) return value
+  if (dateModelTypeOf(value) !== 'calendar-date') throw new TypeError(`Not a day: expected a Temporal.PlainDate or an @internationalized/date CalendarDate, got ${String(value)}.`)
+  const { calendar, era, year, month, day } = value
+  if (calendar.identifier !== 'gregory') {
+    throw new RangeError(`Only a Gregorian CalendarDate can be used as a day here; this one is in the "${calendar.identifier}" calendar. Convert it with toCalendar(date, new GregorianCalendar()) from @internationalized/date.`)
+  }
+  // A Gregorian year counts within its era: 1 BC is the ISO year 0.
+  return Temporal.PlainDate.from({ year: era === 'BC' ? 1 - year : year, month, day }, { overflow: 'reject' })
+}
+
+type CalendarDateClass = new (year: number, month: number, day: number) => CalendarDateLike
+
+/**
+ * The day in the type asked for: the PlainDate itself, or a Gregorian CalendarDate with its fields. `like`, a
+ * CalendarDate the caller already holds, names the class to build with, so the caller's own copy of
+ * @internationalized/date gets its own class back; without one it is the layer's.
+ */
+export function fromPlainDate(d: PlainDate, type: 'plain-date', like?: CalendarDateLike | null): PlainDate
+export function fromPlainDate(d: PlainDate, type: 'calendar-date', like?: CalendarDateLike | null): CalendarDate
+export function fromPlainDate(d: PlainDate, type: DateModelType, like?: CalendarDateLike | null): EntryDate
+export function fromPlainDate(d: PlainDate | null, type: DateModelType, like?: CalendarDateLike | null): EntryDate | null
+export function fromPlainDate(d: PlainDate | null, type: DateModelType, like?: CalendarDateLike | null): EntryDate | null {
+  if (!d || type === 'plain-date') return d
+  const Class = (like?.constructor ?? CalendarDate) as CalendarDateClass
+  return new Class(d.year, d.month, d.day)
+}
+
+// ── Limits ──────────────────────────────────────────────────────────────────────────────────────────────────────
+
+/** The days a field takes, as Nuxt UI's UCalendar names them: the first and the last, and the days in between it
+ *  refuses. `minValue` and `maxValue` may be either day type. */
+export interface DateLimits {
+  minValue?: EntryDate | null
+  maxValue?: EntryDate | null
+  isDateUnavailable?: ((date: PlainDate) => boolean) | null
+}
+
+/** Why the limits refuse a day. */
+export type DateLimitReason = 'before-min' | 'after-max' | 'unavailable'
+
+/** A day the limits refuse: why, the day, and the limit it crossed (`minValue` or `maxValue`; null when unavailable).
+ *  A PlainDate here; ZDateField's `invalid` hands it back in the model's own type. */
+export interface DateLimitProblem<D = PlainDate> {
+  readonly reason: DateLimitReason
+  readonly date: D
+  readonly limit: D | null
+}
+
+const earlier = (a: PlainDate, b: PlainDate) => (Temporal.PlainDate.compare(a, b) <= 0 ? a : b)
+const later = (a: PlainDate, b: PlainDate) => (Temporal.PlainDate.compare(a, b) >= 0 ? a : b)
+const clamp = (d: PlainDate, lo: PlainDate, hi: PlainDate) => later(lo, earlier(d, hi))
+
+// The first and last days a shortcut may land on: the limits', within the days a field can show and read back.
+function bounds(limits?: DateLimits) {
+  const min = toPlainDate(limits?.minValue)
+  const max = toPlainDate(limits?.maxValue)
+  return { lo: min ? later(min, FIRST_ENTRY_DATE) : FIRST_ENTRY_DATE, hi: max ? earlier(max, LAST_ENTRY_DATE) : LAST_ENTRY_DATE }
+}
+
+/** Why the limits refuse `date`, or null when they take it. Checked in that order: before `minValue`, after
+ *  `maxValue`, then `isDateUnavailable`. */
+export function checkDateLimits(date: PlainDate, limits?: DateLimits): DateLimitProblem | null {
+  const min = toPlainDate(limits?.minValue)
+  if (min && Temporal.PlainDate.compare(date, min) < 0) return { reason: 'before-min', date, limit: min }
+  const max = toPlainDate(limits?.maxValue)
+  if (max && Temporal.PlainDate.compare(date, max) > 0) return { reason: 'after-max', date, limit: max }
+  if (limits?.isDateUnavailable?.(date)) return { reason: 'unavailable', date, limit: null }
+  return null
+}
+
+/** An English sentence for a refused day, its dates in the field's format: "Choose a date on or after 01/01/2026.",
+ *  "Choose a date on or before 12/31/2026.", "12/25/2026 isn't available." A product in another language builds its
+ *  own from the problem's `reason`, `date` and `limit`. */
+export function dateLimitMessage(problem: DateLimitProblem, format: DateEntryFormat | string = US_DATE_ENTRY): string {
+  switch (problem.reason) {
+    case 'before-min':
+      return `Choose a date on or after ${formatDateEntry(problem.limit, format)}.`
+    case 'after-max':
+      return `Choose a date on or before ${formatDateEntry(problem.limit, format)}.`
+    case 'unavailable':
+      return `${formatDateEntry(problem.date, format)} isn't available.`
   }
 }

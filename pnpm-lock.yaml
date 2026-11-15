@@ -30,6 +30,9 @@ importers:
         specifier: ^3.5.42
         version: 3.5.45(typescript@5.9.3)
     devDependencies:
+      '@internationalized/date':
+        specifier: ^3.12.4
+        version: 3.12.4
       '@playwright/test':
         specifier: ^1.63.0
         version: 1.65.1
@@ -101,6 +104,9 @@ importers:
       '@iconify-json/lucide':
         specifier: ^1.2.133
         version: 1.2.154
+      '@internationalized/date':
+        specifier: ^3.12.4
+        version: 3.12.4
       '@nu-grid/nuxt':
         specifier: ^0.4.4
         version: 0.4.4(@nuxt/schema@4.6.4)(@nuxt/ui@4.11.3(fad572e043a0675f45b096b701af3be1))(@vueuse/nuxt@14.4.0(074aded234ff49692baa4c51791bf2d1))(bare-buffer@3.7.2)(confbox@0.3.2)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.5)(mlly@1.8.2)(oxc-parser@0.154.0)(react@19.3.1)(reka-ui@2.10.5(vue@3.5.45(typescript@5.9.3)))(rolldown@1.2.19)(tailwindcss@4.3.5)(unplugin@3.7.0(esbuild@0.28.2)(rolldown@1.2.19)(rollup@4.68.3)(vite@8.3.8(@types/node@25.9.9)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)))(vue@3.5.45(typescript@5.9.3))
