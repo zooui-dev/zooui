@@ -132,6 +132,27 @@ test('Done on a row with an error keeps it open, the error showing and focus in 
   await expect(button(list, 'Edit Plan')).toBeFocused()
 })
 
+test('Cancel on a row with an error puts its values back but keeps it open, and it stays open once fixed', async ({ page }) => {
+  const list = steps(page)
+  await page.locator('[data-check-steps]').click()
+  await expect(row(list, 1).getByRole('alert')).toHaveText('Name this step.')
+  await row(list, 1).getByLabel('Owner').fill('Zed')
+  await button(list, 'Cancel Step 2').click()
+  await expect(echo(page, 'owners')).toHaveText('Ana, Ben, Cy')
+  await expect(row(list, 1)).not.toHaveAttribute('data-folded')
+  await expect(row(list, 1).getByRole('alert')).toHaveText('Name this step.')
+  const name = row(list, 1).getByLabel('Step name')
+  await expect(name).toBeFocused()
+  // Fixed and checked again (the Check button takes focus): the error clears and the row does not fold, its field
+  // still there with the fix in it.
+  await name.fill('Plan')
+  await page.locator('[data-check-steps]').click()
+  await expect(row(list, 1).getByRole('alert')).toHaveCount(0)
+  await expect(row(list, 1)).not.toHaveAttribute('data-folded')
+  await expect(name).toHaveValue('Plan')
+  await expect(button(list, 'Done Plan')).toBeVisible()
+})
+
 test('a list without #summary has no Done or Cancel, and Escape does nothing', async ({ page }) => {
   const list = parts(page)
   await expect(list.locator('[data-done], [data-cancel]')).toHaveCount(0)

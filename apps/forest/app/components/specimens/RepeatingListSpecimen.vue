@@ -28,10 +28,9 @@ function check() {
 }
 watch(sources, () => { if (checked.value) check() }, { deep: true })
 
-// Reorderable: steps folded to a summary, with keys, errors, a nested field, at least two, and Move to top / bottom;
-// and compact ranked choices with a minimum and maximum and no row key (told apart by object identity). Each echoes
-// its order and, by which of the starting objects each row (and a step's nested details) is, that a move or a Cancel
-// hands back the same objects.
+// Done and Cancel: steps folded to a summary, with keys, errors, a nested field and at least two. It echoes its order
+// and, by which of the starting objects each row (and its nested details) is, that a Cancel puts the values back into
+// the same objects.
 interface Step { id?: string; name: string; details: { owner: string } }
 const firstSteps: Step[] = [
   { id: 'step a', name: 'Draft', details: { owner: 'Ana' } },
@@ -49,10 +48,6 @@ const stepTitle = (s: Step, i: number) => s.name || `Step ${i + 1}`
 function checkSteps() {
   stepErrors.value = Object.fromEntries(steps.value.filter((s) => s.id && !s.name.trim()).map((s) => [s.id!, 'Name this step.']))
 }
-const firstChoices: Category[] = [{ name: 'Email' }, { name: 'Phone' }, { name: 'Text' }]
-const choices = ref<Category[]>([...firstChoices])
-// The ref hands out reactive proxies of the rows: compared as the objects they wrap.
-const choiceIdentity = computed(() => choices.value.map((c) => firstChoices.indexOf(toRaw(c))).join(', '))
 </script>
 
 <template>
@@ -117,12 +112,10 @@ const choiceIdentity = computed(() => choices.value.map((c) => firstChoices.inde
     </div>
 
     <div data-specimen="repeating-list-steps" class="flex flex-col gap-2">
-      <h3 class="text-sm font-semibold text-highlighted">Steps, in order</h3>
+      <h3 class="text-sm font-semibold text-highlighted">Steps</h3>
       <ZRepeatingList
         v-model="steps"
         item-label="step"
-        reorderable
-        move-to-ends
         :min="2"
         :new-row="newStep"
         :row-key="stepKey"
@@ -146,26 +139,6 @@ const choiceIdentity = computed(() => choices.value.map((c) => firstChoices.inde
       <p class="text-sm text-muted" data-step-identity>{{ stepIdentity }}</p>
       <p class="text-sm text-muted" data-details-identity>{{ detailsIdentity }}</p>
       <p class="text-sm text-muted" data-owners>{{ steps.map((s) => s.details.owner || '-').join(', ') }}</p>
-    </div>
-
-    <div data-specimen="repeating-list-choices" class="flex flex-col gap-2">
-      <h3 class="text-sm font-semibold text-highlighted">Contact preference, best first</h3>
-      <ZRepeatingList
-        v-model="choices"
-        item-label="choice"
-        reorderable
-        compact
-        :min="2"
-        :max="4"
-        :row-title="(r, i) => r.name || `Choice ${i + 1}`"
-        :new-row="() => ({ name: '' })"
-        :announce-move="({ title, position }) => `${title} is now choice ${position}.`"
-      >
-        <template #row="{ row, index }">
-          <UInput v-model="row.name" :aria-label="`Choice ${index + 1}`" class="w-full" />
-        </template>
-      </ZRepeatingList>
-      <p class="text-sm text-muted" data-identity>{{ choiceIdentity }}</p>
     </div>
   </section>
 </template>

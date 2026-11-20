@@ -75,26 +75,3 @@ test('the product\'s selectors and behavior hold in a production build: add focu
   await expect(list.locator('[data-row="3"]').getByRole('button', { name: 'Remove Referral source 4' }).locator('svg')).toBeVisible()
   expect(icons).toEqual([])
 })
-
-for (const mode of ['light', 'dark'] as const) {
-  test(`reorderable (${mode}): the move icons are bundled, a move by button and by key keeps focus on the row`, async ({ page }) => {
-    const icons: string[] = []
-    page.on('request', (r) => { if (/_nuxt_icon|iconify/.test(r.url())) icons.push(r.url()) })
-    await open(page, mode)
-    const list = page.locator('[data-specimen="repeating-list-steps"]').getByTestId('repeating-list')
-    const order = page.locator('[data-specimen="repeating-list-steps"] [data-order]')
-    for (const name of ['Move Review to the top', 'Move Review up', 'Move Draft down', 'Move Draft to the bottom']) {
-      await expect(list.getByRole('button', { name, exact: true }).locator('svg')).toBeVisible()
-    }
-    await list.getByRole('button', { name: 'Move Review up', exact: true }).click()
-    await expect(order).toHaveText('step a, step c, step b')
-    await expect(list.getByRole('button', { name: 'Move Review up', exact: true })).toBeFocused()
-    await page.keyboard.press('Alt+ArrowUp')
-    await expect(order).toHaveText('step c, step a, step b')
-    await expect(list.locator('[data-announce]')).toHaveText('Moved Review to position 1 of 3.')
-    // Up is disabled at the top: focus is on the row's first move still enabled.
-    await expect(list.getByRole('button', { name: 'Move Review down', exact: true })).toBeFocused()
-    expect(icons).toEqual([])
-    expect(await page.evaluate(findConflicts)).toEqual([])
-  })
-}

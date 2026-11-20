@@ -13,14 +13,8 @@
 // `rowKey` keeps a row's identity while it is renamed (rows that carry history); rows it has no key for are told
 // apart by object identity, hence `T extends object`.
 //
-// `reorderable` adds move buttons to each row, and Alt+ArrowUp / Alt+ArrowDown (Alt+Home / Alt+End to the ends) on
-// anything focused in it. A move hands v-model a new array of the same row objects, so a row's key, its error and
-// whether it is folded go with it; focus stays with the moved row, and the move is announced. The rows slide to their
-// new places (Vue's TransitionGroup move), except under prefers-reduced-motion.
-//
 // With #summary, an open row has Done (fold it, keeping the edits) and Cancel (put back what it held when it opened,
 // then fold it; Escape does the same); Cancel on a row added here and never Done removes it.
-import { MOVE_ICONS, MOVES, moved, moveForKey, moveTarget, type Move } from './reorder'
 import { restore, snapshot } from './row-snapshot'
 
 const props = withDefaults(
@@ -59,14 +53,6 @@ const props = withDefaults(
     announce?: (change: { type: 'added' | 'removed'; title: string; count: number }) => string
     /** Where focus lands in a row that is added or opened: the first match in the row. */
     focusSelector?: string
-    /** Rows can be moved: Up and Down on each row, and Alt+ArrowUp / Alt+ArrowDown (Alt+Home / Alt+End to the ends). */
-    reorderable?: boolean
-    /** With `reorderable`, Move to top and Move to bottom buttons as well (the keys work without them). */
-    moveToEnds?: boolean
-    /** A move button's accessible name; "Move Part 3 up", "Move Part 3 to the top" unless given. */
-    moveLabel?: (change: { move: Move; title: string }) => string
-    /** What a screen reader hears when a row is moved; "Moved Part 3 to position 1 of 5." unless given. */
-    announceMove?: (change: { title: string; position: number; count: number }) => string
   }>(),
   {
     rowKey: undefined,
@@ -84,10 +70,6 @@ const props = withDefaults(
     maxLabel: undefined,
     announce: undefined,
     focusSelector: 'input, select, textarea, button[role="radio"]',
-    reorderable: false,
-    moveToEnds: false,
-    moveLabel: undefined,
-    announceMove: undefined,
   },
 )
 const rows = defineModel<T[]>({ required: true })
@@ -160,9 +142,7 @@ const maxText = computed(() => props.maxLabel ?? `That's the most you can add he
 const announcement = ref('')
 let announceTimer: ReturnType<typeof setTimeout> | undefined
 function say(type: 'added' | 'removed', title: string, count: number) {
-  speak(props.announce?.({ type, title, count }) ?? `${title} ${type}. ${count} in the list.`)
-}
-function speak(text: string) {
+  const text = props.announce?.({ type, title, count }) ?? `${title} ${type}. ${count} in the list.`
   announcement.value = ''
   clearTimeout(announceTimer)
   announceTimer = setTimeout(() => { announcement.value = text }, 100)
@@ -173,7 +153,7 @@ onBeforeUnmount(() => clearTimeout(announceTimer))
 // field. With v-model the new row only arrives back through the parent, so this waits for a render that has it rather
 // than a fixed tick.
 const focusAt = shallowRef<{ index: number; selector?: string } | null>(null)
-const rowEl = (i: number) => root.value?.querySelector<HTMLElement>(`:scope > [data-rows] > * > [data-row="${i}"]`) ?? null
+const rowEl = (i: number) => root.value?.querySelector<HTMLElement>(`:scope > [data-row="${i}"]`) ?? null
 watch(
   [focusAt, () => rows.value.length, folded],
   () => {
@@ -224,8 +204,8 @@ function edit(row: T, i: number) {
 
 // Done and Cancel, on an open row of a list with #summary. A row is copied when it opens (Edit, or an error opening
 // it), and Cancel puts the copy back into the same object, so it keeps its identity and key. A row added here and not
-// yet Done has nothing to go back to: Cancel removes it, where Remove could (not at `min`). Done on a row with an error
-// leaves it open, the error showing, with focus in its first field.
+// yet Done has nothing to go back to: Cancel removes it, where Remove could (not at `min`). Done or Cancel on a row with
+// an error leaves it open (Cancel having put its values back), the error showing, with focus in its first field.
 const snapshots = shallowReactive(new Map<string, T>())
 const fresh = shallowReactive(new Set<string>())
 const closable = computed(() => !!slots.summary)
@@ -255,6 +235,8 @@ function cancel(row: T, i: number) {
   const snap = snapshots.get(k)
   if (snap) {
     restore(row, snap)
+    // Still in error: open, as Done leaves it, so it cannot fold under the user once the error clears.
+    if (errorOf(row)) return focusRow(i)
     snapshots.delete(k)
     fold(row, i)
   } else if (fresh.has(k) && canRemove(row)) {
@@ -262,66 +244,13 @@ function cancel(row: T, i: number) {
   }
 }
 
-// Moving. The buttons show only when there is somewhere to move to; a move at an edge is disabled there.
-const showMoves = computed(() => props.reorderable && rows.value.length > 1)
-const shownMoves = computed(() => (props.moveToEnds ? MOVES : MOVES.filter((m) => m === 'up' || m === 'down')))
-const MOVE_WORDS: Record<Move, string> = { up: 'up', down: 'down', top: 'to the top', bottom: 'to the bottom' }
-const moveText = (move: Move, row: T, i: number) => {
-  const title = titleOf(row, i)
-  return props.moveLabel?.({ move, title }) ?? `Move ${title} ${MOVE_WORDS[move]}`
-}
-const canMove = (move: Move, i: number) => moveTarget(move, i, rows.value.length) !== null
-
-// Focus to put back once the moved row is drawn at its new place: the element that had it (the move button, or a
-// field in the row), or, when that is now disabled at the edge, the row's first move button still enabled. Vue moves
-// the row's DOM node, which can drop focus, and with v-model the new order only arrives back through the parent.
-const refocus = shallowRef<{ key: string; to: number; el: HTMLElement | null } | null>(null)
-watch(
-  [refocus, () => rows.value],
-  () => {
-    const r = refocus.value
-    if (!r) return
-    const at = rows.value[r.to]
-    if (!at || keyOf(at) !== r.key) return
-    const row = rowEl(r.to)
-    if (!row) return
-    refocus.value = null
-    const el = r.el
-    if (el && el.isConnected && row.contains(el) && !(el as HTMLButtonElement).disabled) el.focus()
-    else (row.querySelector<HTMLElement>('[data-move]:not(:disabled)') ?? row.querySelector<HTMLElement>(props.focusSelector))?.focus()
-  },
-  { flush: 'post' },
-)
-
-function move(i: number, how: Move, from: HTMLElement | null) {
-  const to = moveTarget(how, i, rows.value.length)
-  if (to === null) return
-  const row = rows.value[i]!
-  const title = titleOf(row, i)
-  const next = moved(rows.value, i, to)
-  rows.value = next
-  refocus.value = { key: keyOf(row), to, el: from }
-  speak(props.announceMove?.({ title, position: to + 1, count: next.length }) ?? `Moved ${title} to position ${to + 1} of ${next.length}.`)
-}
-
-// The keys work on anything focused in the row. A select or a combobox keeps Alt+ArrowDown, which opens its list, and a
-// field with its own popup open keeps Escape; a field that handled the key itself (ZNumberInput's step, a menu's
-// Escape) and a row of a list nested in this one have already taken it (defaultPrevented).
+// Escape anywhere in an open row is Cancel. A field with its own popup open keeps it, and a field that handled it (a
+// menu closing) or a row of a list nested in this one has already taken it (defaultPrevented).
 function onRowKeydown(e: KeyboardEvent, row: T, i: number) {
-  if (e.defaultPrevented) return
-  const target = e.target as HTMLElement
-  if (e.key === 'Escape') {
-    if (!closable.value || isFolded(row) || !canCancel(row) || target.closest('[aria-expanded="true"]')) return
-    e.preventDefault()
-    cancel(row, i)
-    return
-  }
-  if (!props.reorderable) return
-  const how = moveForKey(e)
-  if (!how) return
-  if (target.matches('select, [role="combobox"], [role="listbox"]')) return
+  if (e.key !== 'Escape' || e.defaultPrevented) return
+  if (!closable.value || isFolded(row) || !canCancel(row) || (e.target as HTMLElement).closest('[aria-expanded="true"]')) return
   e.preventDefault()
-  move(i, how, target)
+  cancel(row, i)
 }
 
 /** Back up to `min` rows, whenever there are fewer (on mount, the list was emptied from outside, or `min` rose). */
@@ -345,130 +274,88 @@ onMounted(() => {
 
 <template>
   <div ref="root" class="space-y-3" data-testid="repeating-list">
-    <!-- Each row in a wrapper of its own, kept while the row folds and opens, so a move slides it (FLIP) and nothing
-         else animates: enter and leave are off (:css="false"). Under reduced motion the move class has no transition,
-         and Vue skips the slide. -->
-    <TransitionGroup
-      tag="div"
-      class="space-y-3 empty:hidden"
-      :css="false"
-      move-class="transition-transform duration-200 ease-out motion-reduce:transition-none"
-      data-rows
-    >
-      <div v-for="(row, i) in rows" :key="keyOf(row)">
-        <!-- Folded: one line and an Edit button. -->
+    <template v-for="(row, i) in rows" :key="keyOf(row)">
+      <!-- Folded: one line and an Edit button. -->
+      <div
+        v-if="isFolded(row)"
+        :data-row="i"
+        data-folded
+        class="flex items-center gap-3 rounded-md border border-default bg-muted px-3 py-2"
+      >
+        <UIcon name="i-lucide-circle-check" class="size-4 shrink-0 text-success" aria-hidden="true" />
+        <span class="min-w-0 flex-1 truncate text-sm text-toned"><slot name="summary" :row="row" :index="i" /></span>
+        <UButton type="button" size="xs" variant="ghost" color="neutral" icon="i-lucide-pencil" :aria-label="`${editLabel} ${titleOf(row, i)}`" data-edit @click="edit(row, i)">
+          {{ editLabel }}
+        </UButton>
+        <UButton
+          v-if="canRemove(row)"
+          type="button"
+          size="xs"
+          variant="ghost"
+          color="neutral"
+          icon="i-lucide-x"
+          :aria-label="`${removeLabel} ${titleOf(row, i)}`"
+          @click="remove(i)"
+        />
+      </div>
+
+      <fieldset
+        v-else
+        :data-row="i"
+        :class="compact ? 'flex items-start gap-2' : 'rounded-md border border-default p-3 sm:p-4'"
+        @keydown="onRowKeydown($event, row, i)"
+      >
+        <legend :class="compact ? 'sr-only' : 'px-1 text-sm font-semibold text-highlighted'">{{ titleOf(row, i) }}</legend>
+        <div :class="compact ? 'min-w-0 flex-1' : 'space-y-4'">
+          <slot name="row" :row="row" :index="i" :key="keyOf(row)" :error="errorOf(row)" :errorId="errorIdOf(row)" />
+          <p v-if="errorOf(row)" :id="errorIdOf(row)" role="alert" class="mt-1 text-sm text-(--ui-color-error-700) dark:text-(--ui-color-error-300)">{{ errorOf(row) }}</p>
+        </div>
         <div
-          v-if="isFolded(row)"
-          :data-row="i"
-          data-folded
-          class="flex items-center gap-3 rounded-md border border-default bg-muted px-3 py-2"
-          @keydown="onRowKeydown($event, row, i)"
+          v-if="canRemove(row) || closable"
+          :class="[compact ? 'pt-1' : 'mt-3 flex justify-end', closable && (compact ? 'flex gap-1' : 'gap-3')]"
         >
-          <UIcon name="i-lucide-circle-check" class="size-4 shrink-0 text-success" aria-hidden="true" />
-          <span class="min-w-0 flex-1 truncate text-sm text-toned"><slot name="summary" :row="row" :index="i" /></span>
-          <span v-if="showMoves" class="inline-flex gap-1" data-moves>
-            <UButton
-              v-for="m in shownMoves"
-              :key="m"
-              type="button"
-              size="xs"
-              variant="ghost"
-              color="neutral"
-              :icon="MOVE_ICONS[m]"
-              :aria-label="moveText(m, row, i)"
-              :disabled="!canMove(m, i)"
-              :data-move="m"
-              @click="move(i, m, $event.currentTarget as HTMLElement)"
-            />
-          </span>
-          <UButton type="button" size="xs" variant="ghost" color="neutral" icon="i-lucide-pencil" :aria-label="`${editLabel} ${titleOf(row, i)}`" data-edit @click="edit(row, i)">
-            {{ editLabel }}
-          </UButton>
           <UButton
             v-if="canRemove(row)"
             type="button"
             size="xs"
             variant="ghost"
             color="neutral"
-            icon="i-lucide-x"
+            icon="i-lucide-trash-2"
             :aria-label="`${removeLabel} ${titleOf(row, i)}`"
             @click="remove(i)"
-          />
-        </div>
-
-        <fieldset
-          v-else
-          :data-row="i"
-          :class="compact ? 'flex items-start gap-2' : 'rounded-md border border-default p-3 sm:p-4'"
-          @keydown="onRowKeydown($event, row, i)"
-        >
-          <legend :class="compact ? 'sr-only' : 'px-1 text-sm font-semibold text-highlighted'">{{ titleOf(row, i) }}</legend>
-          <div :class="compact ? 'min-w-0 flex-1' : 'space-y-4'">
-            <slot name="row" :row="row" :index="i" :key="keyOf(row)" :error="errorOf(row)" :errorId="errorIdOf(row)" />
-            <p v-if="errorOf(row)" :id="errorIdOf(row)" role="alert" class="mt-1 text-sm text-(--ui-color-error-700) dark:text-(--ui-color-error-300)">{{ errorOf(row) }}</p>
-          </div>
-          <div
-            v-if="canRemove(row) || showMoves || closable"
-            :class="[compact ? 'pt-1' : 'mt-3 flex justify-end', (showMoves || closable) && (compact ? 'flex gap-1' : 'gap-3')]"
           >
-            <span v-if="showMoves" class="inline-flex gap-1" data-moves>
-              <UButton
-                v-for="m in shownMoves"
-                :key="m"
-                type="button"
-                size="xs"
-                variant="ghost"
-                color="neutral"
-                :icon="MOVE_ICONS[m]"
-                :aria-label="moveText(m, row, i)"
-                :disabled="!canMove(m, i)"
-                :data-move="m"
-                @click="move(i, m, $event.currentTarget as HTMLElement)"
-              />
-            </span>
+            <span v-if="!compact">{{ removeLabel }}</span>
+          </UButton>
+          <template v-if="closable">
             <UButton
-              v-if="canRemove(row)"
+              v-if="canCancel(row)"
               type="button"
               size="xs"
               variant="ghost"
               color="neutral"
-              icon="i-lucide-trash-2"
-              :aria-label="`${removeLabel} ${titleOf(row, i)}`"
-              @click="remove(i)"
+              :icon="compact ? 'i-lucide-x' : undefined"
+              :aria-label="`${cancelLabel} ${titleOf(row, i)}`"
+              data-cancel
+              @click="cancel(row, i)"
             >
-              <span v-if="!compact">{{ removeLabel }}</span>
+              <span v-if="!compact">{{ cancelLabel }}</span>
             </UButton>
-            <template v-if="closable">
-              <UButton
-                v-if="canCancel(row)"
-                type="button"
-                size="xs"
-                variant="ghost"
-                color="neutral"
-                :icon="compact ? 'i-lucide-x' : undefined"
-                :aria-label="`${cancelLabel} ${titleOf(row, i)}`"
-                data-cancel
-                @click="cancel(row, i)"
-              >
-                <span v-if="!compact">{{ cancelLabel }}</span>
-              </UButton>
-              <UButton
-                type="button"
-                size="xs"
-                variant="outline"
-                color="neutral"
-                :icon="compact ? 'i-lucide-check' : undefined"
-                :aria-label="`${doneLabel} ${titleOf(row, i)}`"
-                data-done
-                @click="done(row, i)"
-              >
-                <span v-if="!compact">{{ doneLabel }}</span>
-              </UButton>
-            </template>
-          </div>
-        </fieldset>
-      </div>
-    </TransitionGroup>
+            <UButton
+              type="button"
+              size="xs"
+              variant="outline"
+              color="neutral"
+              :icon="compact ? 'i-lucide-check' : undefined"
+              :aria-label="`${doneLabel} ${titleOf(row, i)}`"
+              data-done
+              @click="done(row, i)"
+            >
+              <span v-if="!compact">{{ doneLabel }}</span>
+            </UButton>
+          </template>
+        </div>
+      </fieldset>
+    </template>
 
     <div class="flex flex-wrap items-center gap-3">
       <UButton ref="addButton" type="button" variant="outline" color="neutral" icon="i-lucide-plus" :disabled="atMax" data-add @click="add()">

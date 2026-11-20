@@ -33,8 +33,7 @@ interface LayerNuxt {
 /** Icons the Z* components render, for the client bundle below. scripts/check-icons.test.mjs keeps it in step with
  *  components/. */
 const Z_ICONS = ['lucide:sun', 'lucide:moon', 'lucide:monitor', 'lucide:triangle-alert', 'lucide:check',
-  'lucide:circle-check', 'lucide:pencil', 'lucide:x', 'lucide:trash-2', 'lucide:plus', 'lucide:chevron-up', 'lucide:chevron-down', 'lucide:calendar',
-  'lucide:arrow-up', 'lucide:arrow-down', 'lucide:arrow-up-to-line', 'lucide:arrow-down-to-line']
+  'lucide:circle-check', 'lucide:pencil', 'lucide:x', 'lucide:trash-2', 'lucide:plus', 'lucide:chevron-up', 'lucide:chevron-down', 'lucide:calendar']
 
 export default defineNuxtConfig({
   modules: [
