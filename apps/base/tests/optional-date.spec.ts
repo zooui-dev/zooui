@@ -1,0 +1,196 @@
+import { expect, test, type Locator, type Page } from '@playwright/test'
+import { findConflicts } from '@zooui/nuxt/testing/find-conflicts'
+
+// ZOptionalDate (pages/optional-date.vue) on the theme-free base: the box gates the date — off, the model is null and
+// the field disabled and empty; on again, the day it held comes back — a tick by the user moves focus into the date,
+// Space toggles it, and it works in a UFormField (the label names the date input, help and error describe it, ids stay
+// unique) with either type of day and ZDateField's limits.
+
+test.use({ timezoneId: 'America/Los_Angeles' })
+const NOW = new Date('2026-11-13T05:30:00Z')
+
+const hydrated = (page: Page) => page.waitForFunction(() => !!(document.querySelector('#__nuxt') as { __vue_app__?: unknown } | null)?.__vue_app__)
+
+test.beforeEach(async ({ page }) => {
+  await page.clock.install({ time: NOW })
+  await page.goto('/optional-date')
+  await page.waitForLoadState('networkidle')
+  await hydrated(page)
+})
+
+const section = (page: Page, name: string) => page.locator(`[data-section="${name}"]`)
+const box = (page: Page, name: string) => section(page, name).getByRole('checkbox')
+const input = (page: Page, name: string) => section(page, name).getByRole('textbox')
+const text = (page: Page, id: string) => page.getByTestId(id)
+const isFocused = (l: Locator) => l.evaluate((el) => document.activeElement === el)
+
+async function enter(field: Locator, value: string) {
+  await field.press('ControlOrMeta+a')
+  await field.press('Backspace')
+  await field.pressSequentially(value)
+  await field.press('Enter')
+}
+
+test('untick: the model is null, the field disabled and empty, and null announced; tick: the day comes back, focused', async ({ page }) => {
+  const ends = input(page, 'ends')
+  await expect(box(page, 'ends')).toBeChecked()
+  await expect(ends).toBeEnabled()
+  await expect(ends).toHaveValue('05/12/2026')
+
+  await box(page, 'ends').click()
+  await expect(box(page, 'ends')).not.toBeChecked()
+  await expect(text(page, 'ends-model')).toHaveText('null')
+  await expect(ends).toBeDisabled()
+  await expect(ends).toHaveValue('')
+  await expect(text(page, 'ends-events')).toHaveText('null')
+
+  await box(page, 'ends').click()
+  await expect(box(page, 'ends')).toBeChecked()
+  await expect(text(page, 'ends-model')).toHaveText('PlainDate 2026-05-12')
+  await expect(ends).toBeEnabled()
+  await expect(ends).toHaveValue('05/12/2026')
+  await expect.poll(() => isFocused(ends)).toBe(true)
+})
+
+test('remembers the day it was holding when unticked, not the one before: an edit, then off and on', async ({ page }) => {
+  const ends = input(page, 'ends')
+  await ends.click()
+  await enter(ends, '6/30')
+  await expect(text(page, 'ends-model')).toHaveText('PlainDate 2026-06-30')
+  await box(page, 'ends').click()
+  await expect(text(page, 'ends-model')).toHaveText('null')
+  await box(page, 'ends').click()
+  await expect(text(page, 'ends-model')).toHaveText('PlainDate 2026-06-30')
+  // Cleared while on, then off and on: nothing to bring back, and the field is empty and ready to type in.
+  await enter(ends, '')
+  await expect(text(page, 'ends-model')).toHaveText('null')
+  await box(page, 'ends').click()
+  await box(page, 'ends').click()
+  await expect(text(page, 'ends-model')).toHaveText('null')
+  await expect(ends).toBeEnabled()
+  await expect.poll(() => isFocused(ends)).toBe(true)
+})
+
+test('keyboard: Space on the checkbox toggles it and a tick moves focus into the date; Tab leads from box to date', async ({ page }) => {
+  const cb = box(page, 'ends')
+  await cb.focus()
+  await page.keyboard.press('Space')
+  await expect(cb).not.toBeChecked()
+  await expect(text(page, 'ends-model')).toHaveText('null')
+  // Unticked, the disabled date is out of the tab order: focus stays on the box.
+  await expect.poll(() => isFocused(cb)).toBe(true)
+  await page.keyboard.press('Space')
+  await expect(cb).toBeChecked()
+  await expect(text(page, 'ends-model')).toHaveText('PlainDate 2026-05-12')
+  await expect.poll(() => isFocused(input(page, 'ends'))).toBe(true)
+  // Typing goes into the date straight away.
+  await page.keyboard.press('ControlOrMeta+a')
+  await page.keyboard.type('7/4')
+  await page.keyboard.press('Enter')
+  await expect(text(page, 'ends-model')).toHaveText('PlainDate 2026-07-04')
+  await page.keyboard.press('Shift+Tab')
+  await expect.poll(() => isFocused(cb)).toBe(true)
+})
+
+test('in a UFormField: the label names the date input, the help describes it, the box has its own name and id', async ({ page }) => {
+  await expect(page.getByRole('textbox', { name: 'Ends', exact: true })).toHaveValue('05/12/2026')
+  await expect(page.getByRole('checkbox', { name: 'Has an end date' })).toBeChecked()
+  const ends = input(page, 'ends')
+  await expect(ends).toHaveAccessibleDescription('Leave it off for an open-ended engagement')
+  const inputId = await ends.getAttribute('id')
+  expect(inputId).toBeTruthy()
+  await expect(box(page, 'ends')).toHaveAttribute('aria-controls', inputId!)
+  // No id on the page is used twice (the box and the date would share the field's, were the box in it).
+  const dupes = await page.evaluate(() => {
+    const ids = [...document.querySelectorAll('[id]')].map((el) => el.id)
+    return ids.filter((id, i) => ids.indexOf(id) !== i)
+  })
+  expect(dupes).toEqual([])
+  expect(await page.evaluate(findConflicts)).toEqual([])
+})
+
+test('in a UFormField with an error: the date input is invalid and described by it, the box is not', async ({ page }) => {
+  const reviewed = input(page, 'errored')
+  await expect(reviewed).toHaveAttribute('aria-invalid', 'true')
+  await expect(reviewed).toHaveAccessibleDescription('Enter the review date')
+  await expect(box(page, 'errored')).not.toHaveAttribute('aria-invalid', 'true')
+  await expect(box(page, 'errored')).toBeChecked()
+})
+
+test('outside a UFormField: named by its own aria-label, and the box controls it', async ({ page }) => {
+  const starts = page.getByRole('textbox', { name: 'Starts', exact: true })
+  await expect(starts).toBeDisabled()
+  await expect(box(page, 'cal')).toHaveAttribute('aria-controls', (await starts.getAttribute('id'))!)
+})
+
+test('a CalendarDate model, from null: unticked at first, typed, unticked and ticked again, still a CalendarDate', async ({ page }) => {
+  const starts = input(page, 'cal')
+  await expect(box(page, 'cal')).not.toBeChecked()
+  await expect(text(page, 'cal-on')).toHaveText('false')
+  await expect(starts).toBeDisabled()
+  await box(page, 'cal').click()
+  await expect(text(page, 'cal-on')).toHaveText('true')
+  await expect.poll(() => isFocused(starts)).toBe(true)
+  await enter(starts, '5/12')
+  await expect(text(page, 'cal-model')).toHaveText('CalendarDate 2026-05-12')
+  await box(page, 'cal').click()
+  await expect(text(page, 'cal-model')).toHaveText('null')
+  await expect(text(page, 'cal-on')).toHaveText('false')
+  await box(page, 'cal').click()
+  await expect(text(page, 'cal-model')).toHaveText('CalendarDate 2026-05-12')
+})
+
+test('limits pass through: a typed day before min-value is refused and the field marked invalid', async ({ page }) => {
+  const starts = input(page, 'cal')
+  await box(page, 'cal').click()
+  await enter(starts, '5/12')
+  await enter(starts, '3/9')
+  await expect(text(page, 'cal-model')).toHaveText('CalendarDate 2026-05-12')
+  await expect(starts).toHaveAttribute('aria-invalid', 'true')
+  await expect(starts).toHaveValue('05/12/2026')
+})
+
+test('v-model:enabled: off at mount with a day keeps it for the tick; the parent filing and withdrawing gates it too', async ({ page }) => {
+  const ext = input(page, 'ext')
+  await expect(box(page, 'ext')).not.toBeChecked()
+  await expect(text(page, 'ext-model')).toHaveText('null')
+  await expect(ext).toBeDisabled()
+  // The parent ticks it: the day it had at mount comes back, and focus stays where it was.
+  await section(page, 'ext').locator('[data-action="file"]').click()
+  await expect(box(page, 'ext')).toBeChecked()
+  await expect(text(page, 'ext-model')).toHaveText('PlainDate 2026-10-15')
+  await expect(ext).toBeEnabled()
+  expect(await isFocused(ext)).toBe(false)
+  await section(page, 'ext').locator('[data-action="withdraw"]').click()
+  await expect(box(page, 'ext')).not.toBeChecked()
+  await expect(text(page, 'ext-model')).toHaveText('null')
+  // The parent sets a day while it's off: the box ticks.
+  await section(page, 'ext').locator('[data-action="set-day"]').click()
+  await expect(box(page, 'ext')).toBeChecked()
+  await expect(text(page, 'ext-on')).toHaveText('true')
+  await expect(ext).toHaveValue('10/20/2026')
+  // The user unticks: the parent's box follows.
+  await box(page, 'ext').click()
+  await expect(text(page, 'ext-on')).toHaveText('false')
+  await expect(text(page, 'ext-model')).toHaveText('null')
+})
+
+test('in a UForm: a tick or untick revalidates the field, so an error for a date no longer asked for goes away', async ({ page }) => {
+  const review = input(page, 'form')
+  await section(page, 'form').getByRole('button', { name: 'Save' }).click()
+  await expect(review).toHaveAccessibleDescription('Enter the review date')
+  await expect(review).toHaveAttribute('aria-invalid', 'true')
+  await box(page, 'form').click()
+  await expect(section(page, 'form')).not.toContainText('Enter the review date')
+  await expect(review).toHaveAttribute('aria-invalid', 'false')
+  // Ticked again with nothing to restore, the rule asks for the date once more.
+  await box(page, 'form').click()
+  await expect(section(page, 'form')).toContainText('Enter the review date')
+})
+
+test('disabled: the box and the date are both disabled', async ({ page }) => {
+  await expect(box(page, 'disabled')).toBeDisabled()
+  await expect(box(page, 'disabled')).toBeChecked()
+  await expect(input(page, 'disabled')).toBeDisabled()
+  await expect(input(page, 'disabled')).toHaveValue('05/12/2026')
+})
