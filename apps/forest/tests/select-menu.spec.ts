@@ -1,19 +1,22 @@
 import { expect, test, type Page } from '@playwright/test'
 
 // ZSelectMenu on the Forest theme (pages/select-menu.vue): a data-entry row filled from the keyboard alone — open on
-// focus, typed to filter, Tab to take it and move on — and a ZSelectMenu painting exactly as a plain USelectMenu does
+// focus, typed or arrowed to, Tab to take it and move on — and a ZSelectMenu painting exactly as a plain USelectMenu does
 // on every Forest scheme in light and dark (it adds behavior, never a look). The behaviors one by one, with
 // `multiple`, grouped items and each switch off, are in apps/base/tests/select-menu.spec.ts.
 
 const hydrated = (page: Page) => page.waitForFunction(() => !!(document.querySelector('#__nuxt') as { __vue_app__?: unknown } | null)?.__vue_app__)
 const listbox = (page: Page) => page.locator('[role="listbox"][data-state="open"]')
 
-test('a data-entry row, from the keyboard alone', async ({ page }) => {
+async function openPage(page: Page) {
   await page.goto('/select-menu')
   await page.waitForLoadState('networkidle')
   await hydrated(page)
-  const form = page.locator('[data-form]')
+}
+const form = (page: Page) => page.locator('[data-form]')
 
+test('a data-entry row, from the keyboard alone', async ({ page }) => {
+  await openPage(page)
   await page.locator('[data-payee]').fill('Acme')
   await page.keyboard.press('Tab')
   // The state menu opened on focus, its search input focused: type to filter, Tab takes the match.
@@ -22,21 +25,38 @@ test('a data-entry row, from the keyboard alone', async ({ page }) => {
   await page.keyboard.type('new')
   await expect(listbox(page).locator('[data-highlighted]')).toHaveText('New York')
   await page.keyboard.press('Tab')
-  await expect(form).toHaveText('Acme|NY||')
-  // The kind menu has no search input: arrow keys pick, and Tab leaves the value as it was.
+  await expect(form(page)).toHaveText('payee: Acme, state: NY, kind: —, memo: —')
+  // The kind menu has no search input: arrow keys and Enter pick, and focus comes back to it.
   await expect(page.locator('[data-kind-menu]')).toHaveAttribute('aria-expanded', 'true')
   await page.keyboard.press('ArrowDown')
   await page.keyboard.press('Enter')
-  await expect(form).toHaveText('Acme|NY|Receipt|')
+  await expect(form(page)).toHaveText('payee: Acme, state: NY, kind: Receipt, memo: —')
   await expect(page.locator('[data-kind-menu]')).toBeFocused()
   // Typeahead on the closed menu, then on to the memo.
   await page.keyboard.press('s')
-  await expect(form).toHaveText('Acme|NY|Statement|')
+  await expect(form(page)).toHaveText('payee: Acme, state: NY, kind: Statement, memo: —')
   await page.keyboard.press('Tab')
   await expect(page.locator('[data-memo]')).toBeFocused()
   await page.keyboard.type('Q3')
-  await expect(form).toHaveText('Acme|NY|Statement|Q3')
+  await expect(form(page)).toHaveText('payee: Acme, state: NY, kind: Statement, memo: Q3')
   await expect(listbox(page)).toHaveCount(0)
+})
+
+test('the kind menu, no search input: arrow down and Tab takes the highlighted kind and moves on', async ({ page }) => {
+  await openPage(page)
+  await page.locator('[data-payee]').fill('Acme')
+  await page.keyboard.press('Tab')
+  // Straight through the state menu: untouched, it stays empty.
+  await expect(page.locator('[data-state-menu]')).toHaveAttribute('aria-expanded', 'true')
+  await page.keyboard.press('Tab')
+  await expect(page.locator('[data-kind-menu]')).toHaveAttribute('aria-expanded', 'true')
+  await expect(listbox(page).locator('[data-highlighted]')).toHaveText('Invoice')
+  await page.keyboard.press('ArrowDown')
+  await expect(listbox(page).locator('[data-highlighted]')).toHaveText('Receipt')
+  await page.keyboard.press('Tab')
+  await expect(page.locator('[data-memo]')).toBeFocused()
+  await expect(listbox(page)).toHaveCount(0)
+  await expect(form(page)).toHaveText('payee: Acme, state: —, kind: Receipt, memo: —')
 })
 
 const SCHEMES = ['teal', 'slate-cobalt', 'graphite-violet', 'paper-olive', 'ink-indigo', 'ember']

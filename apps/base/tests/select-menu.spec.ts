@@ -199,7 +199,7 @@ test.describe('Tab closes the menu and moves on', () => {
     await expect(value(page, 'plain')).toHaveText('Blueberry')
   })
 
-  test('without a search input: the value stays as it was', async ({ page }) => {
+  test('without a search input: arrowed to, Tab takes the highlighted item', async ({ page }) => {
     await menu(page, 'no-search').focus()
     await page.keyboard.press('Enter')
     await page.keyboard.press('ArrowDown')
@@ -207,7 +207,38 @@ test.describe('Tab closes the menu and moves on', () => {
     await page.keyboard.press('Tab')
     await focused(after(page, 'no-search'))
     await expect(listbox(page)).toHaveCount(0)
+    await expect(value(page, 'no-search')).toHaveText('4')
+  })
+
+  test('without a search input, untouched: the value stays', async ({ page }) => {
+    await menu(page, 'no-search').focus()
+    await page.keyboard.press('Enter')
+    await expect(highlighted(page)).toHaveText('Grace Hopper')
+    await page.keyboard.press('Tab')
+    await focused(after(page, 'no-search'))
     await expect(value(page, 'no-search')).toHaveText('3')
+  })
+
+  test('without a search input: a letter in the open list moves the highlight, and Tab takes it', async ({ page }) => {
+    await menu(page, 'no-search').focus()
+    await page.keyboard.press('Enter')
+    await expect(highlighted(page)).toHaveText('Grace Hopper')
+    await page.keyboard.press('k')
+    await expect(highlighted(page)).toHaveText('Katherine Johnson')
+    await page.keyboard.press('Tab')
+    await focused(after(page, 'no-search'))
+    await expect(value(page, 'no-search')).toHaveText('4')
+  })
+
+  test('a hovered item counts as moving the highlight: Tab takes it', async ({ page }) => {
+    await menu(page, 'no-search').focus()
+    await page.keyboard.press('Enter')
+    await expect(highlighted(page)).toHaveText('Grace Hopper')
+    await listbox(page).getByRole('option', { name: 'Alan Turing' }).hover()
+    await expect(highlighted(page)).toHaveText('Alan Turing')
+    await page.keyboard.press('Tab')
+    await focused(after(page, 'no-search'))
+    await expect(value(page, 'no-search')).toHaveText('2')
   })
 
   test('with multiple: the selection stays as it was', async ({ page }) => {
@@ -256,11 +287,11 @@ test.describe('Tab closes the menu and moves on', () => {
   test('a menu opened from code through v-model:open closes on Tab too', async ({ page }) => {
     const root = page.locator('[data-side="wrapped"]')
     await root.locator('[data-open-from-code]').click()
-    await expect(root.locator('[data-value]')).toHaveText('|true|0')
+    await expect(root.locator('[data-value]')).toHaveText('value: —, open: true, changes: 0')
     await expect(search(page)).toBeFocused()
     await page.keyboard.press('Tab')
     await expect(listbox(page)).toHaveCount(0)
-    await expect(root.locator('[data-value]')).toHaveText('|false|0')
+    await expect(root.locator('[data-value]')).toHaveText('value: —, open: false, changes: 0')
     await expect(search(page)).toHaveCount(0)
   })
 
@@ -284,12 +315,12 @@ test.describe('open on focus', () => {
     await expect(menu(page, 'entry')).toHaveAttribute('aria-expanded', 'true')
     await page.keyboard.type('gr')
     await page.keyboard.press('Tab')
-    await expect(value(page, 'entry')).toHaveText('Grape|')
+    await expect(value(page, 'entry')).toHaveText('first: Grape, second: —')
     await expect(next).toHaveAttribute('aria-expanded', 'true')
     await expect(search(page)).toBeFocused()
     await page.keyboard.type('ap')
     await page.keyboard.press('Tab')
-    await expect(value(page, 'entry')).toHaveText('Grape|Apple')
+    await expect(value(page, 'entry')).toHaveText('first: Grape, second: Apple')
     await focused(after(page, 'entry'))
     await expect(listbox(page)).toHaveCount(0)
   })
@@ -304,7 +335,7 @@ test.describe('open on focus', () => {
     await expect(highlighted(page)).toHaveText('Apple')
     await page.keyboard.press('Tab')
     await focused(after(page, 'entry'))
-    await expect(value(page, 'entry')).toHaveText('|')
+    await expect(value(page, 'entry')).toHaveText('first: —, second: —')
   })
 
   test('Escape closes it, and the focus coming back does not open it again', async ({ page }) => {
@@ -345,20 +376,20 @@ test.describe('everything else passes through unchanged', () => {
       await expect(trigger).toHaveAttribute('aria-haspopup', 'listbox')
       await expect(trigger).toHaveText('@Choose someone')
       await trigger.click()
-      await expect(root.locator('[data-value]')).toHaveText('|true|0')
+      await expect(root.locator('[data-value]')).toHaveText('value: —, open: true, changes: 0')
       await expect(listbox(page).locator('[data-item-label]')).toHaveText(['ADA LOVELACE', 'ALAN TURING', 'GRACE HOPPER', 'KATHERINE JOHNSON'])
       await listbox(page).getByRole('option', { name: 'ALAN TURING' }).click()
-      await expect(root.locator('[data-value]')).toHaveText('2|false|1')
+      await expect(root.locator('[data-value]')).toHaveText('value: 2, open: false, changes: 1')
       await expect(trigger).toHaveText('@Alan Turing')
       await trigger.locator('[data-slot="trailingClear"]').click()
-      await expect(root.locator('[data-value]')).toHaveText(/^\|false\|/)
+      await expect(root.locator('[data-value]')).toHaveText(/^value: —, open: false, /)
       await expect(trigger).toHaveText('@Choose someone')
     })
   }
 
   test('the trigger renders the same markup as USelectMenu\'s', async ({ page }) => {
     const markup = (s: 'native' | 'wrapped') => side(page, s).locator('[data-menu]').evaluate((el) =>
-      el.outerHTML.replace(/ (id|aria-label|aria-controls)="[^"]*"/g, '').replace(/<!--[^>]*-->/g, ''))
+      el.outerHTML.replace(/ (id|aria-label|aria-controls|aria-describedby)="[^"]*"/g, '').replace(/<!--[^>]*-->/g, ''))
     expect(await markup('wrapped')).toBe(await markup('native'))
   })
 

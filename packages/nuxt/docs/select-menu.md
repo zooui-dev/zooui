@@ -35,13 +35,14 @@ and paint alike in light and dark, on the base and on every Forest scheme.
   because the trigger's accessible name is its label, not its value. **With `multiple`** typing never replaces the
   selection: it opens the menu, with the letter in the search input (which filters and highlights the first match,
   and keeps the typing) or, without one, on the match by reka-ui's own typeahead.
-- **Close on Tab.** reka-ui otherwise loops focus inside the open menu. **A single-select menu with a search input
-  commits the highlighted item first**, as Enter would, once the person has typed in the search or moved the
-  highlight with the keys since it opened: type to filter, Tab to take the match and move on. An untouched menu
-  leaves the value as it was, though its highlight may be the first item (reka-ui's choice when nothing is
-  selected): Tabbing through an empty open-on-focus field doesn't fill it in. Hovering doesn't count. **Without a search input, or with
-  `multiple`, Tab leaves the value as it was**: there the highlight only shows where the arrow keys are, and taking
-  it would change a field just by passing through it. The closing menu is made `inert`, so nothing in it can take
+- **Close on Tab.** reka-ui otherwise loops focus inside the open menu. **A single-select menu commits the
+  highlighted item first**, as Enter would, whenever the person moved the highlight in this opening: arrow keys
+  (Home, End, Page Up and Down too), typing in the search or, without one, a letter in the list, or hovering an item
+  (a pointer moving onto one). Type or arrow to an item, Tab to take it and move on, with or without a search input. **An
+  untouched menu leaves the value as it was**, though its highlight may be the first item (reka-ui's choice when
+  nothing is selected): Tabbing through an empty open-on-focus field doesn't fill it in. **With `multiple`, Tab leaves
+  the selection as it was**: toggling the highlighted item would add or remove one just by leaving the field, and
+  Enter or a click already toggles it. The closing menu is made `inert`, so nothing in it can take
   focus back as it animates out (the search input's `UInput` focuses itself on a timer after it mounts).
 - **Open on focus** is for data entry: Tab in, type, Tab to take the match and land in the next field, already open
   if it is a menu too. Only focus from the keyboard opens it (`:focus-visible`), since a click opens the menu

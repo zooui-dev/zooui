@@ -18,7 +18,7 @@ preview: SelectMenuBasic
 
 Focus the field and type: `b` picks Banana, `b` again Blueberry, and `bl` Blueberry straight away. The search starts over after a second's pause. The pick is announced in a polite live region, since the trigger's name is its label, not its value. Group labels, separators and disabled items are skipped.
 
-Open the menu and Tab out of it, and focus goes to the next field instead of looping inside the menu. **With a search input**, once you have typed in the search or moved the highlight, Tab takes the highlighted item first, as Enter would: type to filter, Tab to take the match and move on. Tab through a menu you haven't touched, and the value stays as it was, even when the menu opened with its first item highlighted. **Without a search input, or with `multiple`**, Tab always leaves the value as it was: the highlight there only shows where the arrow keys are, so taking it would change the field just by passing through it.
+Open the menu and Tab out of it, and focus goes to the next field instead of looping inside the menu. Once you have moved the highlight (with the arrow keys, by typing in the search or, without a search input, a letter in the list, or by hovering an item), Tab takes the highlighted item first, as Enter would: type or arrow to an item, Tab to take it and move on. Tab through a menu you haven't touched, and the value stays as it was, even when the menu opened with its first item highlighted. **With `multiple`**, Tab always leaves the selection as it was: toggling the highlighted item would add or remove one just by leaving the field, and Enter or a click already does that.
 
 ::component-example{name="SelectMenuBasic"}
 ::

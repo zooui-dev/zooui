@@ -13,9 +13,10 @@
 //   label, not its value). With `multiple` it never replaces the selection: it opens the menu on the match instead.
 // - openOnFocus: keyboard focus opens the menu (not a click, which opens it anyway, and not focus coming back from it).
 // - closeOnTab: Tab and Shift+Tab close the open menu and move on to the next or previous field. reka-ui otherwise
-//   keeps focus looping inside the menu. A single-select menu with a search input commits the highlighted item first,
-//   as Enter would (type to filter, Tab to take it), once the person has typed or moved the highlight; an untouched
-//   menu, and any other menu, leaves the value as it was.
+//   keeps focus looping inside the menu. A single-select menu commits the highlighted item first, as Enter would, once
+//   the person has moved the highlight in this opening (arrow keys, typing in the search or the list, a hover): type
+//   or arrow to an item, Tab to take it. An untouched menu leaves the value as it was, and so does `multiple` (Tab
+//   there would add or remove an item just by leaving the field; Enter and a click toggle it).
 import type { SelectMenuItem } from '@nuxt/ui'
 import { itemLabel, itemValue, selectableItems, typeaheadMatch, type TypeaheadKeys } from './select-typeahead.ts'
 
@@ -76,8 +77,8 @@ const isOpen = ref(false)
 let closedAt = 0
 /** A letter typed on the closed `multiple` menu, handed to the menu once it is open. */
 let pendingKey = ''
-/** Whether the person has typed in the search or moved the highlight since the menu opened: only then does Tab
- *  take the highlighted item. Untouched, the highlight is only where the menu opened (the selected item, or the first
+/** Whether the person has moved the highlight since the menu opened (arrow keys, typing, a hover): only then does
+ *  Tab take the highlighted item. Untouched, the highlight is only where the menu opened (the selected item, or the first
  *  one when nothing is selected), and Tabbing past the field must not fill it in. */
 let touched = false
 
@@ -88,6 +89,7 @@ function onOpen(value: boolean) {
     touched = false
     document.addEventListener('keydown', onDocumentKeydown, true)
     document.addEventListener('input', onDocumentInput, true)
+    document.addEventListener('pointermove', onDocumentPointermove, true)
     void afterOpen()
   } else {
     closedAt = performance.now()
@@ -98,6 +100,7 @@ function onOpen(value: boolean) {
 function removeDocumentListeners() {
   document.removeEventListener('keydown', onDocumentKeydown, true)
   document.removeEventListener('input', onDocumentInput, true)
+  document.removeEventListener('pointermove', onDocumentPointermove, true)
 }
 onBeforeUnmount(removeDocumentListeners)
 // A menu opened (or closed) from code through v-model:open emits no update:open; `open` passes through $attrs, and
@@ -113,6 +116,13 @@ const NAVIGATION = new Set(['ArrowDown', 'ArrowUp', 'Home', 'End', 'PageDown', '
 const inMenu = (e: Event) => e.isTrusted && e.target instanceof Node && !!content()?.contains(e.target)
 function onDocumentInput(e: Event) {
   if (inMenu(e)) touched = true
+}
+// A hover moves the highlight: reka-ui highlights the item a pointer moves over, so a move over one it hasn't
+// highlighted yet is the person moving it.
+function onDocumentPointermove(e: PointerEvent) {
+  if (!inMenu(e)) return
+  const option = (e.target as Element).closest?.('[role="option"]')
+  if (option && !option.hasAttribute('data-highlighted')) touched = true
 }
 
 /** Resolves to what `find` returns once it returns something, or null after about ten frames. */
@@ -209,7 +219,8 @@ function onTriggerFocusin(e: FocusEvent) {
 let left: HTMLElement | null = null
 
 function onDocumentKeydown(e: KeyboardEvent) {
-  if (NAVIGATION.has(e.key) && inMenu(e)) touched = true
+  // Arrow keys, and a letter in a list without a search input (reka-ui's own typeahead moves the highlight).
+  if ((NAVIGATION.has(e.key) || (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey)) && inMenu(e)) touched = true
   if (e.key !== 'Tab' || !props.closeOnTab || !isOpen.value || e.ctrlKey || e.metaKey || e.altKey) return
   const el = trigger()
   const menuEl = content()
@@ -217,7 +228,7 @@ function onDocumentKeydown(e: KeyboardEvent) {
   if (!el || !menuEl || !target || !menuEl.contains(target)) return
   // reka-ui's focus scope loops Tab inside the menu only while focus is on its last (or first) item; by the time the
   // key reaches it, focus is on the trigger below, so it lets the key be.
-  if (touched && hasSearch.value && !props.multiple) press('Enter') // the highlighted item, as Enter takes it
+  if (touched && !props.multiple) press('Enter') // the highlighted item, as Enter takes it
   // Focus leaving the menu for its trigger closes it (the spec checks it, on the page's last field too). Not a click
   // on the trigger: `isOpen` hears of a close a tick late, so a click after Enter's close could open it again.
   movingFocus = true
