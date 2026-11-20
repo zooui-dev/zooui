@@ -17,5 +17,6 @@
     <OptionalDateSpecimen />
     <ForestGrid />
     <RepeatingListSpecimen />
+    <FilterSelectSpecimen />
   </main>
 </template>
