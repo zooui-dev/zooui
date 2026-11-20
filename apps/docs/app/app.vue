@@ -65,5 +65,6 @@ const links = [
     <ClientOnly>
       <LazyUContentSearch :files="files ?? []" :navigation="navigation ?? []" :fuse="{ resultLimit: 30 }" />
     </ClientOnly>
+    <ZConfirmDialog />
   </UApp>
 </template>

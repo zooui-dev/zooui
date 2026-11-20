@@ -11,6 +11,8 @@ Forms often ask for "one or more" of something: referral sources, contacts, the 
 
 With a `#summary` slot, rows that are already there when the list mounts start folded to one line with an Edit button. New rows, and any row with an error, are open. `row-key` keeps a row's identity while it is edited, for rows that are saved records.
 
+An open row has **Done** and **Cancel**. Done folds it, keeping the edits. Cancel puts back what the row held when it opened, then folds it: the values go back into the same object, nested fields included, so the row keeps its identity and key. A row added in the list and not yet Done has nothing to go back to, so Cancel removes it; at `min`, where it could not be removed, it has no Cancel. <kbd>Esc</kbd> anywhere in an open row is Cancel, unless a field inside handles Escape itself, such as an open select menu or date popover. Done on a row with an error keeps it open with the error showing, and puts focus in its first field; Cancel does the same after putting its values back. After Done or Cancel, focus goes to the row's Edit button. The words are `done-label` and `cancel-label`.
+
 ::component-example{name="RepeatingListSources"}
 ::
 

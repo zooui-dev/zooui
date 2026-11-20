@@ -62,5 +62,6 @@ const sections = [
       </header>
       <NuxtPage />
     </div>
+    <ZConfirmDialog />
   </UApp>
 </template>
