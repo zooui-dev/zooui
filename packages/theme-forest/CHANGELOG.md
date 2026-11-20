@@ -1,5 +1,15 @@
 # @zooui/theme-forest
 
+## 0.3.1
+
+### 🩹 Fixes
+
+- [#33](https://github.com/zooui-dev/zooui/pull/33) [`e3be7e7`](https://github.com/zooui-dev/zooui/commit/e3be7e7d9f14f532ce751110a6ea97fb968ada44) - Warning, success and info icons and text in Forest are easier to see in light mode.
+
+### 🌊 Dependencies
+
+- @zooui/nuxt@0.3.1
+
 ## 0.3.0
 
 ### 🩹 Fixes
