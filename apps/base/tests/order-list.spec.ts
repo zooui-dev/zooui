@@ -73,3 +73,29 @@ test('in a production build: keyboard moves, the master-detail form, and the too
   await expect(list.locator('[data-controls] button svg')).toHaveCount(6)
   expect(icons).toEqual([])
 })
+
+test('the steps list: a Move down click keeps focus on its button and scrolls only the list, also where a click does not focus a button (Safari)', async ({ page }) => {
+  // Safari does not focus a button on click; emulated by cancelling the button's own focus on mousedown.
+  await page.addInitScript(() => document.addEventListener('mousedown', (e) => {
+    if (!(e.target as Element).closest('button')) return
+    e.preventDefault()
+    ;(document.activeElement as HTMLElement | null)?.blur()
+  }, true))
+  await open(page, 'light')
+  const s = page.locator('[data-specimen="order-list-steps"]')
+  await s.getByRole('option', { name: 'Step 4', exact: true }).click()
+  await s.scrollIntoViewIfNeeded()
+  const y = await page.evaluate(() => window.scrollY)
+  const down = s.getByRole('button', { name: 'Move Step 4 down' })
+  for (let to = 4; to <= 8; to++) {
+    await down.click()
+    await expect(s.locator(`[data-row="${to}"]`)).toHaveText('Step 4')
+    await expect(down).toBeFocused()
+  }
+  const inView = await s.locator('[data-scroller]').evaluate((box) => {
+    const row = box.querySelector<HTMLElement>('[data-row="8"]')!
+    return box.scrollTop > 0 && row.offsetTop >= box.scrollTop && row.offsetTop + row.offsetHeight <= box.scrollTop + box.clientHeight
+  })
+  expect(inView).toBe(true)
+  expect(await page.evaluate(() => window.scrollY)).toBe(y)
+})

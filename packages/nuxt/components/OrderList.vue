@@ -212,15 +212,18 @@ function scrollToRow(i: number) {
 watch(selectedIndex, (i) => { if (i >= 0) scrollToRow(i) }, { flush: 'post' })
 onMounted(() => { if (selectedIndex.value >= 0) scrollToRow(selectedIndex.value) })
 
-/** Focus back to the list when the control that had it is gone or disabled (Move to top, at the top). */
-function keepFocus() {
+/** Focus on the toolbar button that was clicked, or back on the list when it is gone or disabled (Move to top, at the
+ *  top). The button is named rather than read from document.activeElement: Safari does not focus a button on click.
+ *  Never scrolls: focusing the list would scroll the page to it, and the row is brought into view by scrollToRow. */
+function keepFocus(control?: HTMLButtonElement | null) {
   nextTick(() => {
+    if (control?.isConnected && !control.disabled) return control.focus({ preventScroll: true })
     const active = document.activeElement as HTMLButtonElement | null
-    if (!active || active === document.body || !root.value?.contains(active) || active.disabled) listbox()?.focus()
+    if (!active || active === document.body || !root.value?.contains(active) || active.disabled) listbox()?.focus({ preventScroll: true })
   })
 }
 
-function move(m: OrderMove) {
+function move(m: OrderMove, control?: HTMLButtonElement | null) {
   const from = selectedIndex.value
   const to = moveTarget(from, items.value.length, m)
   if (to === null) return
@@ -232,7 +235,7 @@ function move(m: OrderMove) {
   selection.value = keyOf(next[to]!)
   emit('reorder', { item, from, to })
   say('moved', title, to + 1, next.length)
-  keepFocus()
+  keepFocus(control)
 }
 
 function add() {
@@ -290,6 +293,9 @@ function onPointerdown() {
   pointing = true
   keyboard.value = false
 }
+// What the rows draw from: a focus move that leaves the ring as it was (the list blurring as a clicked toolbar button
+// takes focus) must not re-render them, or TransitionGroup cancels the slide it has just started.
+const ring = computed(() => focused.value && keyboard.value)
 
 let query = ''
 let queryTimer: ReturnType<typeof setTimeout> | undefined
@@ -369,7 +375,7 @@ function rowClass(i: number, selected: boolean) {
   return twMerge(
     'cursor-pointer select-none rounded px-2.5 py-1.5 text-sm',
     selected ? 'bg-primary/10 text-highlighted hover:bg-primary/15' : ['text-default hover:bg-elevated', props.striped && i % 2 === 1 && 'bg-elevated/50'],
-    selected && focused.value && keyboard.value && 'ring-2 ring-inset ring-primary',
+    selected && ring.value && 'ring-2 ring-inset ring-primary',
     props.ui?.row,
   )
 }
@@ -381,7 +387,7 @@ const columnClass = computed(() => twMerge('min-w-0 flex-auto', props.fill && 'f
 const headerClass = computed(() => twMerge('px-2.5 py-1.5 text-sm font-medium text-muted', props.ui?.header))
 const listClass = computed(() => twMerge(
   'relative overflow-y-auto rounded-md bg-default p-1 ring ring-default',
-  focused.value && keyboard.value && selectedIndex.value < 0 && 'ring-2 ring-primary',
+  ring.value && selectedIndex.value < 0 && 'ring-2 ring-primary',
   props.fill && 'min-h-0 flex-1',
   props.ui?.list,
 ))
@@ -435,7 +441,7 @@ defineExpose({
             :aria-label="moveText(b.move)"
             :disabled="!canMove(b.move)"
             :data-move="b.move"
-            @click="move(b.move)"
+            @click="(e: MouseEvent) => move(b.move, e.currentTarget as HTMLButtonElement | null)"
           />
         </div>
       </slot>

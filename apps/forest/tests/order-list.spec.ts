@@ -384,6 +384,71 @@ test('the selected row scrolls into view: End, a move to the top, and a move to 
   await expect(listbox(s)).toBeFocused()
 })
 
+/** Safari does not focus a button on click: focus leaves the list for the page. Emulated in Chromium by cancelling the
+ *  button's own focus on mousedown. And every focus() call is recorded with its preventScroll, since Chromium, unlike
+ *  Safari, would not scroll the page to the list on focus anyway. */
+async function clicksLike(page: Page, browser: 'chromium' | 'safari') {
+  await page.addInitScript((safari) => {
+    const calls: boolean[] = []
+    ;(window as unknown as { focusCalls: boolean[] }).focusCalls = calls
+    const focus = HTMLElement.prototype.focus
+    HTMLElement.prototype.focus = function (options?: FocusOptions) {
+      if (this.closest('[data-testid="order-list"]')) calls.push(!!options?.preventScroll)
+      return focus.call(this, options)
+    }
+    if (safari) {
+      document.addEventListener('mousedown', (e) => {
+        if (!(e.target as Element).closest('button')) return
+        e.preventDefault()
+        ;(document.activeElement as HTMLElement | null)?.blur()
+      }, true)
+    }
+  }, browser === 'safari')
+}
+const focusCalls = (page: Page) => page.evaluate(() => {
+  const w = window as unknown as { focusCalls: boolean[] }
+  const calls = [...w.focusCalls]
+  w.focusCalls.length = 0
+  return calls
+})
+
+for (const browser of ['chromium', 'safari'] as const) {
+  test(`a toolbar move keeps focus on its button and scrolls only the list, never the page (${browser} clicks)`, async ({ page }) => {
+    await clicksLike(page, browser)
+    await open(page)
+    const s = steps(page)
+    await listbox(s).focus()
+    for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowDown')
+    await expect(selectedRows(s)).toHaveText(['Step 5'])
+    await s.scrollIntoViewIfNeeded()
+    const y = await page.evaluate(() => window.scrollY)
+    const box = s.locator('[data-scroller]')
+    const down = s.getByRole('button', { name: 'Move Step 5 down' })
+    await focusCalls(page)
+    for (let to = 5; to <= 9; to++) {
+      await down.click()
+      await expect(listbox(s).locator(`[data-row="${to}"]`)).toHaveText('Step 5')
+      await expect(down).toBeFocused()
+      expect(await inView(s, to)).toBe(true)
+      expect(await page.evaluate(() => window.scrollY)).toBe(y)
+    }
+    // The list's own box scrolled to follow the row; the page did not.
+    expect(await box.evaluate((b) => b.scrollTop)).toBeGreaterThan(0)
+    // At the top, Move up and Move to top are disabled, and focus goes to the list.
+    await s.getByRole('button', { name: 'Move Step 5 to top' }).click()
+    await expect(listbox(s).locator('[data-row="0"]')).toHaveText('Step 5')
+    await expect(listbox(s)).toBeFocused()
+    expect(await inView(s, 0)).toBe(true)
+    expect(await page.evaluate(() => window.scrollY)).toBe(y)
+    // Alt+Down from the keyboard: focus stays on the list, the page stays put.
+    await page.keyboard.press('Alt+ArrowDown')
+    await expect(listbox(s).locator('[data-row="1"]')).toHaveText('Step 5')
+    await expect(listbox(s)).toBeFocused()
+    expect(await page.evaluate(() => window.scrollY)).toBe(y)
+    expect(await focusCalls(page)).not.toContain(false)
+  })
+}
+
 /** Clicks a move button and, before the next frame, reads the moved row's transition: Vue's move class is on it. */
 const moveAndRead = (scope: Locator) => scope.evaluate(async (root) => {
   root.querySelector<HTMLButtonElement>('[data-move="up"]')!.click()
