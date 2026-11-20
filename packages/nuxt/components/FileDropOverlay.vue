@@ -60,7 +60,7 @@ function outrankedByModal(container: HTMLElement) {
 // page are left alone. The overlay is only a picture (`pointer-events: none`): the drag's events stay on the page's
 // own elements, so showing or hiding it never moves the pointer off one, a drop zone under it still gets its drop, and
 // an overlay nested inside it can be reached.
-import { dragCarriesFiles, sortDroppedFiles, type RejectedFile } from '../utils/file-drop'
+import { dragCarriesFiles, droppedFiles, sortDroppedFiles, type FileFilter, type RejectedFile } from '../utils/file-drop'
 
 defineOptions({ inheritAttrs: false })
 
@@ -70,13 +70,16 @@ const props = withDefaults(
     accept?: string | string[]
     /** Take every matching file; without it the first is taken and the rest go to @rejected. */
     multiple?: boolean
+    /** A rule of the product's own, run on each file `accept` takes (a size limit, a name rule): `true` takes it;
+     *  `false`, or a message saying why, sends it to @rejected as `filter`, with the message. */
+    filter?: FileFilter
     /** No overlay and no @drop; a file dropped is still kept from opening in the tab. */
     disabled?: boolean
     /** What the overlay says, and what a screen reader hears when it appears. */
     label?: string
     /** A second line under the label. */
     description?: string
-    /** The overlay's icon; `false` for none. */
+    /** The overlay's icon, such as `i-lucide-upload`; none by default. */
     icon?: string | false
     /** Take drops in this element only, with the overlay drawn inside it, rather than the window: an element (a template
      *  ref to one), a component, or a selector. `null` takes no drops, for a ref that isn't set yet. A selector is
@@ -86,17 +89,18 @@ const props = withDefaults(
   {
     accept: undefined,
     multiple: false,
+    filter: undefined,
     disabled: false,
-    label: 'Drop files here',
+    label: 'Drop your files',
     description: undefined,
-    icon: 'i-lucide-upload',
+    icon: false,
     target: undefined,
   },
 )
 const emit = defineEmits<{
   /** The files taken, in drop order; not emitted when none were. */
   drop: [files: File[]]
-  /** The files refused, each with its reason; not emitted when none were. */
+  /** The files refused, each with its reason (and `filter`'s message); not emitted when none were. */
   rejected: [files: RejectedFile[]]
 }>()
 defineSlots<{
@@ -166,7 +170,7 @@ function onDrop(e: DragEvent) {
   const take = visible.value && !takenByZone && !(bound && outrankedByModal(bound))
   reset()
   if (!take || !e.dataTransfer) return
-  const { accepted, rejected } = sortDroppedFiles(e.dataTransfer.files, { accept: props.accept, multiple: props.multiple })
+  const { accepted, rejected } = sortDroppedFiles(droppedFiles(e.dataTransfer), { accept: props.accept, multiple: props.multiple, filter: props.filter })
   if (accepted.length) emit('drop', accepted)
   if (rejected.length) emit('rejected', rejected)
 }
@@ -240,24 +244,32 @@ defineExpose({
   <!-- Over the window, in <body>; contained, inside the target itself, so it sits in the target's stacking context
        (a dialog's, over the dialog's content) with no measuring. -->
   <Teleport :to="scoped ?? 'body'">
-    <div
-      v-if="visible"
-      v-bind="$attrs"
-      data-file-drop-overlay
-      :data-contained="scoped ? '' : undefined"
-      aria-hidden="true"
-      :class="[
-        'pointer-events-none flex items-center justify-center bg-default/75 backdrop-blur-sm',
-        scoped ? 'absolute inset-0 z-10 rounded-[inherit] p-3' : 'fixed inset-0 z-50 p-6',
-      ]"
+    <!-- Fades in with the message growing from a little smaller, and out a little faster; none with reduced motion. -->
+    <Transition
+      enter-active-class="transition-opacity duration-150 ease-out *:transition-transform *:duration-150 *:ease-out motion-reduce:duration-0 motion-reduce:*:duration-0"
+      enter-from-class="opacity-0 *:scale-95"
+      leave-active-class="transition-opacity duration-100 ease-in *:transition-transform *:duration-100 *:ease-in motion-reduce:duration-0 motion-reduce:*:duration-0"
+      leave-to-class="opacity-0 *:scale-95"
     >
-      <div class="flex max-w-full flex-col items-center gap-3 rounded-lg border-2 border-dashed border-accented bg-elevated px-10 py-8 text-center shadow-lg" data-file-drop-message>
-        <slot :label="label" :accept="accept" :multiple="multiple">
-          <UIcon v-if="icon" :name="icon" class="size-10 text-primary" data-file-drop-icon />
-          <p class="text-base font-semibold text-highlighted">{{ label }}</p>
-          <p v-if="description" class="text-sm text-muted">{{ description }}</p>
-        </slot>
+      <div
+        v-if="visible"
+        v-bind="$attrs"
+        data-file-drop-overlay
+        :data-contained="scoped ? '' : undefined"
+        aria-hidden="true"
+        :class="[
+          'pointer-events-none flex items-center justify-center bg-default/75 backdrop-blur-sm',
+          scoped ? 'absolute inset-0 z-10 rounded-[inherit] p-3' : 'fixed inset-0 z-50 p-6',
+        ]"
+      >
+        <div class="flex max-w-full flex-col items-center gap-3 rounded-lg border-2 border-dashed border-accented bg-elevated px-10 py-8 text-center shadow-lg" data-file-drop-message>
+          <slot :label="label" :accept="accept" :multiple="multiple">
+            <UIcon v-if="icon" :name="icon" class="size-10 text-primary" data-file-drop-icon />
+            <p class="text-base font-semibold text-highlighted">{{ label }}</p>
+            <p v-if="description" class="text-sm text-muted">{{ description }}</p>
+          </slot>
+        </div>
       </div>
-    </div>
+    </Transition>
   </Teleport>
 </template>

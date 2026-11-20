@@ -32,6 +32,7 @@ const drop = useTemplateRef('drop')
       accept="image/*,.pdf"
       multiple
       label="Drop receipts to attach them"
+      icon="i-lucide-upload"
       description="Images and PDFs"
       @drop="(files) => (dropped = files.map((f) => f.name))"
       @rejected="(files) => (rejected = files.map((r) => `${r.file.name} ${r.reason}`))"

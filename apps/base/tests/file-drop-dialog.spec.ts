@@ -151,11 +151,18 @@ test('a drop on the field\'s own drop zone is added once, whether UFileUpload ta
 })
 
 test('remove: an added file at once; a stored one through the server, with the row busy until it answers', async ({ page }) => {
-  await expect(page.locator('[data-file-row="engagement-letter.pdf"]')).toContainText('245 kB')
-  await expect(page.locator('[data-file-row="2025-return.pdf"]')).toContainText('1.8 MB')
+  // Sizes in 1024s by default, as Buoy showed them.
+  await expect(page.locator('[data-file-row="engagement-letter.pdf"]')).toContainText('239.3 KB')
+  await expect(page.locator('[data-file-row="2025-return.pdf"]')).toContainText('1.7 MB')
   await fire(page, 'dragenter', FIELD)
   await fire(page, 'drop', FIELD)
-  await expect(page.locator('[data-file-row="report.pdf"]')).toContainText('1.2 kB')
+  await expect(page.locator('[data-file-row="report.pdf"]')).toContainText('1.2 KB')
+  // Remove is in the error color, as Buoy's was.
+  const errorColor = await page.evaluate(() => {
+    const d = document.createElement('div'); d.style.color = 'var(--ui-error)'; document.body.append(d)
+    const c = getComputedStyle(d).color; d.remove(); return c
+  })
+  await expect(page.getByRole('button', { name: 'Remove report.pdf' })).toHaveCSS('color', errorColor)
   await page.getByRole('button', { name: 'Remove report.pdf' }).click()
   await expect.poll(() => names(page)).toEqual([...STORED, 'scan.png'])
 
@@ -194,4 +201,45 @@ test('closing the dialog takes its listeners with it: its element no longer answ
   await expect(pageOverlay(page)).toBeVisible()
   await fire(page, 'dragleave', PAGE)
   await expect(pageOverlay(page)).toHaveCount(0)
+})
+
+test('no file twice: a name the list already holds, stored or added, is refused as already attached', async ({ page }) => {
+  await fire(page, 'dragenter', FIELD)
+  await fire(page, 'drop', FIELD)
+  await expect.poll(() => names(page)).toEqual([...STORED, 'report.pdf', 'scan.png'])
+
+  const again: Carry = [{ name: 'report.pdf', type: 'application/pdf' }, { name: 'engagement-letter.pdf', type: 'application/pdf' }, { name: 'ledger.csv', type: 'text/csv' }]
+  await fire(page, 'dragenter', FIELD, again)
+  await fire(page, 'drop', FIELD, again)
+  await expect.poll(() => names(page)).toEqual([...STORED, 'report.pdf', 'scan.png', 'ledger.csv'])
+  await expect(page.getByText('report.pdf, engagement-letter.pdf: already attached.', { exact: true })).toBeVisible()
+
+  // Once removed, a name can be attached again.
+  await page.getByRole('button', { name: 'Remove report.pdf' }).click()
+  await expect.poll(() => names(page)).toEqual([...STORED, 'scan.png', 'ledger.csv'])
+  const report: Carry = [{ name: 'report.pdf', type: 'application/pdf' }]
+  await fire(page, 'dragenter', FIELD, report)
+  await fire(page, 'drop', FIELD, report)
+  await expect.poll(() => names(page)).toEqual([...STORED, 'scan.png', 'ledger.csv', 'report.pdf'])
+})
+
+test('a file browsed for, removed, and browsed for again is added again: the input is reset before each browse', async ({ page }) => {
+  const input = page.locator('[data-zone="upload"] input[type="file"]')
+  const zone = page.locator(UPLOAD)
+  const pdf = { name: 'again.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF') }
+
+  const [first] = await Promise.all([page.waitForEvent('filechooser'), zone.click()])
+  await first.setFiles(pdf)
+  await expect.poll(() => names(page)).toEqual([...STORED, 'again.pdf'])
+  // The input still holds the pick: a browser would send no change for the same file chosen again.
+  expect(await input.evaluate((el: HTMLInputElement) => el.value)).toContain('again.pdf')
+
+  await page.getByRole('button', { name: 'Remove again.pdf' }).click()
+  await expect.poll(() => names(page)).toEqual(STORED)
+
+  const [second] = await Promise.all([page.waitForEvent('filechooser'), zone.click()])
+  // Opened empty, so choosing the same file again is a change.
+  expect(await input.evaluate((el: HTMLInputElement) => ({ value: el.value, files: el.files?.length ?? 0 }))).toEqual({ value: '', files: 0 })
+  await second.setFiles(pdf)
+  await expect.poll(() => names(page)).toEqual([...STORED, 'again.pdf'])
 })
