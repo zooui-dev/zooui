@@ -31,7 +31,7 @@ const OVERLAY = '[data-file-drop-overlay]'
 const overlay = (page: Page) => page.locator(OVERLAY)
 const announce = (page: Page) => page.locator('[data-file-drop-announce]')
 const shown = async (page: Page) => {
-  await expect(overlay(page)).toHaveAttribute('data-state', 'open')
+  await expect(overlay(page)).toHaveCount(1)
   await expect(overlay(page).getByText('Drop receipts to attach them')).toBeVisible()
 }
 
@@ -62,12 +62,13 @@ test.describe('over the window', () => {
     await shown(page)
     await expect(page.getByTestId('visible')).toHaveText('true')
     await expect(page.getByRole('status').filter({ hasText: 'Drop receipts to attach them' })).toHaveCount(1)
-    // The pointer is over the overlay now: it is entered, then the child under it left.
-    await fire(page, 'dragenter', OVERLAY)
+    // The overlay is only a picture (pointer-events: none): the drag's events stay on the page's own elements.
+    await expect(overlay(page)).toHaveCSS('pointer-events', 'none')
+    await fire(page, 'dragenter', '[data-child="a"]')
     await fire(page, 'dragleave', '[data-child="b"]')
     await shown(page)
-    // Out of the window: the overlay is left for nothing.
-    await fire(page, 'dragleave', OVERLAY)
+    // Out of the window: the last element is left for nothing.
+    await fire(page, 'dragleave', '[data-child="a"]')
     await expect(overlay(page)).toHaveCount(0)
     await expect(announce(page)).toHaveText('')
     await expect(page.getByTestId('visible')).toHaveText('false')
@@ -84,7 +85,7 @@ test.describe('over the window', () => {
     ]
     for (const [type, sel] of steps) {
       await fire(page, type as 'dragenter' | 'dragleave', sel)
-      await expect(overlay(page), `${type} ${sel}`).toHaveAttribute('data-state', 'open')
+      await expect(overlay(page), `${type} ${sel}`).toHaveCount(1)
     }
     await fire(page, 'dragleave', '[data-child="b"]')
     await expect(overlay(page)).toHaveCount(0)
@@ -94,8 +95,8 @@ test.describe('over the window', () => {
   test('a drop hands back the accepted files in @drop and the rest in @rejected, and is kept from opening in the tab', async ({ page }) => {
     await fire(page, 'dragenter', '[data-child="b"]')
     await shown(page)
-    expect(await fire(page, 'dragover', OVERLAY)).toEqual({ prevented: true, dropEffect: 'copy' })
-    expect((await fire(page, 'drop', OVERLAY)).prevented).toBe(true)
+    expect(await fire(page, 'dragover', '[data-child="b"]')).toEqual({ prevented: true, dropEffect: 'copy' })
+    expect((await fire(page, 'drop', '[data-child="b"]')).prevented).toBe(true)
     await expect(page.getByTestId('dropped')).toHaveText('lunch.png, invoice.pdf')
     await expect(page.getByTestId('rejected')).toHaveText('setup.exe accept')
     await expect(overlay(page)).toHaveCount(0)
@@ -123,17 +124,15 @@ test.describe('over the window', () => {
 
   test('Escape hides it for the rest of the drag, a drop then takes nothing, and the next drag shows it again', async ({ page }) => {
     await fire(page, 'dragenter', '[data-child="b"]')
-    await fire(page, 'dragenter', OVERLAY)
-    await fire(page, 'dragleave', '[data-child="b"]')
     await shown(page)
     await page.keyboard.press('Escape')
-    await expect(overlay(page)).toHaveAttribute('data-state', 'hidden')
-    await expect(overlay(page)).toHaveCSS('pointer-events', 'none')
+    await expect(overlay(page)).toHaveCount(0)
     await expect(announce(page)).toHaveText('')
     // Still dragging: crossing the page does not bring it back.
     await fire(page, 'dragenter', '[data-child="a"]')
-    await fire(page, 'dragleave', OVERLAY)
-    await expect(overlay(page)).toHaveAttribute('data-state', 'hidden')
+    await fire(page, 'dragleave', '[data-child="b"]')
+    await expect(overlay(page)).toHaveCount(0)
+    await expect(page.getByTestId('visible')).toHaveText('false')
     expect(await fire(page, 'dragover', '[data-child="a"]')).toEqual({ prevented: true, dropEffect: 'none' })
     expect((await fire(page, 'drop', '[data-child="a"]')).prevented).toBe(true)
     await expect(page.getByTestId('dropped')).toHaveText('none')
@@ -159,8 +158,7 @@ test.describe('over the window', () => {
     await page.locator('[data-toggle="disabled"]').click()
     await fire(page, 'dragenter', '[data-child="b"]')
     await expect(page.getByTestId('visible')).toHaveText('false')
-    await expect(overlay(page)).toHaveAttribute('data-state', 'hidden')
-    await expect(overlay(page)).toHaveCSS('pointer-events', 'none')
+    await expect(overlay(page)).toHaveCount(0)
     await expect(announce(page)).toHaveText('')
     expect(await fire(page, 'dragover', '[data-child="b"]')).toEqual({ prevented: true, dropEffect: 'none' })
     expect((await fire(page, 'drop', '[data-child="b"]')).prevented).toBe(true)
@@ -172,7 +170,7 @@ test.describe('over the window', () => {
     const zone = '[data-zone="upload"] [data-slot="base"]'
     await page.locator('[data-toggle="disabled"]').click()
     await fire(page, 'dragenter', zone)
-    await expect(overlay(page)).toHaveAttribute('data-state', 'hidden')
+    await expect(overlay(page)).toHaveCount(0)
     expect(await fire(page, 'dragover', zone)).toEqual({ prevented: true, dropEffect: 'copy' })
     expect((await fire(page, 'drop', zone)).prevented).toBe(true)
     await expect(page.getByTestId('uploaded')).toHaveText('lunch.png, setup.exe, invoice.pdf')
@@ -219,16 +217,20 @@ test.describe('scoped to a region', () => {
     await expect(overlay(page)).toHaveCount(0)
 
     await fire(page, 'dragenter', '[data-child="inside"]', CSVS)
-    await expect(overlay(page)).toHaveAttribute('data-state', 'open')
+    // Contained: drawn inside the region itself, over its padding box (inside its 1px border), with no measuring.
+    const region = page.locator('[data-zone="region"]')
+    await expect(region.locator(OVERLAY)).toHaveAttribute('data-contained', '')
     await expect(overlay(page).getByText('Drop a CSV to import it')).toBeVisible()
-    const [region, cover] = await Promise.all([page.locator('[data-zone="region"]').boundingBox(), overlay(page).boundingBox()])
-    for (const k of ['x', 'y', 'width', 'height'] as const) expect(Math.abs(region![k] - cover![k]), k).toBeLessThan(1)
+    await expect(region).toHaveCSS('position', 'relative')
+    const [outer, cover] = await Promise.all([region.boundingBox(), overlay(page).boundingBox()])
+    for (const k of ['x', 'y'] as const) expect(Math.abs(outer![k] + 1 - cover![k]), k).toBeLessThan(0.5)
+    for (const k of ['width', 'height'] as const) expect(Math.abs(outer![k] - 2 - cover![k]), k).toBeLessThan(0.5)
 
-    // Over the overlay, which lives in <body> outside the region, the count still holds.
-    await fire(page, 'dragenter', OVERLAY, CSVS)
+    // Crossing the region's children holds it.
+    await fire(page, 'dragenter', '[data-zone="region"]', CSVS)
     await fire(page, 'dragleave', '[data-child="inside"]', CSVS)
-    await expect(overlay(page)).toHaveAttribute('data-state', 'open')
-    expect((await fire(page, 'drop', OVERLAY, CSVS)).prevented).toBe(true)
+    await expect(region.locator(OVERLAY)).toHaveCount(1)
+    expect((await fire(page, 'drop', '[data-zone="region"]', CSVS)).prevented).toBe(true)
     await expect(page.getByTestId('dropped')).toHaveText('march.csv')
     await expect(page.getByTestId('rejected')).toHaveText('photo.png accept, april.csv multiple')
     await expect(overlay(page)).toHaveCount(0)
@@ -237,10 +239,12 @@ test.describe('scoped to a region', () => {
   test('leaving the region hides it', async ({ page }) => {
     await expect.poll(async () => (await fire(page, 'dragover', '[data-child="inside"]', CSVS)).prevented).toBe(true)
     await fire(page, 'dragenter', '[data-child="inside"]', CSVS)
-    await fire(page, 'dragenter', OVERLAY, CSVS)
+    await fire(page, 'dragenter', '[data-zone="region"]', CSVS)
     await fire(page, 'dragleave', '[data-child="inside"]', CSVS)
-    await expect(overlay(page)).toHaveAttribute('data-state', 'open')
-    await fire(page, 'dragleave', OVERLAY, CSVS)
+    await expect(overlay(page)).toHaveCount(1)
+    // Out of the region onto the page: entered outside (no listener there), then the region left.
+    await fire(page, 'dragenter', '[data-zone="outside"]', CSVS)
+    await fire(page, 'dragleave', '[data-zone="region"]', CSVS)
     await expect(overlay(page)).toHaveCount(0)
   })
 })

@@ -49,7 +49,7 @@ for (const mode of ['light', 'dark'] as const) {
     })
     expect(await page.evaluate(findConflicts)).toEqual([])
 
-    await fire(page, 'drop', OVERLAY)
+    await fire(page, 'drop', '[data-child="b"]')
     await expect(page.getByTestId('dropped')).toHaveText('lunch.png, invoice.pdf')
     await expect(page.getByTestId('rejected')).toHaveText('setup.exe accept')
     await expect(page.locator(OVERLAY)).toHaveCount(0)

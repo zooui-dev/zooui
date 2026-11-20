@@ -1,8 +1,9 @@
 # ZFileDropOverlay
 
-Files dropped anywhere in the window (`components/FileDropOverlay.vue`), with its sorting rule in
-`utils/file-drop.ts`. Nuxt UI's `UFileUpload` takes a drop on its box; this takes one on the page. While files are
-dragged over the window a full-window overlay says what dropping does, and the drop hands the files back.
+Files dropped anywhere in the window, or contained in a dialog or region (`components/FileDropOverlay.vue`), with its
+sorting rule in `utils/file-drop.ts`; `ZFileList` (`components/FileList.vue`, [below](#zfilelist)) lists the files a
+form holds. Nuxt UI's `UFileUpload` takes a drop on its box; this takes one on the page. While files are dragged over
+it an overlay says what dropping does, and the drop hands the files back.
 
 ```vue
 <ZFileDropOverlay accept="image/*,.pdf" multiple label="Drop receipts to attach them" @drop="attach" @rejected="warn" />
@@ -20,7 +21,7 @@ brings up. Not "fullscreen", which reads as the Fullscreen API, and not "drop zo
 | `label` | `string` | The overlay's message and what the live region announces (`Drop files here`). |
 | `description` | `string` | A second, muted line. |
 | `icon` | `string \| false` | `i-lucide-upload` (in `Z_ICONS`); `false` for none. |
-| `target` | `HTMLElement \| { $el } \| string \| null` | Take drops in this element only, with the overlay placed over it: an element or template ref, a component, or a selector. `null` takes nothing (a ref not set yet); unset is the window. |
+| `target` | `HTMLElement \| { $el } \| string \| null` | Contain it in this element: drops there only, with the overlay drawn inside it. An element or template ref, a component, or a selector. `null` takes nothing (a ref not set yet); unset is the window. A selector is looked up at mount, so for an element rendered later (a dialog's content, a `v-if`) pass a template ref, which is followed as it changes. |
 
 | Emit | |
 | --- | --- |
@@ -35,16 +36,28 @@ hides the overlay for the rest of the drag as Escape does.
 on the old, so the overlay is up while the count is above zero; the page's children can't make it flicker. Only drags
 whose `dataTransfer.types` has `Files` are counted: text, links and elements dragged within the page are left alone,
 with no preventDefault, so the page's own drag and drop is untouched. A drop anywhere, or the count reaching zero
-(the drag left the window), ends the drag. The overlay stays mounted for the whole drag: dismissed (Escape) or
-disabled, it is transparent and `pointer-events: none` rather than removed, because an element removed from under the
-pointer never gets its `dragleave`, and the count would stick above zero. Only a drop on the overlay itself emits, so
-a drop zone drawn over it (a modal's `UFileUpload`) keeps its own drop; set `disabled` while one is open, since the
-overlay is otherwise on top.
+(the drag left the window), ends the drag. The overlay is only a picture, `pointer-events: none`: the drag's events
+stay on the page's own elements, so showing or hiding it never takes an element from under the pointer (whose
+`dragleave` would never come, and the count would stick), and a drop zone under it still gets its events. Dismissed
+(Escape) or disabled, it is simply not drawn.
 
-**Scoped.** With `target`, the listeners go on that element instead of `<html>`, and the overlay (in `<body>`, out of
-the target) counts its own enter and leave, so moving onto it doesn't end the drag. Its box is measured from the
-target as the drag enters and on each `dragover`, so it follows a scroll. A drop outside the target is the page's
-business, as it is without the component.
+**Contained.** Whenever `target` is set, the overlay is contained in it: the listeners go on that element instead of
+`<html>`, and the overlay is teleported into it as `absolute inset-0` rather than to `<body>` as `fixed inset-0
+z-50`. Not a separate prop: an overlay placed over a target from `<body>` sits in the wrong stacking context (behind a
+dialog that portalled later) and outside a modal's interactive layer, so there is no case for it. A target that isn't
+positioned is made `position: relative` while the overlay is attached, and its own `position` put back after. A drop
+outside the target is the page's business, as it is without the component.
+
+**Nesting: the innermost wins.** Every instance shares one `WeakSet` of drag events already claimed. A target's
+listeners run before those of anything around it (an outer target, or `<html>`), so the innermost overlay claims each
+event and the outer ones leave it alone, neither counting nor answering it. The count is split by region: the dialog's
+overlay counts the drag over the dialog, the page's the drag over the rest, and each shows only while the pointer is
+over its own; the drop goes to the one under it. A disabled overlay still claims, so the count stays whole when
+`disabled` changes mid-drag, and a dialog's disabled overlay keeps the page's from taking drops over the dialog.
+
+**Drop zones under it.** When a drop zone under the pointer (a `UFileUpload`) has taken the `dragover`, its
+`dropEffect` is left alone, and a drop it takes (`defaultPrevented`) isn't emitted again. One it refuses is the
+overlay's.
 
 **SSR and cleanup.** Nothing is attached during SSR: the listeners (the drag events on `<html>` or the target, and
 `keydown` for Escape on `document`) go on in `onMounted` and come off in `onBeforeUnmount`, and a changed `target`
@@ -56,5 +69,46 @@ focusable, so focus stays where it was and isn't trapped.
 
 **The rule, on its own.** `fileMatchesAccept(file, accept)`, `sortDroppedFiles(files, { accept, multiple })` and
 `dragCarriesFiles(dataTransfer)` are auto-imported (`utils/file-drop.ts`), so a product's own inputs can take the same
-files. Tested by `scripts/file-drop.test.mjs`; the component by `apps/base/tests/file-drop.spec.ts` and
+files. Tested by `scripts/file-drop.test.mjs`; the component by `apps/base/tests/file-drop.spec.ts`,
+`apps/base/tests/file-drop-dialog.spec.ts` (contained in a `ZModal`, nested, with `ZFileList`) and
 `apps/forest/tests/file-drop.spec.ts`.
+
+## In a dialog, with a file list
+
+A transfer dialog's Files field: the whole dialog takes drops, the field lists what the transfer holds and what is being
+added, and a `UFileUpload` under the list browses for more (`apps/base/app/pages/file-drop-dialog.vue`).
+
+```vue
+<ZModal title="Edit transfer">
+  <template #content>
+    <div ref="dialog" class="flex flex-col gap-4 p-6">
+      <UFormField label="Files">
+        <ZFileList :items="[...stored, ...added]" :remove="remove" />
+        <UFileUpload :model-value="null" multiple :accept="ACCEPT" :preview="false" @update:model-value="(f) => f && add(f)" />
+      </UFormField>
+      <ZFileDropOverlay :target="dialog" :accept="ACCEPT" multiple @drop="add" @rejected="report" />
+    </div>
+  </template>
+</ZModal>
+```
+
+`add(files)` runs `sortDroppedFiles(files, { accept: ACCEPT, multiple: true })` and appends what it takes; `report`
+raises a toast for what it refuses. Browsed files go through `add` too: `UFileUpload`'s own drop check reads only the
+MIME types out of `accept` (it drops `.pdf`, `.csv`), and a native file dialog's filter can be switched to all files,
+so its model isn't the rule. Binding `:model-value="null"` makes each `update:model-value` carry only the new files. A
+drop on the `UFileUpload` itself reaches `add` once: when it takes the drop, the overlay leaves it be.
+
+## ZFileList
+
+| Prop | | |
+| --- | --- | --- |
+| `items` | `FileListItem[]` | The rows, in order: `File`s and stored files, `{ id, name, size, type? }`. |
+| `remove` | `(item, index) => unknown` | Removes a row; a returned promise shows as the row's spinner (`aria-busy`, button disabled) until it settles. Unset, no Remove buttons. |
+| `locale` | `string` | The sizes' locale; Nuxt UI's when unset. |
+| `remove-label` | `string` | `Remove`; the button's name is it and the file's: "Remove invoice.pdf". |
+
+`@remove-error(error, item)` when `remove`'s promise rejects; the row stays. Why not `UFileUpload`'s own list: its
+model is `File[]` (it calls `URL.createObjectURL` on each), so it can't hold a file already on the server, and its
+remove is synchronous, by index. The icon is chosen by MIME type or extension (image, video, audio, spreadsheet,
+archive, document, or plain). Sizes are `formatFileSize(bytes, locale)`: decimal units, one decimal under 10,
+`512 bytes`, `1.2 kB`, `1,2 kB` in German. Rows carry `data-file-row` (the name) and stored ones `data-stored`.

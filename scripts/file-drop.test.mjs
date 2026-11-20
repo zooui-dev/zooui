@@ -4,7 +4,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { dragCarriesFiles, fileMatchesAccept, sortDroppedFiles } from '../packages/nuxt/utils/file-drop.ts'
+import { dragCarriesFiles, fileMatchesAccept, formatFileSize, sortDroppedFiles } from '../packages/nuxt/utils/file-drop.ts'
 
 const file = (name, type = '') => new File(['x'], name, { type })
 const names = (files) => files.map((f) => f.name)
@@ -68,5 +68,29 @@ describe('dragCarriesFiles', () => {
     assert.equal(dragCarriesFiles({ types: [] }), false)
     assert.equal(dragCarriesFiles(null), false)
     assert.equal(dragCarriesFiles(undefined), false)
+  })
+})
+
+describe('formatFileSize', () => {
+  it('says bytes in words under 1 kB, and steps up in decimal units', () => {
+    assert.equal(formatFileSize(0, 'en'), '0 bytes')
+    assert.equal(formatFileSize(1, 'en'), '1 byte')
+    assert.equal(formatFileSize(999, 'en'), '999 bytes')
+    assert.equal(formatFileSize(1000, 'en'), '1 kB')
+    assert.equal(formatFileSize(1234, 'en'), '1.2 kB')
+    assert.equal(formatFileSize(34_560_000, 'en'), '35 MB')
+    assert.equal(formatFileSize(3_400_000_000, 'en'), '3.4 GB')
+  })
+  it('steps up when rounding reaches the next unit', () => {
+    assert.equal(formatFileSize(999_960, 'en'), '1 MB')
+    assert.equal(formatFileSize(9_960, 'en'), '10 kB')
+  })
+  it('writes the locale\'s digits and unit words', () => {
+    assert.equal(formatFileSize(1234, 'de'), '1,2 kB')
+    assert.equal(formatFileSize(512, 'de'), '512 Byte')
+  })
+  it('reads a missing or negative size as nothing', () => {
+    assert.equal(formatFileSize(Number.NaN, 'en'), '0 bytes')
+    assert.equal(formatFileSize(-5, 'en'), '0 bytes')
   })
 })

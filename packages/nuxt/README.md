@@ -63,7 +63,8 @@ plain Nuxt UI. Three rules:
 | `ZRepeatingList` | A generic list editor |
 | `ZNumberInput` | One number input for money, percent, count and hours, with a calc mode |
 | `ZDateField` | A calendar-day field on `Temporal.PlainDate` or `CalendarDate`, with Nuxt UI's limit props |
-| `ZFileDropOverlay` | Files dropped anywhere in the window (or a region), with an overlay, sorted by `accept` |
+| `ZFileDropOverlay` | Files dropped anywhere in the window, or contained in a dialog or region; nested overlays defer to the innermost |
+| `ZFileList` | A form's files, stored and newly added, with an async remove and locale sizes |
 
 ## Docs
 

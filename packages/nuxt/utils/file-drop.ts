@@ -10,6 +10,9 @@ export interface RejectedFile {
   reason: 'accept' | 'multiple'
 }
 
+/** A row of ZFileList: a `File` just added, or a file already stored, by its id. */
+export type FileListItem = File | { id: string | number; name: string; size: number; type?: string }
+
 /** What a file needs for matching: a `File`, or anything with its name and MIME type. */
 type Named = Pick<File, 'name' | 'type'>
 
@@ -59,4 +62,25 @@ export function sortDroppedFiles(
 /** Whether a drag carries files from outside the page, rather than text, a link or an element dragged within it. */
 export function dragCarriesFiles(dataTransfer: Pick<DataTransfer, 'types'> | null | undefined): boolean {
   return !!dataTransfer && Array.from(dataTransfer.types).includes('Files')
+}
+
+const SIZE_UNITS = ['kilobyte', 'megabyte', 'gigabyte', 'terabyte'] as const
+
+/**
+ * A file's size for people, in the locale's own words and digits: `512 bytes`, `1.2 kB`, `34 MB` (`1,2 kB` in German).
+ * Decimal units, 1 kB = 1000 bytes, as the units' names say; one decimal under 10, none above.
+ */
+export function formatFileSize(bytes: number, locale?: string): string {
+  if (!Number.isFinite(bytes) || bytes < 1000) {
+    return new Intl.NumberFormat(locale, { style: 'unit', unit: 'byte', unitDisplay: 'long' }).format(Math.max(0, Math.round(bytes || 0)))
+  }
+  let value = bytes / 1000
+  let unit = 0
+  const digits = (v: number) => (v < 10 ? 1 : 0)
+  // 999,960 bytes is 1 MB, not "1,000 kB": step up whenever rounding reaches the next unit.
+  while (unit < SIZE_UNITS.length - 1 && Number(value.toFixed(digits(value))) >= 1000) {
+    value /= 1000
+    unit += 1
+  }
+  return new Intl.NumberFormat(locale, { style: 'unit', unit: SIZE_UNITS[unit], unitDisplay: 'short', maximumFractionDigits: digits(value) }).format(value)
 }
