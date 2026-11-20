@@ -306,3 +306,52 @@ test('limits: unavailable days are disabled in the calendar, refused when typed,
   // isDateUnavailable was only ever handed the model's type.
   await expect(page.getByTestId('wrong-type')).toHaveText('')
 })
+
+// ── Typing and shortcuts, as Buoy's UInputDate (pages/date-field-entry.vue) ────────────────────────────────────
+
+async function entryPage(page: Page) {
+  await page.goto('/date-field-entry')
+  await page.waitForLoadState('networkidle')
+  await page.waitForFunction(() => !!(document.querySelector('#__nuxt') as { __vue_app__?: unknown } | null)?.__vue_app__)
+}
+
+test('the #leading slot is drawn in place of the icon, with the input\'s leadingIcon class', async ({ page }) => {
+  await entryPage(page)
+  const input = box(page, 'With a leading slot')
+  const leading = input.locator('..').locator('[data-slot="leading"]')
+  await expect(leading.getByTestId('leading-badge')).toHaveText('Due')
+  // The slot replaces the icon: the badge is all there is.
+  await expect(leading.locator('> *')).toHaveCount(1)
+  await expect(leading.getByTestId('leading-badge')).toHaveClass(/(^|\s)shrink-0(\s|$)/)
+})
+
+test('shortcuts step from the committed date, not from text typed since; with none, from today', async ({ page }) => {
+  await entryPage(page)
+  const saved = box(page, 'Saved')
+  await saved.click()
+  await saved.press('ControlOrMeta+a')
+  await saved.pressSequentially('04/0')
+  await saved.press('+')
+  await expect(saved).toHaveValue('03/16/2026')
+  await expect(page.getByTestId('saved-model')).toHaveText('2026-03-16')
+  // Again, from what + just committed: typing then m goes to the first of the committed month.
+  await saved.pressSequentially('12/2')
+  await saved.press('m')
+  await expect(saved).toHaveValue('03/01/2026')
+
+  const empty = box(page, 'Empty')
+  await empty.click()
+  await empty.pressSequentially('5')
+  await empty.press('+')
+  // Today is November 12, 2026 in the browser: + is the 13th, not the 6th.
+  await expect(empty).toHaveValue('11/13/2026')
+  await expect(page.getByTestId('empty-model')).toHaveText('2026-11-13')
+})
+
+test('eight digits are month, day and year', async ({ page }) => {
+  await entryPage(page)
+  const eight = box(page, 'Eight digits')
+  await commit(eight, '05122026')
+  await expect(eight).toHaveValue('05/12/2026')
+  await expect(page.getByTestId('eight-model')).toHaveText('2026-05-12')
+})

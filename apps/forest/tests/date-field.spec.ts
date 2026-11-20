@@ -279,14 +279,16 @@ test('dateUpdate: leaving after Enter, or after a shortcut, doesn\'t announce th
 test('dateUpdate: a shortcut, a pick and a clear each announce their own date', async ({ page }) => {
   const { root, input, events } = harness(page)
   await input.click()
+  // Typed but not committed: the shortcut steps from the committed date, none here, so from today (November 12).
   await input.pressSequentially('5/12/2026')
   await input.press('h')
-  await expect(events).toHaveText(['2026-05-31'])
+  await expect(input).toHaveValue('11/30/2026')
+  await expect(events).toHaveText(['2026-11-30'])
   await root.getByRole('button', { name: 'Choose a date' }).click()
   await panel(page).locator('[data-slot="cellTrigger"]:not([data-outside-view])', { hasText: /^\s*20\s*$/ }).click()
-  await expect(events).toHaveText(['2026-05-31', '2026-05-20'])
+  await expect(events).toHaveText(['2026-11-30', '2026-11-20'])
   await root.getByRole('button', { name: 'Clear date' }).click()
-  await expect(events).toHaveText(['2026-05-31', '2026-05-20', 'null'])
+  await expect(events).toHaveText(['2026-11-30', '2026-11-20', 'null'])
 })
 
 // Round-trip: a stored day the field couldn't read back if typed (a year before 1000 shows as

@@ -5,21 +5,32 @@
 //   <UFormField label="Ends"><ZOptionalDate v-model="form.endDate" label="Has an end date" /></UFormField>
 //   <ZOptionalDate v-model="extDue" v-model:enabled="extFiled" label="Extension filed" model-type="calendar-date" />
 //
-// THE MODEL. While the box is off, v-model is null: a form saves what it holds, and an unticked day must not be saved.
-// Unticking REMEMBERS the day (here, not in the model) and ticking again puts it back, so a box unticked by mistake
-// costs nothing; the field shows no day while it is off, since it never shows one the form isn't holding. A day the
-// parent sets ticks the box. Ticked and empty is a state of its own ("has an end date, not yet known"), which is why
-// the box is `v-model:enabled` rather than read off the date. Unbound, the box starts ticked when the model holds a day.
+// THE MODEL. As Buoy's UCheckboxDate: unticking disables the date field and greys it out, and LEAVES the day in v-model,
+// so the form reads `enabled` to know whether it counts. The box and the day are independent: a day the parent sets
+// doesn't tick the box. Ticked and empty is a state of its own ("has an end date, not yet known"), which is why the box
+// is `v-model:enabled` rather than read off the date. Unbound, the box starts ticked when the model holds a day.
 //
-// A tick by the user moves focus into the date field. Unticking a day announces `dateUpdate` with null (an inline
-// editor saves then); a restored day is announced by the field itself when focus leaves it, as any settle is.
+// `clear-when-off` makes v-model null while the box is off, for a form that saves what it holds: unticking REMEMBERS
+// the day (here, not in the model) and ticking again puts it back, so a box unticked by mistake costs nothing; the
+// field shows no day while it is off, and a day the parent sets ticks the box. Unticking a day announces `dateUpdate`
+// with null (an inline editor saves then); a restored day is announced by the field itself when focus leaves it.
+//
+// Nothing is written at mount in either mode, so loading a record never marks the form changed: a box off with a day
+// in hand shows the day greyed out until the user ticks or unticks.
+//
+// `enabled-change` fires with the new state when the USER ticks or unticks (Buoy's `enabledChanged`), never when the
+// parent sets `enabled` or the day — the moment to fetch a default date. A tick by the user moves focus into the date
+// field.
+//
+// SIZE. A surrounding UFieldGroup's size wins, then a UFormField's, then the `size` prop. (Buoy's comment names this
+// order, though there an explicit `size` prop wins, since Nuxt UI's useFieldGroup and useFormField read it first.)
 //
 // IN A UFormField the date field is the input: the label names it and the field's error and help describe it, as for
 // a bare ZDateField. The checkbox is named by `label` and kept out of the form field (an input in a UFormField takes
 // its id, which two inputs can't share), and it names the date input in aria-controls.
 //
 // Everything else — format, locale, clearable, placeholder, icon, `@invalid`, `@clear` … — passes through to ZDateField.
-import { formBusInjectionKey, formFieldInjectionKey, inputIdInjectionKey } from '@nuxt/ui/composables'
+import { fieldGroupInjectionKey, formBusInjectionKey, formFieldInjectionKey, inputIdInjectionKey } from '@nuxt/ui/composables'
 import type { Temporal } from 'temporal-polyfill/implementation'
 import type { CalendarDateLike, DateModelType } from '../utils/date-entry'
 
@@ -37,6 +48,8 @@ const props = withDefaults(
     size?: Size
     /** As ZDateField's: the type to hand back while the model is null and has held no day. */
     modelType?: DateModelType
+    /** Make v-model null while the box is off, keeping the day to put back on a tick. Off: the day stays in v-model. */
+    clearWhenOff?: boolean
     /** The first day the field takes, a PlainDate or a CalendarDate. */
     minValue?: Temporal.PlainDate | CalendarDateLike
     /** The last day the field takes, a PlainDate or a CalendarDate. */
@@ -47,8 +60,10 @@ const props = withDefaults(
   { label: 'Set a date', modelType: 'plain-date' },
 )
 const emit = defineEmits<{
-  // As ZDateField's, and null when unticking clears a day.
+  // As ZDateField's, and null when unticking clears a day (clear-when-off).
   dateUpdate: [value: T | null]
+  // The user ticked (true) or unticked (false) the box.
+  enabledChange: [enabled: boolean]
 }>()
 const model = defineModel<T | null>({ default: null })
 /** Whether the box is ticked. Unbound, it starts ticked when the model holds a day. */
@@ -60,7 +75,8 @@ const formBus = inject(formBusInjectionKey, undefined)
 const ownId = useId()
 // Inside a UFormField the date input takes the field's id (so its label names it); outside, one of ours.
 const inputId = computed(() => (formField?.value ? formInputId?.value : undefined) ?? ownId)
-const size = computed<Size>(() => props.size ?? (formField?.value?.size as Size | undefined) ?? 'md')
+const fieldGroup = inject(fieldGroupInjectionKey, undefined)
+const size = computed<Size>(() => fieldGroup?.value?.size ?? (formField?.value?.size as Size | undefined) ?? props.size ?? 'md')
 
 // The checkbox outside the form field: no shared id, no field error color, no form events on its own.
 const OutsideFormField = defineComponent({
@@ -73,15 +89,17 @@ const OutsideFormField = defineComponent({
 
 // The box's state, read here rather than off `enabled`: a parent-owned v-model only catches up on its next render.
 const on = ref(enabled.value ?? model.value != null)
-// The day unticking took away, for ticking to put back.
+// The day unticking took away, for ticking to put back (clear-when-off).
 let kept: T | null = null
 
+// Returns whether the box changed.
 function apply(next: boolean) {
-  if (next === on.value) return
+  if (next === on.value) return false
   on.value = next
   enabled.value = next
+  if (!props.clearWhenOff) return true
   if (!next) {
-    if (model.value == null) return
+    if (model.value == null) return true
     kept = model.value
     model.value = null
     emit('dateUpdate', null)
@@ -89,19 +107,13 @@ function apply(next: boolean) {
     model.value = kept
     kept = null
   }
-}
-
-if (enabled.value === undefined) enabled.value = on.value
-// Off with a day in hand: the box says it doesn't count, so it is kept for a tick and the model holds null.
-else if (!on.value && model.value != null) {
-  kept = model.value
-  model.value = null
+  return true
 }
 
 watch(() => enabled.value, (v) => { if (v !== undefined) apply(v) })
-// A day the parent sets ticks the box, and replaces any kept one.
+// clear-when-off: a day the parent sets ticks the box, and replaces any kept one.
 watch(model, (v) => {
-  if (v == null) return
+  if (v == null || !props.clearWhenOff) return
   kept = null
   if (!on.value) {
     on.value = true
@@ -113,7 +125,7 @@ const fieldCmp = useTemplateRef<{ focus: () => void }>('fieldCmp')
 const checkboxCmp = useTemplateRef<{ $el: HTMLElement }>('checkboxCmp')
 
 function onToggle(v: boolean | 'indeterminate') {
-  apply(v === true)
+  if (apply(v === true)) emit('enabledChange', on.value)
   // The model changed in code, which the date input never reports, and the box is kept out of the form field: so a
   // UForm hears it here, and revalidates the field (an error for a date the box no longer asks for goes away).
   const name = formField?.value?.name
