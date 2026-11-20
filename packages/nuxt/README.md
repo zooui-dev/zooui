@@ -66,7 +66,7 @@ plain Nuxt UI. Three rules:
 | `ZFileDropOverlay` | Files dropped anywhere in the window, or contained in a dialog or region; nested overlays defer to the innermost |
 | `ZFileList` | A form's files, stored and newly added, with an async remove and locale sizes |
 | `ZConfirmDialog`, `ZConfirmButton` | `useConfirm()`'s promise-based questions, and a button that asks in a popover |
-| `ZOptionalDate` | A checkbox in front of a `ZDateField`: the date counts only while it's ticked |
+| `ZOptionalDate` | A checkbox in front of a `ZDateField`: the date can be edited only while it's ticked |
 | `ZSelectMenu` | Nuxt UI's `USelectMenu` with typeahead from the top of the list, Tab that moves on, a focus ring on any focus, and optional open on focus |
 | `ZFilterSelect` | A faceted multi-select filter for list and table toolbars: search, counts, All and Clear |
 
