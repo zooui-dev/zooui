@@ -99,7 +99,8 @@ and later ones are refused as `multiple`.
 Tested by `scripts/file-drop.test.mjs`; the component by `apps/base/tests/file-drop.spec.ts`,
 `apps/base/tests/file-drop-dialog.spec.ts` (contained in a `ZModal`, the page standing down behind it, with
 `ZFileList`) and
-`apps/forest/tests/file-drop.spec.ts`.
+`apps/forest/tests/file-drop.spec.ts`; `ZFileList`'s thumbnails, sizes and row slots by
+`apps/base/tests/file-list.spec.ts`.
 
 ## In a dialog, with a file list
 
