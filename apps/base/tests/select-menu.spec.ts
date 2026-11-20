@@ -1,7 +1,8 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 
 // ZSelectMenu (pages/select-menu.vue) on the theme-free base: its four keyboard behaviors — the selected item
-// highlighted on open, typeahead on the closed menu, open on focus, close on Tab — with a search input, without one,
+// highlighted on open, typeahead on the closed menu (from the top of the list, telling a UForm), open on focus, close
+// on Tab — and its focus ring on any focus, with a search input, without one,
 // with `multiple` and with grouped items; each switched off; and the same props, slots and events on a plain
 // USelectMenu and a ZSelectMenu, which must behave and paint alike in light and dark. The matching rules themselves
 // are unit-tested in scripts/select-typeahead.test.mjs.
@@ -104,6 +105,47 @@ test.describe('typeahead on the closed menu', () => {
     await expect(value(page, 'plain')).toHaveText('Banana')
   })
 
+  test('searches from the top of the list, though the value sits lower; a repeated letter cycles on from it', async ({ page }) => {
+    await menu(page, 'states').focus()
+    await expect(value(page, 'states')).toHaveText('Colorado')
+    await page.keyboard.press('c')
+    await expect(value(page, 'states')).toHaveText('California')
+    await page.keyboard.press('c')
+    await expect(value(page, 'states')).toHaveText('Colorado')
+    await page.keyboard.press('c')
+    await expect(value(page, 'states')).toHaveText('Connecticut')
+    await page.keyboard.press('c')
+    await expect(value(page, 'states')).toHaveText('California')
+  })
+
+  test('a longer search from the top: "con" from Colorado lands on Connecticut, "co" stays', async ({ page }) => {
+    await menu(page, 'states').focus()
+    await page.keyboard.type('co')
+    await expect(value(page, 'states')).toHaveText('Colorado')
+    await page.keyboard.press('n')
+    await expect(value(page, 'states')).toHaveText('Connecticut')
+  })
+
+  test('a pick tells a surrounding UForm, which validates on change', async ({ page }) => {
+    const form = section(page, 'form')
+    await menu(page, 'form').focus()
+    await page.keyboard.press('b')
+    await expect(value(page, 'form')).toHaveText('Banana')
+    await expect(form.getByText('Bananas are out of season')).toBeVisible()
+    await expect(menu(page, 'form')).toHaveAttribute('aria-invalid', 'true')
+    await page.keyboard.press('b')
+    await expect(value(page, 'form')).toHaveText('Blueberry')
+    await expect(form.getByText('Bananas are out of season')).toHaveCount(0)
+    await expect(menu(page, 'form')).toHaveAttribute('aria-invalid', 'false')
+  })
+
+  test('v-model\'s modifiers apply to a pick: .number writes a number', async ({ page }) => {
+    await menu(page, 'number').focus()
+    await page.keyboard.press('2')
+    await expect(value(page, 'number')).toHaveText('20')
+    await expect(section(page, 'number').locator('[data-type]')).toHaveText('number')
+  })
+
   test('reads label-key and hands back value-key, without a search input', async ({ page }) => {
     await menu(page, 'no-search').focus()
     await page.keyboard.press('a')
@@ -155,6 +197,59 @@ test.describe('typeahead on the closed menu', () => {
     await page.keyboard.type('ap')
     await expect(listbox(page)).toHaveCount(0)
     await expect(value(page, 'off')).toHaveText('Cherry')
+  })
+})
+
+test.describe('the focus ring shows on any focus', () => {
+  const ringNative = (page: Page) => section(page, 'ring').locator('[data-ring-native]')
+  const ringWrapped = (page: Page) => section(page, 'ring').locator('[data-ring-wrapped]')
+  const ring = (l: Locator) => l.evaluate((el) => getComputedStyle(el).boxShadow)
+  // An inset ring in the primary color: 2px is ZSelectMenu's (Buoy's), 1px stock's on keyboard focus.
+  const primaryRing = (page: Page, width = 2) => page.evaluate((w) => {
+    const probe = document.createElement('div')
+    probe.className = w === 2 ? 'ring-2 ring-inset ring-primary' : 'ring ring-inset ring-primary'
+    document.body.append(probe)
+    const shadow = getComputedStyle(probe).boxShadow
+    probe.remove()
+    return shadow
+  }, width)
+  const outline = (l: Locator) => l.evaluate((el) => getComputedStyle(el).outlineWidth)
+  test.beforeEach(async ({ page }) => {
+    await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important; animation: none !important }' })
+  })
+
+  // A pick with the mouse closes the menu and hands focus back to the trigger, with no key pressed.
+  const mousePick = async (page: Page, trigger: Locator, item: string) => {
+    await trigger.click()
+    await listbox(page).getByRole('option', { name: item }).click()
+    await expect(listbox(page)).toHaveCount(0)
+    await expect(trigger).toBeFocused()
+    await expect(trigger).toHaveText(item)
+  }
+
+  test('mouse focus: ZSelectMenu shows the ring, stock does not; it goes when focus leaves', async ({ page }) => {
+    const expected = await primaryRing(page)
+    const unfocused = await ring(ringWrapped(page))
+    expect(unfocused).not.toBe(expected)
+    await mousePick(page, ringNative(page), 'Date')
+    expect(await ring(ringNative(page))).not.toBe(expected)
+    await mousePick(page, ringWrapped(page), 'Date')
+    await expect.poll(() => ring(ringWrapped(page))).toBe(expected)
+    await section(page, 'ring').locator('[data-before]').click()
+    await expect.poll(() => ring(ringWrapped(page))).toBe(unfocused)
+  })
+
+  test('keyboard focus: stock\'s own ring and outline, and ZSelectMenu\'s 2px ring with the same outline', async ({ page }) => {
+    await section(page, 'ring').locator('[data-before]').focus()
+    await page.keyboard.press('Tab')
+    await expect(ringNative(page)).toBeFocused()
+    await expect.poll(() => ring(ringNative(page))).toBe(await primaryRing(page, 1))
+    const stockOutline = await outline(ringNative(page))
+    expect(stockOutline).toBe('3px')
+    await page.keyboard.press('Tab')
+    await expect(ringWrapped(page)).toBeFocused()
+    await expect.poll(() => ring(ringWrapped(page))).toBe(await primaryRing(page))
+    expect(await outline(ringWrapped(page))).toBe(stockOutline)
   })
 })
 

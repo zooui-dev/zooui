@@ -2,7 +2,8 @@
 /**
  * ZSelectMenu on the Forest theme (tests/select-menu.spec.ts drives it): a data-entry row of open-on-focus menus
  * between text fields, filled from the keyboard alone, and a plain USelectMenu beside a ZSelectMenu with the same
- * props, which must paint alike on every scheme in light and dark. The `data-*` attributes are the spec's selectors.
+ * props, which must paint alike on every scheme in light and dark (but for ZSelectMenu's focus ring on any focus,
+ * which apps/base/tests/select-menu.spec.ts checks). The `data-*` attributes are the spec's selectors.
  */
 const STATES = [
   { code: 'CA', name: 'California' },
@@ -30,7 +31,7 @@ const show = (v: string | undefined) => v || '—'
     </header>
     <section class="flex flex-col gap-3">
       <h3 class="font-semibold text-highlighted">Data entry</h3>
-      <p class="text-sm text-muted">Tab through: menus open on focus, type to jump, Tab commits the highlighted item.</p>
+      <p class="text-sm text-muted">Try: Tab through from Payee. Menus open on focus; type to filter and Tab commits the highlighted item. On the closed Kind menu, type s: Statement, found from the top of the list.</p>
       <form data-specimen="entry" class="flex flex-wrap items-end gap-3" @submit.prevent>
         <UFormField label="Payee"><UInput v-model="form.payee" placeholder="Who was paid" data-payee /></UFormField>
         <UFormField label="State">
@@ -49,7 +50,7 @@ const show = (v: string | undefined) => v || '—'
 
     <section class="flex flex-col gap-3">
       <h3 class="font-semibold text-highlighted">Nuxt UI's USelectMenu beside ZSelectMenu</h3>
-      <p class="text-sm text-muted">The same props on each: ZSelectMenu adds keyboard behavior, never a look, so the two should match on every scheme.</p>
+      <p class="text-sm text-muted">Try: compare the two on every scheme; they should match. The one difference is focus: click each and pick with the mouse, and only ZSelectMenu keeps a ring on its trigger once focus comes back to it.</p>
       <div data-specimen="paint" class="flex flex-wrap gap-4">
         <UFormField label="Nuxt UI USelectMenu">
           <USelectMenu v-model="native" :items="KINDS" data-side="native" class="w-48" />

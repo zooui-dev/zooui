@@ -67,7 +67,7 @@ plain Nuxt UI. Three rules:
 | `ZFileList` | A form's files, stored and newly added, with an async remove and locale sizes |
 | `ZConfirmDialog`, `ZConfirmButton` | `useConfirm()`'s promise-based questions, and a button that asks in a popover |
 | `ZOptionalDate` | A checkbox in front of a `ZDateField`: the date counts only while it's ticked |
-| `ZSelectMenu` | Nuxt UI's `USelectMenu` with typeahead, Tab that moves on, and optional open on focus |
+| `ZSelectMenu` | Nuxt UI's `USelectMenu` with typeahead from the top of the list, Tab that moves on, a focus ring on any focus, and optional open on focus |
 
 ## Docs
 

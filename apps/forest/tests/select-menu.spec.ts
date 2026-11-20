@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 // ZSelectMenu on the Forest theme (pages/select-menu.vue): a data-entry row filled from the keyboard alone — open on
 // focus, typed or arrowed to, Tab to take it and move on — and a ZSelectMenu painting exactly as a plain USelectMenu does
-// on every Forest scheme in light and dark (it adds behavior, never a look). The behaviors one by one, with
+// on every Forest scheme in light and dark (it adds behavior, and a focus ring on mouse focus, checked in the base spec). The behaviors one by one, with
 // `multiple`, grouped items and each switch off, are in apps/base/tests/select-menu.spec.ts.
 
 const hydrated = (page: Page) => page.waitForFunction(() => !!(document.querySelector('#__nuxt') as { __vue_app__?: unknown } | null)?.__vue_app__)
