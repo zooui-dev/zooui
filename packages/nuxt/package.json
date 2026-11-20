@@ -1,6 +1,6 @@
 {
   "name": "@zooui/nuxt",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Zoo UI for Nuxt: a theme-free Nuxt layer with Nuxt UI as it ships, Zoo UI's Z* components and colored-edge surfaces, and the mechanisms every product needs, all on Nuxt UI's tokens so they take the product's own colors. Add a theme layer such as @zooui/theme-forest for a ready-made look.",
   "license": "MIT",
   "repository": {

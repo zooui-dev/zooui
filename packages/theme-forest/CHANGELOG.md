@@ -1,5 +1,15 @@
 # @zooui/theme-forest
 
+## 0.3.0
+
+### 🩹 Fixes
+
+- [#29](https://github.com/zooui-dev/zooui/pull/29) [`e12b661`](https://github.com/zooui-dev/zooui/commit/e12b6610a9189d7df3782f661af8f3359190de51) - Grids no longer draw over a sticky page header when the page scrolls.
+
+### 🌊 Dependencies
+
+- @zooui/nuxt@0.3.0
+
 ## 0.2.0
 
 ### Patch Changes
