@@ -84,6 +84,8 @@ product's palette and dark mode carry through; a `highlight` or `ui.base` you pa
 `scripts/select-typeahead.test.mjs` (the matching rules), `apps/base/tests/select-menu.spec.ts` (each behavior with
 a search input, without one, with `multiple` and with grouped items, each switched off; typeahead from the top of the
 list; a `UForm` validating on change after a typeahead pick; the focus ring on mouse and keyboard focus beside a plain
-`USelectMenu`; and the pass-through and paint against a plain `USelectMenu`) and `apps/forest/tests/select-menu.spec.ts` (a data-entry row from the keyboard;
-a smoke test each of typeahead from the top, the focus ring after a mouse pick and a `UForm` validating a typeahead
-pick; and the paint on every scheme in light and dark).
+`USelectMenu`, kept while the menu is open and after Escape, gone on Tab or a click away; and the pass-through and
+paint against a plain `USelectMenu`) and `apps/forest/tests/select-menu.spec.ts` (a data-entry row from the keyboard;
+a smoke test each of typeahead from the top, the focus ring after a mouse pick (on three schemes), kept while the menu
+is open and after Escape and gone on Tab, and a `UForm` validating a typeahead pick; and the paint on every scheme in
+light and dark).

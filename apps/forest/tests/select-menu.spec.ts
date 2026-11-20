@@ -2,9 +2,10 @@ import { expect, test, type Locator, type Page } from '@playwright/test'
 
 // ZSelectMenu on the Forest theme (pages/select-menu.vue): a data-entry row filled from the keyboard alone — open on
 // focus, typed or arrowed to, Tab to take it and move on —, a smoke test each of typeahead from the top, the focus ring
-// after a mouse pick and a UForm validating a typeahead pick; and a ZSelectMenu painting exactly as a plain USelectMenu
-// does on every Forest scheme in light and dark (it adds behavior, and a focus ring on mouse focus). The behaviors one
-// by one, with `multiple`, grouped items and each switch off, are in apps/base/tests/select-menu.spec.ts.
+// after a mouse pick (kept while the menu is open and after Escape, gone on Tab) and a UForm validating a typeahead
+// pick; and a ZSelectMenu painting exactly as a plain USelectMenu does on every Forest scheme in light and dark (it adds
+// behavior, and a focus ring on mouse focus). The behaviors one by one, with `multiple`, grouped items and each switch
+// off, are in apps/base/tests/select-menu.spec.ts.
 
 const hydrated = (page: Page) => page.waitForFunction(() => !!(document.querySelector('#__nuxt') as { __vue_app__?: unknown } | null)?.__vue_app__)
 const listbox = (page: Page) => page.locator('[role="listbox"][data-state="open"]')
