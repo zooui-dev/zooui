@@ -11,6 +11,9 @@ const dropped = ref<string[]>([])
 const rejected = ref<string[]>([])
 const drop = useTemplateRef('drop')
 const uploaded = ref<File[] | null>(null)
+/** The page's own rule, on top of `accept`: an empty file is refused, with a message saying so. */
+const notEmpty = (file: File) => file.size > 0 || 'is empty'
+const describe = (r: RejectedFile) => `${r.file.name} ${r.reason}${r.message ? `: ${r.message}` : ''}`
 </script>
 
 <template>
@@ -21,8 +24,12 @@ const uploaded = ref<File[] | null>(null)
         Drag images, PDFs or anything else from your desktop anywhere onto this page: an overlay covers the window while
         the drag is over it, and dropping hands the files back. This one takes images and PDFs, several at once. The
         readouts under "What the drop handed back" show what it emitted: <strong>Dropped</strong> lists the files it
-        took, <strong>Rejected</strong> the ones it refused and why, and <strong>Overlay showing</strong> its exposed
-        <code>visible</code>.
+        took, <strong>Rejected</strong> the ones it refused and why (<code>accept</code> for the wrong type,
+        <code>filter</code> with the page's message for one its own rule refused), and <strong>Overlay showing</strong>
+        its exposed <code>visible</code>. The overlay fades in and out, and doesn't with reduced motion.
+      </p>
+      <p class="text-sm text-muted">
+        The page's <code>filter</code> refuses an empty file: <code>(file) =&gt; file.size &gt; 0 || 'is empty'</code>.
       </p>
     </header>
 
@@ -51,6 +58,7 @@ const uploaded = ref<File[] | null>(null)
 
     <section class="flex flex-col gap-1 text-sm">
       <h2 class="mb-2 text-base font-semibold text-highlighted">What the drop handed back</h2>
+      <p class="mb-1 text-muted">Try this: drop an empty PDF (a 0-byte file) with a picture; the picture is taken and the PDF is rejected as <code>filter: is empty</code>.</p>
       <p>Dropped: <span data-testid="dropped">{{ dropped.join(', ') || 'none' }}</span></p>
       <p>Rejected: <span data-testid="rejected">{{ rejected.join(', ') || 'none' }}</span></p>
       <p>Overlay showing: <span data-testid="visible">{{ drop?.visible ?? 'unmounted' }}</span></p>
@@ -73,9 +81,11 @@ const uploaded = ref<File[] | null>(null)
       multiple
       :disabled="disabled"
       label="Drop receipts to attach them"
+      icon="i-lucide-upload"
       description="Images and PDFs"
       @drop="(files) => (dropped = files.map((f) => f.name))"
-      @rejected="(files) => (rejected = files.map((r) => `${r.file.name} ${r.reason}`))"
+      :filter="notEmpty"
+      @rejected="(files) => (rejected = files.map(describe))"
     />
   </main>
 </template>
