@@ -27,6 +27,27 @@ function check() {
   sourceErrors.value = Object.fromEntries(sources.value.filter((s) => s.id && !s.name.trim()).map((s) => [s.id!, 'Enter name.']))
 }
 watch(sources, () => { if (checked.value) check() }, { deep: true })
+
+// Done and Cancel: steps folded to a summary, with keys, errors, a nested field and at least two. It echoes its order
+// and, by which of the starting objects each row (and its nested details) is, that a Cancel puts the values back into
+// the same objects.
+interface Step { id?: string; name: string; details: { owner: string } }
+const firstSteps: Step[] = [
+  { id: 'step a', name: 'Draft', details: { owner: 'Ana' } },
+  { id: 'step b', name: '', details: { owner: 'Ben' } },
+  { id: 'step c', name: 'Review', details: { owner: 'Cy' } },
+]
+const firstDetails = firstSteps.map((s) => s.details)
+const steps = ref<Step[]>([...firstSteps])
+const stepIdentity = computed(() => steps.value.map((s) => firstSteps.indexOf(toRaw(s))).join(', '))
+const detailsIdentity = computed(() => steps.value.map((s) => firstDetails.indexOf(toRaw(s.details))).join(', '))
+const stepErrors = ref<Record<string, string>>({})
+const newStep = (): Step => ({ name: '', details: { owner: '' } })
+const stepKey = (s: Step) => s.id
+const stepTitle = (s: Step, i: number) => s.name || `Step ${i + 1}`
+function checkSteps() {
+  stepErrors.value = Object.fromEntries(steps.value.filter((s) => s.id && !s.name.trim()).map((s) => [s.id!, 'Name this step.']))
+}
 </script>
 
 <template>
@@ -88,6 +109,36 @@ watch(sources, () => { if (checked.value) check() }, { deep: true })
           <UInput v-model="row.name" :aria-label="`Category ${index + 1}`" class="w-full" />
         </template>
       </ZRepeatingList>
+    </div>
+
+    <div data-specimen="repeating-list-steps" class="flex flex-col gap-2">
+      <h3 class="text-sm font-semibold text-highlighted">Steps</h3>
+      <ZRepeatingList
+        v-model="steps"
+        item-label="step"
+        :min="2"
+        :new-row="newStep"
+        :row-key="stepKey"
+        :row-title="stepTitle"
+        :errors="stepErrors"
+      >
+        <template #row="{ row, errorId }">
+          <UFormField label="Step name">
+            <UInput v-model="row.name" :aria-describedby="errorId" />
+          </UFormField>
+          <UFormField label="Owner">
+            <UInput v-model="row.details.owner" />
+          </UFormField>
+        </template>
+        <template #summary="{ row }">{{ [row.name, row.details.owner].filter(Boolean).join(' · ') }}</template>
+      </ZRepeatingList>
+      <div>
+        <UButton data-check-steps label="Check steps" color="neutral" variant="outline" @click="checkSteps" />
+      </div>
+      <p class="text-sm text-muted" data-order>{{ steps.map((s) => s.id ?? 'new').join(', ') }}</p>
+      <p class="text-sm text-muted" data-step-identity>{{ stepIdentity }}</p>
+      <p class="text-sm text-muted" data-details-identity>{{ detailsIdentity }}</p>
+      <p class="text-sm text-muted" data-owners>{{ steps.map((s) => s.details.owner || '-').join(', ') }}</p>
     </div>
   </section>
 </template>

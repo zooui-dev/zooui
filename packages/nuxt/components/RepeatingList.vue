@@ -12,6 +12,11 @@
 // line with an Edit button (new rows, and any row with an error, are open); without one every row is open.
 // `rowKey` keeps a row's identity while it is renamed (rows that carry history); rows it has no key for are told
 // apart by object identity, hence `T extends object`.
+//
+// With #summary, an open row has Done (fold it, keeping the edits) and Cancel (put back what it held when it opened,
+// then fold it; Escape does the same); Cancel on a row added here and never Done removes it.
+import { restore, snapshot } from './row-snapshot'
+
 const props = withDefaults(
   defineProps<{
     /** One row, singular and lower case: "referral source". */
@@ -38,6 +43,10 @@ const props = withDefaults(
     removeLabel?: string
     /** The folded row's Edit button's word; named the same way. */
     editLabel?: string
+    /** With #summary, the open row's Done button's word (fold it, keeping the edits); named the same way. */
+    doneLabel?: string
+    /** With #summary, the open row's Cancel button's word (undo the edits and fold it); named the same way. */
+    cancelLabel?: string
     /** Shown beside the disabled Add button at `max`; "That's the most you can add here (12)." unless given. */
     maxLabel?: string
     /** What a screen reader hears when a row is added or removed; "Part 3 added. 3 in the list." unless given. */
@@ -56,6 +65,8 @@ const props = withDefaults(
     addLabel: undefined,
     removeLabel: 'Remove',
     editLabel: 'Edit',
+    doneLabel: 'Done',
+    cancelLabel: 'Cancel',
     maxLabel: undefined,
     announce: undefined,
     focusSelector: 'input, select, textarea, button[role="radio"]',
@@ -74,8 +85,11 @@ let counter = 0
 function keyOf(row: T): string {
   const k = props.rowKey?.(row)
   if (k) return k
-  let id = ids.get(row)
-  if (!id) ids.set(row, (id = `${uid}:new-${++counter}`))
+  // By the object a reactive proxy wraps: a new row is seen both as the object newRow() made and as the parent ref's
+  // proxy of it.
+  const raw = toRaw(row)
+  let id = ids.get(raw)
+  if (!id) ids.set(raw, (id = `${uid}:new-${++counter}`))
   return id
 }
 
@@ -104,7 +118,12 @@ watch(
     if (!errs) return
     const next = new Set(folded.value)
     let changed = false
-    for (const k of Object.keys(errs)) if (errs[k] && next.delete(k)) changed = true
+    for (const k of Object.keys(errs)) {
+      if (!errs[k] || !next.delete(k)) continue
+      changed = true
+      const row = rows.value.find((r) => keyOf(r) === k)
+      if (row) opened(row)
+    }
     if (changed) folded.value = next
   },
   { deep: true },
@@ -130,32 +149,33 @@ function say(type: 'added' | 'removed', title: string, count: number) {
 }
 onBeforeUnmount(() => clearTimeout(announceTimer))
 
-// The row to put focus in once it is drawn. With v-model the new row only arrives back through the parent, so this
-// waits for a render that has it rather than a fixed tick.
-const focusAt = ref<number | null>(null)
-const firstInput = (i: number) => {
-  const row = root.value?.querySelector<HTMLElement>(`:scope > [data-row="${i}"]`)
-  return row?.querySelector<HTMLElement>(props.focusSelector) ?? null
-}
+// The row to put focus in once it is drawn: the first match for `selector` in it (a folded row's Edit), else its first
+// field. With v-model the new row only arrives back through the parent, so this waits for a render that has it rather
+// than a fixed tick.
+const focusAt = shallowRef<{ index: number; selector?: string } | null>(null)
+const rowEl = (i: number) => root.value?.querySelector<HTMLElement>(`:scope > [data-row="${i}"]`) ?? null
 watch(
   [focusAt, () => rows.value.length, folded],
   () => {
-    if (focusAt.value === null) return
-    const el = firstInput(focusAt.value)
+    const at = focusAt.value
+    if (at === null) return
+    const row = rowEl(at.index)
+    const el = (at.selector && row?.querySelector<HTMLElement>(at.selector)) || row?.querySelector<HTMLElement>(props.focusSelector)
     if (!el) return
     el.focus()
     focusAt.value = null
   },
   { flush: 'post' },
 )
-function focusRow(i: number) {
-  focusAt.value = i
+function focusRow(i: number, selector?: string) {
+  focusAt.value = { index: i, selector }
 }
 
 function add() {
   if (atMax.value) return
   const i = rows.value.length
   const row = props.newRow()
+  fresh.add(keyOf(row))
   rows.value = [...rows.value, row]
   focusRow(i)
   say('added', titleOf(row, i), i + 1)
@@ -163,6 +183,9 @@ function add() {
 
 function remove(i: number) {
   const title = titleOf(rows.value[i]!, i)
+  const k = keyOf(rows.value[i]!)
+  snapshots.delete(k)
+  fresh.delete(k)
   const next = rows.value.filter((_, j) => j !== i)
   rows.value = next
   // Counted from `next`: with v-model, rows.value is the old array until the parent hands the new one back.
@@ -175,19 +198,76 @@ function edit(row: T, i: number) {
   const next = new Set(folded.value)
   next.delete(keyOf(row))
   folded.value = next
+  opened(row)
   focusRow(i)
+}
+
+// Done and Cancel, on an open row of a list with #summary. A row is copied when it opens (Edit, or an error opening
+// it), and Cancel puts the copy back into the same object, so it keeps its identity and key. A row added here and not
+// yet Done has nothing to go back to: Cancel removes it, where Remove could (not at `min`). Done or Cancel on a row with
+// an error leaves it open (Cancel having put its values back), the error showing, with focus in its first field.
+const snapshots = shallowReactive(new Map<string, T>())
+const fresh = shallowReactive(new Set<string>())
+const closable = computed(() => !!slots.summary)
+const canCancel = (row: T) => {
+  const k = keyOf(row)
+  return snapshots.has(k) || (fresh.has(k) && canRemove(row))
+}
+function opened(row: T) {
+  const k = keyOf(row)
+  if (!fresh.has(k)) snapshots.set(k, snapshot(row))
+}
+function fold(row: T, i: number) {
+  const next = new Set(folded.value)
+  next.add(keyOf(row))
+  folded.value = next
+  focusRow(i, '[data-edit]')
+}
+function done(row: T, i: number) {
+  if (errorOf(row)) return focusRow(i)
+  const k = keyOf(row)
+  snapshots.delete(k)
+  fresh.delete(k)
+  fold(row, i)
+}
+function cancel(row: T, i: number) {
+  const k = keyOf(row)
+  const snap = snapshots.get(k)
+  if (snap) {
+    restore(row, snap)
+    // Still in error: open, as Done leaves it, so it cannot fold under the user once the error clears.
+    if (errorOf(row)) return focusRow(i)
+    snapshots.delete(k)
+    fold(row, i)
+  } else if (fresh.has(k) && canRemove(row)) {
+    remove(i)
+  }
+}
+
+// Escape anywhere in an open row is Cancel. A field with its own popup open keeps it, and a field that handled it (a
+// menu closing) or a row of a list nested in this one has already taken it (defaultPrevented).
+function onRowKeydown(e: KeyboardEvent, row: T, i: number) {
+  if (e.key !== 'Escape' || e.defaultPrevented) return
+  if (!closable.value || isFolded(row) || !canCancel(row) || (e.target as HTMLElement).closest('[aria-expanded="true"]')) return
+  e.preventDefault()
+  cancel(row, i)
 }
 
 /** Back up to `min` rows, whenever there are fewer (on mount, the list was emptied from outside, or `min` rose). */
 function fillToMin() {
   if (rows.value.length < props.min) {
-    rows.value = [...rows.value, ...Array.from({ length: props.min - rows.value.length }, () => props.newRow())]
+    const added = Array.from({ length: props.min - rows.value.length }, () => props.newRow())
+    for (const row of added) fresh.add(keyOf(row))
+    rows.value = [...rows.value, ...added]
   }
 }
 watch([() => rows.value.length, () => props.min], fillToMin)
 
 onMounted(() => {
-  if (slots.summary) folded.value = new Set(rows.value.filter((row) => !errorOf(row)).map(keyOf))
+  if (slots.summary) {
+    folded.value = new Set(rows.value.filter((row) => !errorOf(row)).map(keyOf))
+    for (const row of rows.value) if (errorOf(row)) opened(row)
+  }
   fillToMin()
 })
 </script>
@@ -204,7 +284,7 @@ onMounted(() => {
       >
         <UIcon name="i-lucide-circle-check" class="size-4 shrink-0 text-success" aria-hidden="true" />
         <span class="min-w-0 flex-1 truncate text-sm text-toned"><slot name="summary" :row="row" :index="i" /></span>
-        <UButton type="button" size="xs" variant="ghost" color="neutral" icon="i-lucide-pencil" :aria-label="`${editLabel} ${titleOf(row, i)}`" @click="edit(row, i)">
+        <UButton type="button" size="xs" variant="ghost" color="neutral" icon="i-lucide-pencil" :aria-label="`${editLabel} ${titleOf(row, i)}`" data-edit @click="edit(row, i)">
           {{ editLabel }}
         </UButton>
         <UButton
@@ -223,14 +303,19 @@ onMounted(() => {
         v-else
         :data-row="i"
         :class="compact ? 'flex items-start gap-2' : 'rounded-md border border-default p-3 sm:p-4'"
+        @keydown="onRowKeydown($event, row, i)"
       >
         <legend :class="compact ? 'sr-only' : 'px-1 text-sm font-semibold text-highlighted'">{{ titleOf(row, i) }}</legend>
         <div :class="compact ? 'min-w-0 flex-1' : 'space-y-4'">
           <slot name="row" :row="row" :index="i" :key="keyOf(row)" :error="errorOf(row)" :errorId="errorIdOf(row)" />
           <p v-if="errorOf(row)" :id="errorIdOf(row)" role="alert" class="mt-1 text-sm text-(--ui-color-error-700) dark:text-(--ui-color-error-300)">{{ errorOf(row) }}</p>
         </div>
-        <div v-if="canRemove(row)" :class="compact ? 'pt-1' : 'mt-3 flex justify-end'">
+        <div
+          v-if="canRemove(row) || closable"
+          :class="[compact ? 'pt-1' : 'mt-3 flex justify-end', closable && (compact ? 'flex gap-1' : 'gap-3')]"
+        >
           <UButton
+            v-if="canRemove(row)"
             type="button"
             size="xs"
             variant="ghost"
@@ -241,6 +326,33 @@ onMounted(() => {
           >
             <span v-if="!compact">{{ removeLabel }}</span>
           </UButton>
+          <template v-if="closable">
+            <UButton
+              v-if="canCancel(row)"
+              type="button"
+              size="xs"
+              variant="ghost"
+              color="neutral"
+              :icon="compact ? 'i-lucide-x' : undefined"
+              :aria-label="`${cancelLabel} ${titleOf(row, i)}`"
+              data-cancel
+              @click="cancel(row, i)"
+            >
+              <span v-if="!compact">{{ cancelLabel }}</span>
+            </UButton>
+            <UButton
+              type="button"
+              size="xs"
+              variant="outline"
+              color="neutral"
+              :icon="compact ? 'i-lucide-check' : undefined"
+              :aria-label="`${doneLabel} ${titleOf(row, i)}`"
+              data-done
+              @click="done(row, i)"
+            >
+              <span v-if="!compact">{{ doneLabel }}</span>
+            </UButton>
+          </template>
         </div>
       </fieldset>
     </template>
