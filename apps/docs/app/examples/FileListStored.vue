@@ -1,8 +1,8 @@
 <script setup lang="ts">
 const files = ref<FileListItem[]>([
-  { id: 1, name: 'engagement-letter.pdf', size: 245_000, type: 'application/pdf' },
-  { id: 2, name: 'ledger-2025.xlsx', size: 1_830_000, type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
-  new File(['x'.repeat(48_000)], 'receipt.png', { type: 'image/png' }),
+  { id: 1, name: 'project-brief.pdf', size: 245_000, type: 'application/pdf' },
+  { id: 2, name: 'budget-2025.xlsx', size: 1_830_000, type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+  new File(['x'.repeat(48_000)], 'sketch.png', { type: 'image/png' }),
 ])
 
 // A stored file is deleted on the server; the row shows a spinner until it answers.

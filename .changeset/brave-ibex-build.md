@@ -3,4 +3,10 @@ type: feat
 "@zooui/nuxt"
 ---
 
-New ZOrderList: the list half of a master-detail editor. It shows an ordered list as a compact listbox with one selected row, and a toolbar beside it adds, removes and moves that row (to top, up, down, to bottom). v-model is the array, v-model:selection the selected item's key (from row-key), and the selection follows the item when it moves. @add asks you to create the item. @remove hands you the item to take out, so a server call can come first; with no @remove listener the list takes the row out itself. @reorder reports each move. Remove is a ZConfirmButton that asks first, with remove-question, remove-description, remove-confirm-label and remove-cancel-label as its words (:confirm-remove="false" makes it act at once), and removable disables it for an item that may not go. On the keyboard, selection follows focus, so the form beside the list follows the arrow keys. Home/End and typeahead select a row, Alt+Up/Down/Home/End move it, and each move is announced. Moved rows slide into place, except under reduced motion, and the moved row stays selected and scrolled into view. fill stretches the list to the height it is given (a grid column beside the form), and ui takes classes for its root, header, list, row and controls, merged over the defaults. It is Zoo UI's one reorderable list: use it for picking and ordering a list beside an editor, and ZRepeatingList for editing rows in place.
+New `ZOrderList`: a reorderable list with one selected row, for master-detail editors.
+
+- `v-model:selection` holds the selected row, which the form beside the list edits
+- A toolbar adds, removes and moves the selected row (`@add`, `@remove`, `@reorder`)
+- `allow-remove` turns on Remove, which asks first
+- Alt+arrow keys move a row from the keyboard
+- `fill` stretches the list to the height it is given

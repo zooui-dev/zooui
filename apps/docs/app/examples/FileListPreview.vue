@@ -4,11 +4,11 @@ const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEElEQVR4nGPgW/oSiBg
 
 const files = ref<FileListItem[]>([
   { id: 1, name: 'site-photo.png', size: 245_000, type: 'image/png', thumbnail: `data:image/png;base64,${PNG}` },
-  { id: 2, name: 'engagement-letter.pdf', size: 1_830_000, type: 'application/pdf' },
+  { id: 2, name: 'project-brief.pdf', size: 1_830_000, type: 'application/pdf' },
 ])
 // A File is made in the browser, not in the server's render.
 onMounted(() => {
-  files.value = [...files.value, new File([Uint8Array.from(atob(PNG), (c) => c.charCodeAt(0))], 'receipt.png', { type: 'image/png' })]
+  files.value = [...files.value, new File([Uint8Array.from(atob(PNG), (c) => c.charCodeAt(0))], 'sketch.png', { type: 'image/png' })]
 })
 const isNew = (item: FileListItem) => item instanceof File
 const selected = ref<string[]>([])

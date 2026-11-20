@@ -13,7 +13,7 @@ const sourceKey = (s: Source) => s.id
   <div class="w-full max-w-lg">
     <ZRepeatingList
       v-model="sources"
-      item-label="referral source"
+      item-label="contact"
       :row-key="sourceKey"
       :new-row="newSource"
     >

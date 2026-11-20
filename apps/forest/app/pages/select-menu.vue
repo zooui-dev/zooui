@@ -13,11 +13,11 @@ const STATES = [
   { code: 'NY', name: 'New York' },
   { code: 'TX', name: 'Texas' },
 ]
-const KINDS = ['Invoice', 'Receipt', 'Statement']
+const KINDS = ['Delivery', 'Pickup', 'Shipping']
 
-const form = reactive({ payee: '', state: undefined as string | undefined, kind: undefined as string | undefined, memo: '' })
-const native = ref('Receipt')
-const wrapped = ref('Receipt')
+const form = reactive({ customer: '', state: undefined as string | undefined, kind: undefined as string | undefined, memo: '' })
+const native = ref('Pickup')
+const wrapped = ref('Pickup')
 
 const FRUIT = ['Apple', 'Banana', 'Blueberry', 'Cherry', 'Date', 'Elderberry', 'Fig', 'Grape']
 const STATE_NAMES = ['Alabama', 'Alaska', 'California', 'Colorado', 'Connecticut', 'Delaware']
@@ -44,9 +44,9 @@ const show = (v: string | undefined) => v || '—'
     </header>
     <section class="flex flex-col gap-3">
       <h3 class="font-semibold text-highlighted">Data entry</h3>
-      <p class="text-sm text-muted">Try: Tab through from Payee. Menus open on focus; type to filter and Tab commits the highlighted item. On the Kind menu, pick one with Enter; then, with the menu closed and focus back on it, type s: Statement, found from the top of the list.</p>
+      <p class="text-sm text-muted">Try: Tab through from Customer. Menus open on focus; type to filter and Tab commits the highlighted item. On the Kind menu, pick one with Enter; then, with the menu closed and focus back on it, type s: Shipping, found from the top of the list.</p>
       <form data-specimen="entry" class="flex flex-wrap items-end gap-3" @submit.prevent>
-        <UFormField label="Payee"><UInput v-model="form.payee" placeholder="Who was paid" data-payee /></UFormField>
+        <UFormField label="Customer"><UInput v-model="form.customer" placeholder="Who placed the order" data-customer /></UFormField>
         <UFormField label="State">
           <ZSelectMenu v-model="form.state" :items="STATES" value-key="code" label-key="name" open-on-focus placeholder="Choose a state" data-state-menu class="w-48" />
         </UFormField>
@@ -57,7 +57,7 @@ const show = (v: string | undefined) => v || '—'
       </form>
       <p class="text-sm text-muted">
         Form value:
-        <output data-form class="text-default">payee: {{ show(form.payee) }}, state: {{ show(form.state) }}, kind: {{ show(form.kind) }}, memo: {{ show(form.memo) }}</output>
+        <output data-form class="text-default">customer: {{ show(form.customer) }}, state: {{ show(form.state) }}, kind: {{ show(form.kind) }}, memo: {{ show(form.memo) }}</output>
       </p>
     </section>
 

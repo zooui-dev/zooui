@@ -32,8 +32,8 @@ test('/file-drop renders, and its filter refuses an empty file with the page\'s 
   await expect(heading(page, 'ZFileDropOverlay, over the window')).toBeVisible()
   await expect(page.getByTestId('visible')).toHaveText('false')
 
-  await drop(page, '[data-child="b"]', [{ name: 'blank.pdf', type: 'application/pdf', bytes: 0 }, { name: 'lunch.png', type: 'image/png' }])
-  await expect(page.getByTestId('dropped')).toHaveText('lunch.png')
+  await drop(page, '[data-child="b"]', [{ name: 'blank.pdf', type: 'application/pdf', bytes: 0 }, { name: 'whiteboard.png', type: 'image/png' }])
+  await expect(page.getByTestId('dropped')).toHaveText('whiteboard.png')
   await expect(page.getByTestId('rejected')).toHaveText('blank.pdf filter: is empty')
 })
 
@@ -65,7 +65,7 @@ test('/file-drop-dialog renders; a drop on the dialog joins the list in 1024s wi
 
   const REPORT: Carry = [{ name: 'report.pdf', type: 'application/pdf', bytes: 1234 }]
   await drop(page, '[data-zone="field"]', REPORT)
-  await expect.poll(() => rows(page)).toEqual(['engagement-letter.pdf', '2025-return.pdf', 'report.pdf'])
+  await expect.poll(() => rows(page)).toEqual(['project-brief.pdf', '2025-plan.pdf', 'report.pdf'])
   await expect(page.locator('[data-file-row="report.pdf"]')).toContainText('1.2 KB')
   const errorColor = await page.evaluate(() => {
     const d = document.createElement('div'); d.style.color = 'var(--ui-error)'; document.body.append(d)
@@ -75,7 +75,7 @@ test('/file-drop-dialog renders; a drop on the dialog joins the list in 1024s wi
 
   await drop(page, '[data-zone="field"]', REPORT)
   await expect(page.getByText('report.pdf: already attached.', { exact: true })).toBeVisible()
-  expect(await rows(page)).toEqual(['engagement-letter.pdf', '2025-return.pdf', 'report.pdf'])
+  expect(await rows(page)).toEqual(['project-brief.pdf', '2025-plan.pdf', 'report.pdf'])
 })
 
 test('/file-list renders with its row slots; Thumbnails shows the pictures and Binary sizes off switches to decimal', async ({ page }) => {
@@ -83,7 +83,7 @@ test('/file-list renders with its row slots; Thumbnails shows the pictures and B
   await page.waitForLoadState('networkidle')
   await expect(heading(page, 'ZFileList: thumbnails, sizes and row slots')).toBeVisible()
   // Hydrated: the client's Files are in the list.
-  await expect.poll(() => rows(page)).toEqual(['site-photo.png', '2025-return.pdf', 'photo-1.png', 'invoice.pdf'])
+  await expect.poll(() => rows(page)).toEqual(['site-photo.png', '2025-plan.pdf', 'photo-1.png', 'agenda.pdf'])
   await expect(page.getByRole('checkbox', { name: 'Include site-photo.png' })).toBeChecked()
   await expect(page.locator('[data-file-row="photo-1.png"] [data-badge]')).toHaveText('New')
 

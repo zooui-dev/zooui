@@ -6,7 +6,7 @@ form holds. Nuxt UI's `UFileUpload` takes a drop on its box; this takes one on t
 it an overlay says what dropping does, and the drop hands the files back.
 
 ```vue
-<ZFileDropOverlay accept="image/*,.pdf" multiple label="Drop receipts to attach them" @drop="attach" @rejected="warn" />
+<ZFileDropOverlay accept="image/*,.pdf" multiple label="Drop photos and PDFs to attach them" @drop="attach" @rejected="warn" />
 <ZFileDropOverlay :target="regionEl" accept=".csv" label="Drop a CSV to import it" @drop="([file]) => importCsv(file)" />
 ```
 
@@ -104,11 +104,11 @@ Tested by `scripts/file-drop.test.mjs`; the component by `apps/base/tests/file-d
 
 ## In a dialog, with a file list
 
-A transfer dialog's Files field: the whole dialog takes drops, the field lists what the transfer holds and what is being
+A share dialog's Files field: the whole dialog takes drops, the field lists what the share holds and what is being
 added, and a `UFileUpload` under the list browses for more (`apps/base/app/pages/file-drop-dialog.vue`).
 
 ```vue
-<ZModal title="Edit transfer">
+<ZModal title="Edit share">
   <template #content>
     <div ref="dialog" class="flex flex-col gap-4 p-6">
       <UFormField label="Files">
@@ -146,7 +146,7 @@ input still holds the last pick, and the browser sends no change for the same fi
 | `items` | `FileListItem[]` | The rows, in order: `File`s and stored files, `{ id, name, size, type? }`. |
 | `remove` | `(item, index) => unknown` | Removes a row; a returned promise shows as the row's spinner (`aria-busy`, button disabled) until it settles. Unset, no Remove buttons. |
 | `locale` | `string` | The sizes' locale; Nuxt UI's when unset. |
-| `remove-label` | `string` | `Remove`; the button's name is it and the file's: "Remove invoice.pdf". The button is a ghost `x` in the `error` color. |
+| `remove-label` | `string` | `Remove`; the button's name is it and the file's: "Remove agenda.pdf". The button is a ghost `x` in the `error` color. |
 | `binary` | `boolean` | Sizes in steps of 1024 (`239.3 KB`), the default; `false` for decimal units (`245 kB`). |
 | `preview` | `boolean` | A thumbnail in place of the icon: an image `File`'s own, through an object URL, or a stored file's `thumbnail` URL. Off by default. |
 

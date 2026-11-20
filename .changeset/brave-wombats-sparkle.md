@@ -1,6 +1,0 @@
----
-type: feat
-"@zooui/nuxt"
----
-
-ZFileDropOverlay has a filter prop for size and name rules: a file it refuses (false, or a message saying why) comes in @rejected with reason filter and the message. A drop whose dataTransfer.files is empty is read from dataTransfer.items. The overlay fades in and out, with no motion under reduced motion. Its default label is now "Drop your files", with no icon by default; pass icon="i-lucide-upload" for the old look. sortDroppedFiles takes filter, existing (names already held) and dedupe: 'name', refusing a repeated name with reason duplicate, and droppedFiles(dataTransfer) is new. ZFileList has #leading and #trailing row slots with { item, index, removing }, a preview prop that shows thumbnails (object URLs for image Files, released when the row goes or the list unmounts, or a stored file's thumbnail URL), and a binary prop. Sizes now count in 1024s by default (1.2 KB, 239.3 KB): formatFileSize(bytes, locale, { binary: false }) and ZFileList's :binary="false" keep decimal units. ZFileList's Remove button is now in the error color.

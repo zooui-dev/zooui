@@ -104,13 +104,13 @@ test.describe('selection', () => {
 
   test('options as their own values (no value-key) stay selected through a reactive model', async ({ page }) => {
     await openPanel(page, 'kind')
-    await option(page, 'Estimate').click()
-    await expect(model(page, 'kind')).toHaveText('["Estimate"]')
-    await expect(option(page, 'Estimate')).toHaveAttribute('aria-selected', 'true')
-    await option(page, 'Invoice').click()
-    await expect(model(page, 'kind')).toHaveText('["Estimate","Invoice"]')
-    await option(page, 'Estimate').click()
-    await expect(model(page, 'kind')).toHaveText('["Invoice"]')
+    await option(page, 'Bug').click()
+    await expect(model(page, 'kind')).toHaveText('["Bug"]')
+    await expect(option(page, 'Bug')).toHaveAttribute('aria-selected', 'true')
+    await option(page, 'Task').click()
+    await expect(model(page, 'kind')).toHaveText('["Bug","Task"]')
+    await option(page, 'Bug').click()
+    await expect(model(page, 'kind')).toHaveText('["Task"]')
   })
 
   test('a value set from outside is shown', async ({ page }) => {
@@ -133,14 +133,14 @@ test.describe('search', () => {
     expect(await labels(page)).toEqual(['In progress'])
     expect(await marks(page)).toEqual(['prog'])
     await search(page).fill('o')
-    expect(await labels(page)).toEqual(['Open', 'In progress', 'Waiting (on client)', 'Done'])
+    expect(await labels(page)).toEqual(['Open', 'In progress', 'Waiting (on supplier)', 'Done'])
     // The label's own case kept.
     await expect(option(page, /^Open/).locator('mark')).toHaveText(['O'])
     // Every match in a label.
     await search(page).fill('I')
     await expect(option(page, /^Waiting/).locator('mark')).toHaveText(['i', 'i', 'i'])
     // The label reads whole, marks and all.
-    await expect(option(page, /^Waiting/).locator('[data-label]')).toHaveText('Waiting (on client)')
+    await expect(option(page, /^Waiting/).locator('[data-label]')).toHaveText('Waiting (on supplier)')
   })
 
   test('regular-expression characters match themselves, and nothing throws', async ({ page }) => {
@@ -148,9 +148,9 @@ test.describe('search', () => {
     page.on('pageerror', (e) => errors.push(e.message))
     await openPanel(page, 'status')
     for (const [typed, expected] of [
-      ['(', ['Waiting (on client)']],
-      ['(on', ['Waiting (on client)']],
-      [')', ['Waiting (on client)']],
+      ['(', ['Waiting (on supplier)']],
+      ['(on', ['Waiting (on supplier)']],
+      [')', ['Waiting (on supplier)']],
       ['[review]', ['Q&A [review]']],
       ['[', ['Q&A [review]']],
       ['&', ['Q&A [review]']],
@@ -261,11 +261,11 @@ test.describe('keyboard and focus', () => {
     await trigger(page, 'kind').focus()
     await page.keyboard.press('Enter')
     await expect(panel(page).locator('input')).toHaveCount(0)
-    await expect(option(page, 'Invoice')).toBeFocused()
+    await expect(option(page, 'Task')).toBeFocused()
     await page.keyboard.press('ArrowDown')
-    await expect(option(page, 'Estimate')).toBeFocused()
+    await expect(option(page, 'Bug')).toBeFocused()
     await page.keyboard.press(' ')
-    await expect(model(page, 'kind')).toHaveText('["Estimate"]')
+    await expect(model(page, 'kind')).toHaveText('["Bug"]')
     await page.keyboard.press('Escape')
     await expect(trigger(page, 'kind')).toBeFocused()
   })

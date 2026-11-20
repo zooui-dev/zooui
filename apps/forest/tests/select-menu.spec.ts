@@ -19,7 +19,7 @@ const form = (page: Page) => page.locator('[data-form]')
 
 test('a data-entry row, from the keyboard alone', async ({ page }) => {
   await openPage(page)
-  await page.locator('[data-payee]').fill('Acme')
+  await page.locator('[data-customer]').fill('Acme')
   await page.keyboard.press('Tab')
   // The state menu opened on focus, its search input focused: type to filter, Tab takes the match.
   await expect(page.locator('[data-state-menu]')).toHaveAttribute('aria-expanded', 'true')
@@ -27,38 +27,38 @@ test('a data-entry row, from the keyboard alone', async ({ page }) => {
   await page.keyboard.type('new')
   await expect(listbox(page).locator('[data-highlighted]')).toHaveText('New York')
   await page.keyboard.press('Tab')
-  await expect(form(page)).toHaveText('payee: Acme, state: NY, kind: —, memo: —')
+  await expect(form(page)).toHaveText('customer: Acme, state: NY, kind: —, memo: —')
   // The kind menu has no search input: arrow keys and Enter pick, and focus comes back to it.
   await expect(page.locator('[data-kind-menu]')).toHaveAttribute('aria-expanded', 'true')
   await page.keyboard.press('ArrowDown')
   await page.keyboard.press('Enter')
-  await expect(form(page)).toHaveText('payee: Acme, state: NY, kind: Receipt, memo: —')
+  await expect(form(page)).toHaveText('customer: Acme, state: NY, kind: Pickup, memo: —')
   await expect(page.locator('[data-kind-menu]')).toBeFocused()
   // Typeahead on the closed menu, then on to the memo.
   await page.keyboard.press('s')
-  await expect(form(page)).toHaveText('payee: Acme, state: NY, kind: Statement, memo: —')
+  await expect(form(page)).toHaveText('customer: Acme, state: NY, kind: Shipping, memo: —')
   await page.keyboard.press('Tab')
   await expect(page.locator('[data-memo]')).toBeFocused()
   await page.keyboard.type('Q3')
-  await expect(form(page)).toHaveText('payee: Acme, state: NY, kind: Statement, memo: Q3')
+  await expect(form(page)).toHaveText('customer: Acme, state: NY, kind: Shipping, memo: Q3')
   await expect(listbox(page)).toHaveCount(0)
 })
 
 test('the kind menu, no search input: arrow down and Tab takes the highlighted kind and moves on', async ({ page }) => {
   await openPage(page)
-  await page.locator('[data-payee]').fill('Acme')
+  await page.locator('[data-customer]').fill('Acme')
   await page.keyboard.press('Tab')
   // Straight through the state menu: untouched, it stays empty.
   await expect(page.locator('[data-state-menu]')).toHaveAttribute('aria-expanded', 'true')
   await page.keyboard.press('Tab')
   await expect(page.locator('[data-kind-menu]')).toHaveAttribute('aria-expanded', 'true')
-  await expect(listbox(page).locator('[data-highlighted]')).toHaveText('Invoice')
+  await expect(listbox(page).locator('[data-highlighted]')).toHaveText('Delivery')
   await page.keyboard.press('ArrowDown')
-  await expect(listbox(page).locator('[data-highlighted]')).toHaveText('Receipt')
+  await expect(listbox(page).locator('[data-highlighted]')).toHaveText('Pickup')
   await page.keyboard.press('Tab')
   await expect(page.locator('[data-memo]')).toBeFocused()
   await expect(listbox(page)).toHaveCount(0)
-  await expect(form(page)).toHaveText('payee: Acme, state: —, kind: Receipt, memo: —')
+  await expect(form(page)).toHaveText('customer: Acme, state: —, kind: Pickup, memo: —')
 })
 
 // The base page's typeahead, focus-ring and UForm sections, on Forest: a smoke test each.

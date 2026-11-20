@@ -1,17 +1,17 @@
 # ZOptionalDate
 
 An optional date (`components/OptionalDate.vue`): a checkbox in front of a [`ZDateField`](date-field.md), for a day a
-record may or may not have, such as "Has an end date" or "Extension filed". The date is editable only while the box
+record may or may not have, such as "Has an end date" or "Follow-up booked". The date is editable only while the box
 is ticked.
 
 ```vue
 <UFormField label="Ends"><ZOptionalDate v-model="form.endDate" label="Has an end date" clearable /></UFormField>
-<UFormField label="Extended due date">
+<UFormField label="Follow-up date">
   <ZOptionalDate
-    v-model="task.extendedDueDate"
-    v-model:enabled="task.hasFiledExtension"
-    label="Extension filed"
-    @enabled-change="(on) => on && !task.extendedDueDate && fetchDefaultDueDate()"
+    v-model="task.followUpDate"
+    v-model:enabled="task.hasFollowUp"
+    label="Follow-up booked"
+    @enabled-change="(on) => on && !task.followUpDate && fetchDefaultFollowUp()"
   />
 </UFormField>
 <ZOptionalDate v-model="form.endDate" label="Has an end date" clear-when-off />

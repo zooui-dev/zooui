@@ -97,7 +97,7 @@ test.describe('the All button (show-select-all)', () => {
     await openPanel(page, 'no-all')
     await expect(panel(page).getByRole('button', { name: 'All' })).toHaveCount(0)
     await expect(panel(page).locator('[data-footer]')).toHaveCount(0)
-    await option(page, 'Invoice').click()
+    await option(page, 'Task').click()
     await expect(panel(page).locator('[data-footer]').getByRole('button')).toHaveText(['Clear'])
     await panel(page).getByRole('button', { name: 'Clear' }).click()
     await expect(page.locator('[data-model="tag"]')).toHaveText('[]')

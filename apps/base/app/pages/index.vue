@@ -3,7 +3,7 @@
 const COLORS = ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral'] as const
 
 const toast = useToast()
-const rows = [{ account: 'Retainer', amount: '1,200.00' }, { account: 'Materials', amount: '3,450.75' }]
+const rows = [{ item: 'Labor', amount: '1,200.00' }, { item: 'Materials', amount: '3,450.75' }]
 </script>
 
 <template>

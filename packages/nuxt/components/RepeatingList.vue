@@ -3,7 +3,7 @@
 // rows' fields are the caller's, in the #row slot, so it holds any input; this owns adding, removing, folding,
 // per-row errors, focus and announcing the count. Written on Nuxt UI's tokens.
 //
-//   <ZRepeatingList v-model="rows" item-label="referral source" :new-row="() => ({ name: '' })" :row-key="(r) => r.id">
+//   <ZRepeatingList v-model="rows" item-label="contact" :new-row="() => ({ name: '' })" :row-key="(r) => r.id">
 //     <template #row="{ row, index, error, errorId }"> …inputs bound to row… </template>
 //     <template #summary="{ row }">{{ row.name }}</template>   <!-- optional: fold rows to one line -->
 //   </ZRepeatingList>
@@ -19,7 +19,7 @@ import { restore, snapshot } from './row-snapshot'
 
 const props = withDefaults(
   defineProps<{
-    /** One row, singular and lower case: "referral source". */
+    /** One row, singular and lower case: "contact". */
     itemLabel: string
     /** A new row's starting values. */
     newRow: () => T
@@ -33,7 +33,7 @@ const props = withDefaults(
     errors?: Record<string, string>
     /** Whether a row may be removed (default: every row, down to `min`). */
     removable?: (row: T) => boolean
-    /** The row's heading, and the name its buttons carry; "Referral source 2" unless given. Hidden in `compact`. */
+    /** The row's heading, and the name its buttons carry; "Contact 2" unless given. Hidden in `compact`. */
     rowTitle?: (row: T, index: number) => string
     /** One line per row, no heading or card: for rows of a single short field. */
     compact?: boolean

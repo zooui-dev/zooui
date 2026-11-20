@@ -72,10 +72,10 @@ test.describe('each helper resolves for each way out', () => {
 test('announced as an alertdialog named by its question and described by its description; details listed', async ({ page }) => {
   await open(page)
   await ask(page, 'delete')
-  const d = page.getByRole('alertdialog', { name: 'Delete the Hartwell invoice', exact: true })
+  const d = page.getByRole('alertdialog', { name: 'Delete the Lakeside order', exact: true })
   await expect(d).toBeVisible()
-  await expect(d).toHaveAccessibleDescription('Are you sure you want to delete the Hartwell invoice? This action cannot be undone.')
-  await expect(d.locator('[data-confirm-details] li')).toHaveText(['Invoice 1042 · $1,200.00', '2 payments recorded'])
+  await expect(d).toHaveAccessibleDescription('Are you sure you want to delete the Lakeside order? This action cannot be undone.')
+  await expect(d.locator('[data-confirm-details] li')).toHaveText(['Order 1042 · $1,200.00', '2 payments recorded'])
   await expect(page.getByRole('dialog')).toHaveCount(0)
   // the icon is decoration: the name is the question alone
   await expect(d.locator('[data-confirm-icon] svg')).toBeVisible()
@@ -350,8 +350,8 @@ test('two-part details: a line break or { title, text } is a heading over its te
   await settled(page)
 
   for (const [i, title, text] of [
-    [0, 'Report Basis Mismatch', 'This file is on the cash basis; the client reports on accrual.'],
-    [1, 'Missing accounts', '3 accounts in the file aren’t in the chart of accounts.'],
+    [0, 'Time Zone Mismatch', 'This file is in UTC; the workspace reports in Pacific time.'],
+    [1, 'Missing people', '3 people in the file aren’t in the team directory.'],
   ] as const) {
     const heading = items.nth(i).locator('[data-confirm-detail-title]')
     await expect(heading).toHaveText(title)
@@ -363,7 +363,7 @@ test('two-part details: a line break or { title, text } is a heading over its te
     expect(below!.y).toBeGreaterThanOrEqual(top!.y + top!.height - 1)
   }
   await expect(items.nth(2).locator('[data-confirm-detail-title], [data-confirm-detail-text]')).toHaveCount(0)
-  await expect(items.nth(2)).toHaveText('12 transactions will be imported')
+  await expect(items.nth(2)).toHaveText('12 tasks will be imported')
   // details but no description: no badge, the details still indented to the description's column
   await expect(dialog(page).locator('[data-confirm-icon]')).toHaveCount(0)
   await expect(dialog(page).locator('[data-confirm-details]')).toHaveCSS('padding-left', '52px')

@@ -93,20 +93,20 @@ export const CONFIRM_COLOR_ICONS: Partial<Record<ConfirmColor, string>> = {
   warning: CONFIRM_WARNING_ICON,
 }
 
-/** The icon shown beside the title: the question's own, else its color's, and none for `icon: false`. */
+/** The icon shown beside the description: the question's own, else its color's, and none for `icon: false`. */
 export function confirmIcon(options: ConfirmBaseOptions): string | undefined {
   if (options.icon === false) return undefined
   return options.icon || (options.color && CONFIRM_COLOR_ICONS[options.color])
 }
 
-/** A detail as its parts: `"Report Basis Mismatch\nThis file is…"` is a heading and its text; a plain line is text. */
+/** A detail as its parts: `"Time Zone Mismatch\nThis file is…"` is a heading and its text; a plain line is text. */
 export function confirmDetailParts(detail: ConfirmDetail): { title?: string, text: string } {
   if (typeof detail !== 'string') return { title: detail.title, text: detail.text ?? '' }
   const at = detail.indexOf('\n')
   return at < 0 ? { text: detail } : { title: detail.slice(0, at), text: detail.slice(at + 1) }
 }
 
-/** `confirmDelete('the Hartwell invoice')`: an error-colored, destructive question with Delete and Cancel. */
+/** `confirmDelete('the Lakeside order')`: an error-colored, destructive question with Delete and Cancel. */
 export function deleteOptions(what?: string, overrides?: Partial<ConfirmOptions>): ConfirmOptions {
   return {
     title: what ? `Delete ${what}` : 'Delete',

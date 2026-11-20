@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * A transfer dialog's Files field, as a product's send-a-transfer dialog has it (tests/file-drop-dialog.spec.ts): the
+ * A share dialog's Files field, as a product's share-files dialog has it (tests/file-drop-dialog.spec.ts): the
  * whole ZModal takes dropped files, with ZFileDropOverlay contained in it, over a page that has its own window-level
  * overlay. The field lists the files already sent (an edit) and the ones being added in one ZFileList, the stored ones
  * removed through a server call the page answers by hand (so the test sees the spinner), and a UFileUpload under it
@@ -16,8 +16,8 @@ const open = ref(false)
 const dialog = useTemplateRef<HTMLElement>('dialog')
 
 const stored = ref<FileListItem[]>([
-  { id: 'f-1', name: 'engagement-letter.pdf', size: 245_000, type: 'application/pdf' },
-  { id: 'f-2', name: '2025-return.pdf', size: 1_830_000, type: 'application/pdf' },
+  { id: 'f-1', name: 'project-brief.pdf', size: 245_000, type: 'application/pdf' },
+  { id: 'f-2', name: '2025-plan.pdf', size: 1_830_000, type: 'application/pdf' },
 ])
 const added = ref<File[]>([])
 const files = computed<FileListItem[]>(() => [...stored.value, ...added.value])
@@ -58,10 +58,10 @@ function remove(item: FileListItem) {
     <header class="flex flex-col gap-2">
       <h1 class="text-xl font-semibold text-highlighted">ZFileDropOverlay in a dialog, with ZFileList</h1>
       <p class="text-sm text-muted">
-        A transfer dialog's Files field. The whole dialog takes dropped files, with its own overlay drawn inside it, and
+        A share dialog's Files field. The whole dialog takes dropped files, with its own overlay drawn inside it, and
         the page behind has a window-level overlay of its own. While the dialog is open the page takes no drops at all, not even
         on the backdrop; once it closes, the page's overlay works again. The field lists the
-        files the transfer already holds (from the server) and the ones being added, with the drop zone under it to
+        files the share already holds (from the server) and the ones being added, with the drop zone under it to
         browse. Dropped and browsed files go through the same rule (PDFs, CSVs and images, and no name the list already
         holds); a refused one is a toast. The drop zone resets before each browse, so a file you removed can be picked again.
         <strong>Dropped on the page</strong> shows what the page's own overlay took.
@@ -79,12 +79,12 @@ function remove(item: FileListItem) {
       <h2 class="text-base font-semibold text-highlighted">The dialog</h2>
       <p class="text-sm text-muted">Try this: open the dialog and drop files anywhere on it; they join the list, and a Word file is refused. Drop the same file again: it's refused as already attached. Close it and drag over the page again: the page's overlay is back.</p>
       <p class="text-sm text-muted">Try this too: browse for a file, remove it from the list, and browse for the same file again; it's added again.</p>
-    <ZModal v-model:open="open" title="Edit transfer" description="Send files to a client">
-      <UButton label="Open the dialog: Edit transfer" data-open-dialog />
+    <ZModal v-model:open="open" title="Edit share" description="Share files with the team">
+      <UButton label="Open the dialog: Edit share" data-open-dialog />
       <template #content="{ close }">
         <div ref="dialog" data-zone="dialog" class="flex flex-col gap-4 rounded-[inherit] p-6">
           <div class="flex items-center justify-between">
-            <h3 class="text-base font-semibold text-highlighted">Edit transfer</h3>
+            <h3 class="text-base font-semibold text-highlighted">Edit share</h3>
             <UButton icon="i-lucide-x" variant="ghost" color="neutral" aria-label="Close" data-close-dialog @click="close" />
           </div>
           <UFormField label="Files">

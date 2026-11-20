@@ -22,7 +22,7 @@ const props = withDefaults(
     remove?: (item: FileListItem, index: number) => unknown
     /** The sizes' locale (BCP 47). Unset: Nuxt UI's locale. */
     locale?: string
-    /** The Remove button's word; its accessible name is this and the file's name: "Remove invoice.pdf". */
+    /** The Remove button's word; its accessible name is this and the file's name: "Remove agenda.pdf". */
     removeLabel?: string
     /** Sizes in steps of 1024 (`1.2 KB`); `false` for decimal units (`1.2 kB`, 1 kB = 1000 bytes). */
     binary?: boolean

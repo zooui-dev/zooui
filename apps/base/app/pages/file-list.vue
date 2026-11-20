@@ -15,7 +15,7 @@ const preview = ref(false)
 const binary = ref(true)
 const items = ref<FileListItem[]>([
   { id: 's-1', name: 'site-photo.png', size: 245_000, type: 'image/png', thumbnail: THUMB },
-  { id: 's-2', name: '2025-return.pdf', size: 1_830_000, type: 'application/pdf' },
+  { id: 's-2', name: '2025-plan.pdf', size: 1_830_000, type: 'application/pdf' },
 ])
 let photos = 0
 function addPhoto() {
@@ -25,7 +25,7 @@ function addPhoto() {
 // The Files are made on the client: a File can't cross from the server's render.
 onMounted(() => {
   addPhoto()
-  items.value = [...items.value, new File(['%PDF'], 'invoice.pdf', { type: 'application/pdf' })]
+  items.value = [...items.value, new File(['%PDF'], 'agenda.pdf', { type: 'application/pdf' })]
 })
 
 /** `File` isn't one of the globals a template can see. */

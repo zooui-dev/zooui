@@ -21,6 +21,10 @@ const columns = [
   { accessorKey: 'versions', header: 'Versions' },
   { accessorKey: 'size', header: 'Size (MB)' },
 ]
+// With sticky headers nu-grid puts its `thead` slot (`relative`) and its `stickyColumnHeader` slot (`sticky`) on one
+// element: two position utilities, which findConflicts flags on every spec that checks this page. `sticky` in the
+// thead slot replaces `relative` there (tailwind-merge), so the element carries `sticky` alone.
+const stickyUi = { thead: 'sticky' }
 </script>
 
 <template>
@@ -42,7 +46,7 @@ const columns = [
     </KsRow>
     <KsRow label="default · grouped · scrolls inside">
       <div class="w-full h-64" data-grid="default-scrolling">
-        <NuGrid :data="manyRows" :columns="columns" row-id="id" :grouping="['owner']" :layout="{ mode: 'group', stickyHeaders: true }" />
+        <NuGrid :data="manyRows" :columns="columns" row-id="id" :grouping="['owner']" :layout="{ mode: 'group', stickyHeaders: true }" :ui="stickyUi" />
       </div>
     </KsRow>
   </KsSection>

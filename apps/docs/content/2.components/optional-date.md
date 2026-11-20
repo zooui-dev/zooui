@@ -5,7 +5,7 @@ component: ZOptionalDate
 preview: OptionalDateBasic
 ---
 
-Some dates are optional by nature: an engagement that may have an end date, a return whose extension may have been filed. `ZOptionalDate` puts a checkbox in front of a [`ZDateField`](/components/date-field): while the box is off, the field is disabled and greyed out; ticked, the field takes a day and focus moves into it.
+Some dates are optional by nature: a project that may have an end date, a task whose follow-up may have been booked. `ZOptionalDate` puts a checkbox in front of a [`ZDateField`](/components/date-field): while the box is off, the field is disabled and greyed out; ticked, the field takes a day and focus moves into it.
 
 ::component-example{name="OptionalDateBasic"}
 ::
@@ -29,12 +29,12 @@ Ticked and empty means "has an end date, not yet known", which a form may want t
 `@enabled-change` fires with the new state when the user ticks or unticks the box, and never when the parent sets `enabled` or the day. It is the moment to fetch a default date:
 
 ```vue
-<UFormField label="Extended due date">
+<UFormField label="Follow-up date">
   <ZOptionalDate
-    v-model="task.extendedDueDate"
-    v-model:enabled="task.hasFiledExtension"
-    label="Extension filed"
-    @enabled-change="(on) => on && !task.extendedDueDate && fetchDefaultDueDate()"
+    v-model="task.followUpDate"
+    v-model:enabled="task.hasFollowUp"
+    label="Follow-up booked"
+    @enabled-change="(on) => on && !task.followUpDate && fetchDefaultFollowUp()"
   />
 </UFormField>
 ```

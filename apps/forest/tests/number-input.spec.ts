@@ -277,13 +277,13 @@ test('prefix and suffix sit in the mark slots, clear of the value', async ({ pag
 })
 
 test('spin off: no chevrons, ArrowUp and ArrowDown do nothing, and it is a plain text box', async ({ page }) => {
-  const invoice = field(page, 'nospin')
+  const order = field(page, 'nospin')
   await expect(root(page, 'nospin').getByRole('button')).toHaveCount(0)
-  await invoice.press('ArrowUp')
-  await invoice.press('ArrowDown')
-  await expect(invoice).toHaveValue('5')
-  expect(await invoice.getAttribute('role')).toBeNull()
-  expect(await invoice.getAttribute('aria-valuenow')).toBeNull()
+  await order.press('ArrowUp')
+  await order.press('ArrowDown')
+  await expect(order).toHaveValue('5')
+  expect(await order.getAttribute('role')).toBeNull()
+  expect(await order.getAttribute('aria-valuenow')).toBeNull()
 })
 
 test('a spinbutton with its range and value, for assistive technology', async ({ page }) => {
@@ -360,13 +360,13 @@ test('calc: an expression, its result shown underneath, put in on Enter, Tab or 
   await expect(calc).toHaveValue('121.00')
 })
 
-test('calc with no places is the whole-dollar 1040 rule; min clamps the result', async ({ page }) => {
-  const line = field(page, 'calc1040')
+test('calc with no places rounds to whole dollars; min clamps the result', async ({ page }) => {
+  const line = field(page, 'calcwhole')
   await line.fill('10.5*3')
-  await expect(root(page, 'calc1040').locator('[data-number-preview]')).toHaveText('Result=$32')
+  await expect(root(page, 'calcwhole').locator('[data-number-preview]')).toHaveText('Result=$32')
   await line.press('Enter')
   await expect(line).toHaveValue('32')
-  await expect(model(page, 'calc1040')).toHaveText('number 32')
+  await expect(model(page, 'calcwhole')).toHaveText('number 32')
   await line.fill('5-10')
   await line.press('Enter')
   await expect(line).toHaveValue('0')

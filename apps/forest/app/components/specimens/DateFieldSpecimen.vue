@@ -2,7 +2,7 @@
 /**
  * ZDateField, in the shapes a product uses it (its e2e specs drive these): a labeled form field, the other formats, a
  * field whose parent owns the v-model and lists every `dateUpdate` (a dev harness), a range whose ends put a
- * default back when blanked (its referral filters), and a field in a modal (its bill form's "Ends").
+ * default back when blanked (its report filters), and a field in a modal (its recurring-task form's "Ends").
  */
 import { Temporal } from 'temporal-polyfill/implementation'
 
@@ -29,7 +29,7 @@ const starts = ref<Temporal.PlainDate | null>(null)
 const iconClicks = ref<string[]>([])
 const iconClicked = (e: MouseEvent) => iconClicks.value.push(e instanceof MouseEvent ? e.type : 'not a MouseEvent')
 
-const billOpen = ref(false)
+const taskOpen = ref(false)
 const ends = ref<Temporal.PlainDate | null>(null)
 </script>
 
@@ -80,12 +80,12 @@ const ends = ref<Temporal.PlainDate | null>(null)
     </div>
 
     <div>
-      <UModal v-model:open="billOpen" title="Add a bill" description="A date field in a dialog.">
-        <UButton data-open="bill" label="Add a bill" color="neutral" variant="outline" />
+      <UModal v-model:open="taskOpen" title="Add a recurring task" description="A date field in a dialog.">
+        <UButton data-open="task" label="Add a recurring task" color="neutral" variant="outline" />
         <template #body>
           <div class="flex flex-col gap-4">
-            <UFormField label="Payee or description">
-              <UInput placeholder="Shop rent" class="w-full" />
+            <UFormField label="Title or description">
+              <UInput placeholder="Weekly team check-in" class="w-full" />
             </UFormField>
             <UFormField label="Ends">
               <ZDateField v-model="ends" clearable class="w-full" />

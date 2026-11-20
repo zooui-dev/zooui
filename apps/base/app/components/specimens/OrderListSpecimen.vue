@@ -41,10 +41,10 @@ const steps = ref<Step[]>(Array.from({ length: 30 }, (_, i) => ({ id: i + 1, tex
 const stepId = ref<string | number | null>(null)
 
 // No @remove: the list takes the row out of v-model itself.
-const groups = ref([{ id: 1, name: 'Partners' }, { id: 2, name: 'Managers' }, { id: 3, name: 'Staff' }, { id: 4, name: 'Seasonal' }])
+const groups = ref([{ id: 1, name: 'Leads' }, { id: 2, name: 'Managers' }, { id: 3, name: 'Staff' }, { id: 4, name: 'Interns' }])
 const groupId = ref<string | number | null>(null)
 
-const folders = ref(['Engagement letters', 'Workpapers', 'Correspondence', 'Tax returns', 'Invoices', 'Archive'].map((name, i) => ({ id: i + 1, name })))
+const folders = ref(['Proposals', 'Drafts', 'Correspondence', 'Reports', 'Orders', 'Archive'].map((name, i) => ({ id: i + 1, name })))
 const folderId = ref<string | number | null>(1)
 
 const tags = ref([{ key: 'a', label: 'Alpha' }, { key: 'b', label: 'Beta' }, { key: 'c', label: 'Gamma' }])
