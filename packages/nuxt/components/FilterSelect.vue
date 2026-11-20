@@ -73,6 +73,8 @@ const props = withDefaults(
     clearLabel?: string
     /** Shown when nothing matches the search. Unset: "No matches". */
     emptyLabel?: string
+    /** The count chip's words, also read in the button's name; "3 selected" unless given. */
+    selectedLabel?: (count: number) => string
     /** What a screen reader hears when the selection changes; "Status: 2 selected." unless given. */
     announce?: (change: { label: string; count: number }) => string
   }>(),
@@ -94,6 +96,7 @@ const props = withDefaults(
     allLabel: 'All',
     clearLabel: 'Clear',
     emptyLabel: 'No matches',
+    selectedLabel: undefined,
     announce: undefined,
   },
 )
@@ -154,7 +157,7 @@ const chosenLabels = computed(() => [
 const chips = computed(() => {
   const n = model.value.length
   if (!n) return []
-  return n <= props.maxShown ? chosenLabels.value : [`${n} selected`]
+  return n <= props.maxShown ? chosenLabels.value : [props.selectedLabel?.(n) ?? `${n} selected`]
 })
 // The button's name, the chips said in words: "Status, Open, Blocked" or "Status, 3 selected". It starts with the
 // visible label, so speech input still finds the button by what it shows.

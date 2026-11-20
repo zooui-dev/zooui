@@ -31,6 +31,7 @@ Nuxt UI's `UListbox` (`multiple`, its search box) and All and Clear under it. Ge
 | `disabled` | `boolean` | Disables the button |
 | `portal` | `boolean \| string` | UPopover's, `true` |
 | `allLabel`, `clearLabel`, `emptyLabel` | `string` | `All`, `Clear`, `No matches` |
+| `selectedLabel` | `(count) => string` | The count chip's words, read in the button's name too; `3 selected` unless given, for a product's own language (``(n) => `${n} ausgewählt` ``) |
 | `announce` | `({ label, count }) => string` | What a screen reader hears on a change; `Status: 2 selected.` / `Status: none selected.` |
 
 Emits `update:modelValue`. Slot `#option-label="{ option, segments, selected }"` replaces an option's highlighted

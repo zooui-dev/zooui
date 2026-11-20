@@ -59,13 +59,14 @@ test.describe('how much the button names (max-shown)', () => {
     await expect(chips(page, 'priority')).toHaveText(['Low', 'High', 'Urgent: same day, before close of business'])
   })
 
-  test('max-shown="0": always a count, from the first value', async ({ page }) => {
+  test('max-shown="0": always a count, from the first value, in selected-label\'s words for the chip and the name', async ({ page }) => {
     await openPanel(page, 'count-only')
     await option(page, /^Open/).click()
-    await expect(chips(page, 'count-only')).toHaveText(['1 selected'])
-    await expect(trigger(page, 'count-only')).toHaveAccessibleName('Stage, 1 selected')
+    await expect(chips(page, 'count-only')).toHaveText(['1 stage'])
+    await expect(trigger(page, 'count-only')).toHaveAccessibleName('Stage, 1 stage')
     await option(page, /^Done/).click()
-    await expect(chips(page, 'count-only')).toHaveText(['2 selected'])
+    await expect(chips(page, 'count-only')).toHaveText(['2 stages'])
+    await expect(trigger(page, 'count-only')).toHaveAccessibleName('Stage, 2 stages')
   })
 
   test('chips are capped and truncate; a chip cut short carries its whole text as a title', async ({ page }) => {

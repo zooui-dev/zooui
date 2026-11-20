@@ -16,7 +16,7 @@ An option's `count` is shown beside it, grouped for the locale, and its `icon` b
 
 ## How much the button names
 
-`max-shown` is how many chosen values the button names, a chip each in the options' order, before it switches to one "3 selected" chip; `0` always shows the count. The chips stay within a capped width and truncate, and a chip cut short shows its whole text on hover. The button keeps Nuxt UI's height for its `size` whatever it holds.
+`max-shown` is how many chosen values the button names, a chip each in the options' order, before it switches to one "3 selected" chip; `0` always shows the count, and `selected-label` words it in your product's language: ``(n) => `${n} ausgewählt` ``. The chips stay within a capped width and truncate, and a chip cut short shows its whole text on hover. The button keeps Nuxt UI's height for its `size` whatever it holds.
 
 ::component-example{name="FilterSelectOptions"}
 ::

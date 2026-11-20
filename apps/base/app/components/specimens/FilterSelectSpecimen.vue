@@ -38,6 +38,7 @@ const owners = ref<number[]>([2])
 const chosenKinds = ref<Kind[]>([])
 const chosenPriorities = ref<string[]>([])
 const countOnly = ref<string[]>([])
+const stagesLabel = (n: number) => (n === 1 ? '1 stage' : `${n} stages`)
 const noAll = ref<Kind[]>([])
 const styled = ref<string[]>(['open'])
 
@@ -72,8 +73,8 @@ const sized = reactive<Record<string, string[]>>(Object.fromEntries(SIZES.flatMa
         <span class="text-xs text-muted">max-shown="3": names up to three, then a count</span>
       </div>
       <div class="flex flex-col items-start gap-1">
-        <ZFilterSelect v-model="countOnly" label="Stage" :options="statusOptions" value-key="value" :max-shown="0" data-specimen="filter-count-only" />
-        <span class="text-xs text-muted">max-shown="0": always a count</span>
+        <ZFilterSelect v-model="countOnly" label="Stage" :options="statusOptions" value-key="value" :max-shown="0" :selected-label="stagesLabel" data-specimen="filter-count-only" />
+        <span class="text-xs text-muted">max-shown="0": always a count, in its own words (selected-label)</span>
       </div>
       <div class="flex flex-col items-start gap-1">
         <ZFilterSelect v-model="noAll" label="Tag" :options="kinds" :show-select-all="false" data-specimen="filter-no-all" />
