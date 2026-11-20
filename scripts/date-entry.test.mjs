@@ -47,6 +47,10 @@ describe('parseDateEntry', () => {
     ['0512', '2026-05-12'],
     ['051226', '2026-05-12'],
     ['123199', '1999-12-31'],
+    ['05122026', '2026-05-12'], // MMDDYYYY
+    ['12311999', '1999-12-31'],
+    ['02292028', '2028-02-29'],
+    ['01011000', '1000-01-01'],
     ['5/12', '2026-05-12'],
     ['05/12', '2026-05-12'],
     ['5/12/26', '2026-05-12'],
@@ -84,6 +88,12 @@ describe('parseDateEntry', () => {
     '5/12/202',
     '5/12/0026',
     '5/12/20261',
+    '13012026', // no 13th month
+    '02302026',
+    '02292027',
+    '05120026', // a four-digit year before 1000
+    '05120000',
+    '051220261', // nine digits
     '5/',
     '/12',
     '5//2026',
@@ -368,6 +378,16 @@ describe('other formats', () => {
     assert.equal(parse('0026-05-12', TODAY, f), null)
     assert.equal(parse('5/12', TODAY, f), null)
     assert.equal(formatDateEntry(d('2026-05-02'), f), '2026-05-02')
+  })
+
+  it('eight digits carry a four-digit year, in each format\'s order', () => {
+    assert.equal(parse('05122026'), '2026-05-12')
+    assert.equal(parse('12052026', TODAY, 'DD/MM/YYYY'), '2026-05-12')
+    assert.equal(parse('12052026', TODAY, 'DD.MM.YYYY'), '2026-05-12')
+    assert.equal(parse('20260512', TODAY, 'YYYY-MM-DD'), '2026-05-12')
+    assert.equal(parse('20260512'), null) // month 20 in MM/DD/YYYY
+    assert.equal(parse('05122026', TODAY, 'YYYY-MM-DD'), null)
+    assert.equal(parse('00260512', TODAY, 'YYYY-MM-DD'), null)
   })
 
   it('every format reads back what it writes', () => {

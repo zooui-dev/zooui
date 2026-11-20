@@ -9,7 +9,19 @@ preview: DateFieldBasic
 
 ## Typing and shortcut keys
 
-In `MM/DD/YYYY`, `5` or `12` is that day this month, `0512` is May 12, and `051226`, `5/12/26` or `5/12/2026` carry the year. Enter, Tab or leaving the field commits; text that isn't a date clears it. The keys `t` (today), `m` and `h` (first and last of the month), `y` and `r` (first and last of the year), and `+` or `-` (a day either way) move the date, and pressing `m`, `h`, `y` or `r` again keeps walking. Alt+↓ opens the calendar.
+In `MM/DD/YYYY`, `5` or `12` is that day this month, `0512` is May 12, and `051226`, `05122026`, `5/12/26` or `5/12/2026` carry the year. Enter, Tab or leaving the field commits; text that isn't a date clears it. The keys `t` (today), `m` and `h` (first and last of the month), `y` and `r` (first and last of the year), and `+` or `-` (a day either way) move the date, and pressing `m`, `h`, `y` or `r` again keeps walking. A key steps from the committed date (today when the field is empty), not from text typed since: with 03/15/2026 saved, typing `04/0` then `+` gives 03/16/2026. Alt+↓ opens the calendar.
+
+## Leading icon or slot
+
+`icon` puts a leading icon in the field, and a click on it emits `@icon-click`. A `#leading` slot takes its place, forwarded to the input with its `ui`:
+
+```vue
+<ZDateField v-model="due">
+  <template #leading="{ ui }">
+    <span :class="ui.leadingIcon()">Due</span>
+  </template>
+</ZDateField>
+```
 
 ::component-example{name="DateFieldBasic"}
 ::
