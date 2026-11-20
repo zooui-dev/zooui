@@ -18,6 +18,6 @@ export default defineNuxtConfig({
   // with it on, the test that Z* icons reach the client bundle could pass without the layer registering them.
   icon: {
     mode: 'svg',
-    clientBundle: { icons: ['lucide:calendar-days', 'lucide:circle-check', 'lucide:landmark', 'lucide:info'] },
+    clientBundle: { icons: ['lucide:calendar-days', 'lucide:circle-check', 'lucide:landmark', 'lucide:info', 'lucide:upload'] },
   },
 })
