@@ -19,4 +19,4 @@ allowBuilds:
 
 minimumReleaseAgeExclude:
   # nu-grid, for apps/forest's grid fixture (published the same day it was added)
-  - '@nu-grid/nuxt@0.4.3'
+  - '@nu-grid/nuxt@0.4.3 || 0.4.5'
