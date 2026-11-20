@@ -27,6 +27,16 @@ const kinds: Kind[] = [{ label: 'Invoice' }, { label: 'Estimate' }, { label: 'Cr
 const statuses = ref<string[]>([])
 const owners = ref<number[]>([2])
 const chosenKinds = ref<Kind[]>([])
+
+const SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const
+const STATES = [
+  { name: 'empty', label: 'Owner', icon: undefined, model: [] },
+  { name: 'empty-no-icon', label: 'Owner', icon: '', model: [] },
+  { name: 'count', label: 'Status', icon: undefined, model: ['open', 'done'] },
+  { name: 'value', label: 'Status', icon: undefined, model: ['progress'] },
+  { name: 'value-no-icon', label: 'Kind', icon: '', model: ['review'] },
+] as const
+const sized = reactive<Record<string, string[]>>(Object.fromEntries(SIZES.flatMap((size) => STATES.map((s) => [`${size}-${s.name}`, [...s.model]]))))
 </script>
 
 <template>
@@ -41,6 +51,16 @@ const chosenKinds = ref<Kind[]>([])
         <!-- @vue-expect-error owners holds numbers, not Status['value'] -->
         <ZFilterSelect v-model="owners" label="Status" :options="statusOptions" value-key="value" />
       </template>
+    </div>
+    <!-- Every size, every state of the button: it is Nuxt UI's button height for its size whatever it holds, so a
+         toolbar lines up. The plain UButton is that height. -->
+    <div class="flex flex-col gap-2" data-specimen="filter-sizes">
+      <!-- A theme's own badge face (Forest's is mono), which the buttons' badges must not take. -->
+      <UBadge label="A UBadge" color="neutral" variant="soft" class="self-start" data-badge-probe />
+      <div v-for="size in SIZES" :key="size" class="flex flex-wrap items-start gap-2" :data-size="size">
+        <UButton :size="size" variant="outline" color="neutral" icon="i-lucide-list-filter" label="Reference" data-reference />
+        <ZFilterSelect v-for="state in STATES" :key="state.name" v-model="sized[`${size}-${state.name}`]!" :size="size" :label="state.label" :options="statusOptions" value-key="value" :icon="state.icon" :data-state="state.name" />
+      </div>
     </div>
     <p class="text-xs text-muted">
       Status <output data-model="status">{{ JSON.stringify(statuses) }}</output>

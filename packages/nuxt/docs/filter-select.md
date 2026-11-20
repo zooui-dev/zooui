@@ -5,8 +5,9 @@
 <ZFilterSelect v-model="owners" label="Owner" :options="people" value-key="id" label-key="name" count-key="open" />
 ```
 
-A faceted filter for a list or table toolbar: a `UButton` naming the filter, with a `UBadge` for what is chosen (the
-value's label when it is one, the number when it is more), opening a `UPopover` with Nuxt UI's `UListbox` (`multiple`,
+A faceted filter for a list or table toolbar: a `UButton` naming the filter, with a badge for what is chosen (the
+value's label when it is one, the number when it is more; drawn in the button's own font and line height, not as a
+`UBadge`, so the button keeps Nuxt UI's height for its `size` and a theme's badge face doesn't reach it), opening a `UPopover` with Nuxt UI's `UListbox` (`multiple`,
 its search box) and All and Clear under it. Generic over the option type (`T extends object`); `v-model` is an array of
 `T[valueKey]`, or of `T` itself without `value-key` (then compared by identity, through `toRaw`, so a model held in
 `ref()` still matches). Values the options no longer hold are kept. Written on Nuxt UI's tokens: the checkbox

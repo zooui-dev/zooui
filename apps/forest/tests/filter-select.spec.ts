@@ -340,7 +340,7 @@ for (const mode of ['light', 'dark'] as const) {
 
         const ratios = await contrasts(page, {
           button: '[data-specimen="filter-owner"] [data-trigger] > span:not(.sr-only)',
-          badge: '[data-specimen="filter-owner"] [data-badge] span',
+          badge: '[data-specimen="filter-owner"] [data-badge]',
           label: '[data-filter-panel] [role="option"] [data-label]',
           count: '[data-filter-panel] [role="option"] [data-count]',
           match: '[data-filter-panel] mark',

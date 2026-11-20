@@ -200,9 +200,10 @@ const searchInput = computed(() => props.searchable
     <UPopover v-model:open="open" :portal="portal" :content="{ side: 'bottom', align: 'start', sideOffset: 6 }" :ui="{ content: 'w-64' }">
       <UButton type="button" variant="outline" color="neutral" :size="size" :icon="icon || undefined" :disabled="disabled" :aria-label="buttonName" data-trigger>
         <span>{{ label }}</span>
-        <UBadge v-if="model.length" color="neutral" variant="soft" size="sm" class="max-w-32 tabular-nums" data-badge>
-          <span class="truncate">{{ badge }}</span>
-        </UBadge>
+        <!-- Not a UBadge: its block padding and line height would make a button with a badge taller than one without,
+             and a theme may restyle badges (Forest sets them in the mono face). This takes the button's own line
+             height and font, so the button is the same height whatever it holds and the value reads as words. -->
+        <span v-if="model.length" class="min-w-0 max-w-32 truncate rounded-sm bg-elevated px-1.5 text-[0.875em] text-default tabular-nums" data-badge>{{ badge }}</span>
       </UButton>
 
       <template #content>
