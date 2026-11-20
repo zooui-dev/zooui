@@ -27,6 +27,20 @@ async function open(page: Page) {
 /** The selected rows, asserted with auto-retry: a removed row stays one frame while its leave transition runs. */
 const selectedRows = (scope: Locator) => listbox(scope).locator('[aria-selected="true"]')
 
+test('the demo page: a header naming the component, a heading and a "try this" line per section, labeled readouts', async ({ page }) => {
+  await page.goto('/')
+  const demo = page.locator('#order-list')
+  await expect(demo.getByRole('heading', { name: 'ZOrderList', level: 2 })).toBeVisible()
+  await expect(demo.locator('[data-demo-header] p')).toContainText('readouts')
+  for (const specimen of ['statuses', 'steps', 'custom']) {
+    const section = demo.locator(`[data-specimen="order-list-${specimen}"]`)
+    await expect(section.getByRole('heading', { level: 3 })).toBeVisible()
+    await expect(section.locator('[data-try]')).toHaveText(/^\s*Try this: /)
+  }
+  await expect(demo.locator('[data-readouts] dt')).toHaveText(['Order (v-model)', 'Selected key (v-model:selection)', 'Reorders (@reorder, item from→to)'])
+  await expect(custom(page).getByText('Selected: Beta')).toBeVisible()
+})
+
 test.describe('selecting', () => {
   test.beforeEach(async ({ page }) => open(page))
 
