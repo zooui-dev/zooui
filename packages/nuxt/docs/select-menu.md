@@ -56,7 +56,8 @@ and paint alike in light and dark, on the base and on every Forest scheme.
 
 ## Focus ring
 
-The trigger shows its focus ring whenever it has focus, from a click as much as from the keyboard. Stock
+The trigger shows its focus ring whenever it has focus, from a click as much as from the keyboard, and for as long as
+the menu is open, while focus is in the menu's search or list. Stock
 `USelectMenu` shows it on keyboard focus only (`focus-visible`: a 1px ring and a translucent outline), so after a mouse
 pick, with focus back on the trigger, nothing shows where focus is. `ZSelectMenu` draws stock's keyboard-focus look on
 any focus, so a focused menu looks exactly like a focused `UInput`: it passes `USelectMenu` its own `highlight` (the

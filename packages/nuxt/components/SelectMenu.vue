@@ -20,7 +20,8 @@
 //   there would add or remove an item just by leaving the field; Enter and a click toggle it).
 //
 // The trigger shows its focus ring on any focus, a click's included (stock shows it on keyboard focus only): while it
-// has focus, the menu is drawn with stock's keyboard-focus look, the ring and halo a focused UInput shows.
+// has focus, and while the menu is open, the menu is drawn with stock's keyboard-focus look, the ring and halo a focused
+// UInput shows.
 import type { SelectMenuItem, SelectMenuProps } from '@nuxt/ui'
 import { formFieldInjectionKey, useFormField } from '@nuxt/ui/composables'
 import { itemLabel, itemValue, selectableItems, typeaheadMatch, type TypeaheadKeys } from './select-typeahead.ts'
@@ -225,11 +226,12 @@ function withModifiers(value: unknown): unknown {
 // ── Focus ring on any focus ────────────────────────────────────────────────────────────────────────────────────
 const focused = ref(false)
 const appConfig = useAppConfig() as { ui?: { selectMenu?: { defaultVariants?: { variant?: string } } } }
-// While the trigger has focus, stock's keyboard-focus look, as a focused UInput draws it: `highlight` is the 1px ring in
-// the menu's color, and `outline-3` the width stock's `focus-visible:outline-3` gives the `outline-<color>/25` halo the
-// theme already sets. The `none` variant has no halo in the theme, so it gets the ring alone.
+// While the trigger has focus, or the menu is open (focus is then in the menu, but the field is still the one being
+// filled in), stock's keyboard-focus look, as a focused UInput draws it: `highlight` is the 1px ring in the menu's
+// color, and `outline-3` the width stock's `focus-visible:outline-3` gives the `outline-<color>/25` halo the theme
+// already sets. The `none` variant has no halo in the theme, so it gets the ring alone.
 const focusRing = computed(() => {
-  if (!focused.value) return {}
+  if (!focused.value && !isOpen.value) return {}
   const variant = (attrs.variant as string | undefined) ?? appConfig.ui?.selectMenu?.defaultVariants?.variant ?? 'outline'
   if (variant === 'none') return { highlight: true }
   const ui = (attrs.ui ?? {}) as NonNullable<SelectMenuProps['ui']>

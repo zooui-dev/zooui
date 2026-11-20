@@ -77,6 +77,10 @@ test('typeahead from the top: c from Colorado is California, and c again cycles 
 })
 
 // The focus look, ring (box-shadow) and halo (outline) with their colors, must be a focused UInput's on each scheme.
+const look = (l: Locator) => l.evaluate((el) => {
+  const c = getComputedStyle(el)
+  return { ring: c.boxShadow, outline: `${c.outlineStyle} ${c.outlineWidth} ${c.outlineColor}`, offset: c.outlineOffset }
+})
 for (const [scheme, mode] of [['teal', 'light'], ['ember', 'light'], ['slate-cobalt', 'dark']] as const) {
   test(`focus ring (${scheme}, ${mode}): after a mouse pick ZSelectMenu looks like a focused UInput, USelectMenu shows nothing`, async ({ page, baseURL }) => {
     await page.context().addCookies([{ name: 'zooui-scheme', value: scheme, url: baseURL as string }])
@@ -84,10 +88,6 @@ for (const [scheme, mode] of [['teal', 'light'], ['ember', 'light'], ['slate-cob
     await openPage(page)
     if (mode === 'dark') await expect(page.locator('html')).toHaveClass(/dark/)
     await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important; animation: none !important }' })
-    const look = (l: Locator) => l.evaluate((el) => {
-      const c = getComputedStyle(el)
-      return { ring: c.boxShadow, outline: `${c.outlineStyle} ${c.outlineWidth} ${c.outlineColor}`, offset: c.outlineOffset }
-    })
     const mousePick = async (trigger: Locator) => {
       await trigger.click()
       await listbox(page).getByRole('option', { name: 'Date' }).click()
@@ -112,6 +112,63 @@ for (const [scheme, mode] of [['teal', 'light'], ['ember', 'light'], ['slate-cob
     await expect.poll(() => look(wrapped)).toEqual(wrappedBefore)
   })
 }
+
+// Open, focus is in the menu (its search input or its list), not on the trigger; the trigger keeps the look.
+test.describe('the focus look stays while the menu is open', () => {
+  const ring = (page: Page) => section(page, 'ring')
+  const input = (page: Page) => ring(page).getByPlaceholder('Field before')
+  const wrapped = (page: Page) => ring(page).locator('[data-ring-wrapped]')
+  const withSearch = (page: Page) => ring(page).locator('[data-ring-search]')
+  const inputFocused = async (page: Page) => {
+    await input(page).click()
+    await expect(input(page)).toBeFocused()
+    const focused = await look(input(page))
+    expect(focused.outline).toMatch(/^solid 3px /)
+    return focused
+  }
+  test.beforeEach(async ({ page }) => {
+    await openPage(page)
+    await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important; animation: none !important }' })
+  })
+
+  test('open with a click, with a search input', async ({ page }) => {
+    const expected = await inputFocused(page)
+    await withSearch(page).click()
+    await expect(listbox(page).locator('input')).toBeFocused()
+    await expect.poll(() => look(withSearch(page))).toEqual(expected)
+  })
+
+  test('open with a click, no search input', async ({ page }) => {
+    const expected = await inputFocused(page)
+    await wrapped(page).click()
+    await expect(listbox(page)).toBeVisible()
+    await expect(wrapped(page)).not.toBeFocused()
+    await expect.poll(() => look(wrapped(page))).toEqual(expected)
+  })
+
+  test('closed with Escape: the look stays, as focus comes back to the trigger', async ({ page }) => {
+    const expected = await inputFocused(page)
+    await withSearch(page).click()
+    await expect(listbox(page).locator('input')).toBeFocused()
+    await page.keyboard.press('Escape')
+    await expect(listbox(page)).toHaveCount(0)
+    await expect(withSearch(page)).toBeFocused()
+    await expect.poll(() => look(withSearch(page))).toEqual(expected)
+  })
+
+  test('Tab away from the open menu: the look goes with the focus', async ({ page }) => {
+    const unfocused = await look(withSearch(page))
+    const expected = await inputFocused(page)
+    await withSearch(page).click()
+    await expect(listbox(page).locator('input')).toBeFocused()
+    await page.keyboard.press('Tab')
+    await expect(listbox(page)).toHaveCount(0)
+    await expect(withSearch(page)).not.toBeFocused()
+    await expect.poll(() => look(withSearch(page))).toEqual(unfocused)
+    expect(await look(withSearch(page))).not.toEqual(expected)
+    await expect(withSearch(page)).toHaveText('Cherry')
+  })
+})
 
 test('in a UForm validating on change: a typeahead pick is validated', async ({ page }) => {
   await openPage(page)

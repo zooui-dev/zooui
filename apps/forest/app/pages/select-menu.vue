@@ -24,6 +24,7 @@ const STATE_NAMES = ['Alabama', 'Alaska', 'California', 'Colorado', 'Connecticut
 const stateName = ref('Colorado')
 const ringNative = ref('Cherry')
 const ringWrapped = ref('Cherry')
+const ringSearch = ref('Cherry')
 
 // A form that validates only on change: a typeahead pick has to tell it.
 const formState = reactive({ fruit: undefined as string | undefined })
@@ -75,7 +76,7 @@ const show = (v: string | undefined) => v || '—'
 
     <section data-specimen="ring" class="flex flex-col gap-3">
       <h3 class="font-semibold text-highlighted">Focus ring</h3>
-      <p class="text-sm text-muted">Try: click each menu and pick a fruit with the mouse. Focus comes back to the trigger: ZSelectMenu shows its ring, Nuxt UI's USelectMenu shows one only after a key. Tab in from "Field before" and both show it. A focused menu looks exactly like the focused text field.</p>
+      <p class="text-sm text-muted">Try: click each menu and pick a fruit with the mouse. Focus comes back to the trigger: ZSelectMenu shows its ring, Nuxt UI's USelectMenu shows one only after a key. Tab in from "Field before" and both show it. A focused menu looks exactly like the focused text field. Open a ZSelectMenu, with a search or without: the ring stays while it is open, stays after Escape, and goes when you Tab away.</p>
       <div class="flex flex-wrap items-end gap-4">
         <UFormField label="Field before"><UInput placeholder="Field before" data-before /></UFormField>
         <UFormField label="Nuxt UI USelectMenu">
@@ -83,6 +84,9 @@ const show = (v: string | undefined) => v || '—'
         </UFormField>
         <UFormField label="ZSelectMenu">
           <ZSelectMenu v-model="ringWrapped" :items="FRUIT" :search-input="false" data-ring-wrapped class="w-48" />
+        </UFormField>
+        <UFormField label="ZSelectMenu with a search">
+          <ZSelectMenu v-model="ringSearch" :items="FRUIT" data-ring-search class="w-48" />
         </UFormField>
       </div>
     </section>

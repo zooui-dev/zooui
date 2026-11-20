@@ -253,6 +253,58 @@ test.describe('the focus ring shows on any focus', () => {
     await expect(ringWrapped(page)).toBeFocused()
     await expect.poll(() => look(ringWrapped(page))).toEqual(expected)
   })
+
+  // Open, focus is in the menu (its search input or its list), not on the trigger; the trigger keeps the look.
+  const ringSearch = (page: Page) => section(page, 'ring').locator('[data-ring-search]')
+
+  test('open with a click, with a search input: the trigger keeps the look while open', async ({ page }) => {
+    const expected = await inputFocused(page)
+    await ringSearch(page).click()
+    await expect(search(page)).toBeFocused()
+    await expect.poll(() => look(ringSearch(page))).toEqual(expected)
+  })
+
+  test('open with a click, no search input: the same', async ({ page }) => {
+    const expected = await inputFocused(page)
+    await ringWrapped(page).click()
+    await expect(listbox(page)).toBeVisible()
+    await expect(ringWrapped(page)).not.toBeFocused()
+    await expect.poll(() => look(ringWrapped(page))).toEqual(expected)
+  })
+
+  test('closed with Escape: the look stays, as focus comes back to the trigger', async ({ page }) => {
+    const expected = await inputFocused(page)
+    await ringSearch(page).click()
+    await expect(search(page)).toBeFocused()
+    await page.keyboard.press('Escape')
+    await expect(listbox(page)).toHaveCount(0)
+    await expect(ringSearch(page)).toBeFocused()
+    await expect.poll(() => look(ringSearch(page))).toEqual(expected)
+  })
+
+  test('Tab away from the open menu, or click elsewhere: the look goes with the focus', async ({ page }) => {
+    const unfocused = await look(ringSearch(page))
+    const wrappedUnfocused = await look(ringWrapped(page))
+    const expected = await inputFocused(page)
+    await ringSearch(page).click()
+    await expect(search(page)).toBeFocused()
+    await page.keyboard.press('Tab')
+    await expect(listbox(page)).toHaveCount(0)
+    await expect(textField(page)).toBeFocused()
+    await expect.poll(() => look(ringSearch(page))).toEqual(unfocused)
+    expect(await look(ringSearch(page))).not.toEqual(expected)
+    await expect(ringSearch(page)).toHaveText('Cherry')
+    await ringWrapped(page).click()
+    await expect(listbox(page)).toBeVisible()
+    await section(page, 'ring').locator('[data-before]').click()
+    await expect(listbox(page)).toHaveCount(0)
+    // Closed by a click elsewhere, focus may land on the clicked field or come back to the trigger (the close's own
+    // return of focus can follow the click): either way, the look is there exactly when the trigger has focus.
+    await expect.poll(async () => {
+      const onTrigger = await ringWrapped(page).evaluate((el) => el === document.activeElement)
+      return JSON.stringify(await look(ringWrapped(page))) === JSON.stringify(onTrigger ? expected : wrappedUnfocused)
+    }).toBe(true)
+  })
 })
 
 test.describe('Tab closes the menu and moves on', () => {

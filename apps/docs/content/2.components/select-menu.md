@@ -25,7 +25,7 @@ Open the menu and Tab out of it, and focus goes to the next field instead of loo
 
 ## Focus ring
 
-The trigger shows its focus ring whenever it has focus, after a click as well as from the keyboard. Nuxt UI's `USelectMenu` shows it on keyboard focus only, so after a pick with the mouse nothing shows where focus is. `ZSelectMenu` draws Nuxt UI's own keyboard-focus look on any focus, the 1px ring and soft outer halo a focused `UInput` shows, in the menu's `color` (red in a field with an error), so your palette and dark mode carry through.
+The trigger shows its focus ring whenever it has focus, after a click as well as from the keyboard, and for as long as the menu is open. Nuxt UI's `USelectMenu` shows it on keyboard focus only, so after a pick with the mouse nothing shows where focus is. `ZSelectMenu` draws Nuxt UI's own keyboard-focus look on any focus, the 1px ring and soft outer halo a focused `UInput` shows, in the menu's `color` (red in a field with an error), so your palette and dark mode carry through.
 
 ## Open on focus, for data entry
 
