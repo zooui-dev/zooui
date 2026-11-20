@@ -15,3 +15,15 @@ line with Edit; new rows and rows with an error are open. `compact` is one line 
 Focus goes to the first `focus-selector` match in an added or opened row, and to Add after a remove; a polite live
 region announces each add and remove. The words are props: `add-label`, `remove-label`, `edit-label`, `max-label`,
 `row-title`, `announce`. The list carries `data-testid="repeating-list"` and each row `data-row`, for e2e selectors.
+
+## Done and Cancel
+
+With `#summary`, an open row has Done and Cancel (`data-done`, `data-cancel`; words `done-label`, `cancel-label`,
+named like Edit: "Done Part 3"). Done folds the row, keeping its edits. Cancel puts back what the row held when it
+opened (by Edit, or by an error opening it) and folds it: the row is copied then, and the copy is written back into the
+same object, nested plain objects and arrays in place, so the row keeps its identity and key (other values, such as a
+Date or a Temporal.PlainDate, are kept by reference). A row added in the list and not yet Done has nothing to go back
+to: Cancel removes it, and focus goes to Add; where Remove could not (at `min`) it has no Cancel. Escape anywhere in an
+open row is Cancel, unless a field took it first (an open select menu or date popover calls `preventDefault`) or the
+focused element has `aria-expanded="true"`. Done on a row with an error leaves it open, the error showing, with focus in
+its first field; so does Cancel, after putting its values back. Done folds it once the error is gone. After Done or Cancel, focus goes to the row's Edit button.
