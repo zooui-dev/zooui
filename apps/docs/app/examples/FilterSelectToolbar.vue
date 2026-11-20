@@ -5,7 +5,7 @@ const people: Person[] = [
   { id: 2, name: 'Sam Lee', open: 9 },
   { id: 3, name: 'Dana Cruz', open: 0 },
 ]
-const kinds = [{ label: 'Invoice' }, { label: 'Estimate' }, { label: 'Credit note' }]
+const kinds = [{ label: 'Task' }, { label: 'Bug' }, { label: 'Idea' }]
 const owners = ref<number[]>([1, 2])
 const chosen = ref<typeof kinds>([])
 </script>

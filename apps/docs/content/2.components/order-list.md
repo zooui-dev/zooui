@@ -27,5 +27,5 @@ Moved rows slide to their new place in 180 ms, and jump straight there under `pr
 
 ## Order list or repeating list
 
-- **`ZRepeatingList`** is for editing rows in place: every row's fields are part of the form, and rows are added and removed. Use it for "one or more" of something short: referral sources, the parts of a split.
+- **`ZRepeatingList`** is for editing rows in place: every row's fields are part of the form, and rows are added and removed. Use it for "one or more" of something short: contacts, the parts of a split.
 - **`ZOrderList`** is for picking and ordering a list beside an editor: rows are a line each, one is selected, and the selected record's form sits next to the list. It is Zoo UI's one reorderable list, so use it whenever the user arranges the order.

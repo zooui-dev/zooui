@@ -109,8 +109,8 @@ for (const mode of ['light', 'dark'] as const) {
 
 // ── A form's "Ends", in a dialog ──────────────────────────────────────
 
-async function billForm(page: Page) {
-  await page.locator('[data-open="bill"]').click()
+async function taskForm(page: Page) {
+  await page.locator('[data-open="task"]').click()
   const dialog = page.getByRole('dialog')
   const input = dialog.getByRole('textbox', { name: 'Ends' })
   await expect(input).toBeVisible()
@@ -118,7 +118,7 @@ async function billForm(page: Page) {
 }
 
 test('typed forms commit on Enter; junk clears', async ({ page }) => {
-  const { input } = await billForm(page)
+  const { input } = await taskForm(page)
   for (const [typed, shown] of [
     ['5', '11/05/2026'],
     ['0512', '05/12/2026'],
@@ -135,7 +135,7 @@ test('typed forms commit on Enter; junk clears', async ({ page }) => {
 })
 
 test('shortcut keys', async ({ page }) => {
-  const { input } = await billForm(page)
+  const { input } = await taskForm(page)
   await input.click()
   await input.press('t')
   await expect(input).toHaveValue(TODAY)
@@ -163,7 +163,7 @@ test('shortcut keys', async ({ page }) => {
 })
 
 test('calendar: opens on the field\'s month without taking focus, highlights the field, a pick closes it', async ({ page }) => {
-  const { input, icon } = await billForm(page)
+  const { input, icon } = await taskForm(page)
   await enter(input, '5/12/2026')
   await expect(input).not.toHaveClass(RING)
   await icon.click()
@@ -179,7 +179,7 @@ test('calendar: opens on the field\'s month without taking focus, highlights the
 })
 
 test('calendar: the icon toggles it, typing moves it, Escape closes it but not the dialog', async ({ page }) => {
-  const { dialog, input, icon } = await billForm(page)
+  const { dialog, input, icon } = await taskForm(page)
   await input.click()
   await icon.click()
   await expect(panel(page)).toBeVisible()
@@ -195,7 +195,7 @@ test('calendar: the icon toggles it, typing moves it, Escape closes it but not t
 })
 
 test('clear, blur and Tab; the PlainDate stays in the model', async ({ page }) => {
-  const { dialog, input, field } = await billForm(page)
+  const { dialog, input, field } = await taskForm(page)
   await enter(input, '7/4/2026')
   const clear = field.getByRole('button', { name: 'Clear date' })
   await clear.click()
@@ -204,17 +204,17 @@ test('clear, blur and Tab; the PlainDate stays in the model', async ({ page }) =
   await expect(clear).toHaveCount(0)
 
   await input.pressSequentially('99/99')
-  await dialog.getByText('Payee or description').click()
+  await dialog.getByText('Title or description').click()
   await expect(input).toHaveValue('')
   await input.click()
   await input.pressSequentially('0916')
   await input.press('Tab')
   await expect(input).toHaveValue('09/16/2026')
 
-  // The product saved the bill and reopened it; here the dialog's owner keeps the PlainDate across close and reopen.
+  // The product saved the task and reopened it; here the dialog's owner keeps the PlainDate across close and reopen.
   await page.keyboard.press('Escape')
   await expect(dialog).toBeHidden()
-  const again = await billForm(page)
+  const again = await taskForm(page)
   await expect(again.input).toHaveValue('09/16/2026')
 })
 
@@ -303,7 +303,7 @@ test('a stored year-0026 date survives passing through the field', async ({ page
   await expect(model).toHaveText('0026-05-12')
 })
 
-// ── Referral filters: a range whose ends put a default back when a settle carries null ──────────────
+// ── Report filters: a range whose ends put a default back when a settle carries null ──────────────
 
 function range(page: Page) {
   const root = page.locator('[data-date-specimen="range"]')

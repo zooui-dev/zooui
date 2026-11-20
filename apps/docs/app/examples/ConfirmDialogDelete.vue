@@ -3,7 +3,7 @@ const { confirm, confirmDelete, confirmDiscard } = useConfirm()
 const answer = ref<string>()
 
 async function remove() {
-  const yes = await confirmDelete('the Hartwell invoice', { details: ['Invoice 1042 · $1,200.00', '2 payments recorded'] })
+  const yes = await confirmDelete('the Lakeside order', { details: ['Order 1042 · $1,200.00', '2 payments recorded'] })
   answer.value = yes ? 'Deleted.' : 'Kept.'
 }
 async function publish() {
@@ -18,7 +18,7 @@ async function leave() {
 <template>
   <div class="flex flex-col items-start gap-3">
     <div class="flex flex-wrap gap-2">
-      <UButton label="Delete invoice" color="error" variant="outline" icon="i-lucide-trash-2" @click="remove" />
+      <UButton label="Delete order" color="error" variant="outline" icon="i-lucide-trash-2" @click="remove" />
       <UButton label="Publish" @click="publish" />
       <UButton label="Close the form" color="neutral" variant="outline" @click="leave" />
     </div>

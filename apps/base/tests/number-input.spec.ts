@@ -101,12 +101,12 @@ test('a Decimal v-model comes back a Decimal of its own class: typed, nudged, cl
 })
 
 test('a Decimal v-model that starts null takes its kind from model-type', async ({ page }) => {
-  const tax = field(page, 'tax')
-  await expect(model(page, 'tax')).toHaveText('null')
-  await tax.fill('12.5')
-  await expect(model(page, 'tax')).toHaveText('Decimal 12.5')
-  await tax.blur()
-  await expect(tax).toHaveValue('12.50')
+  const shipping = field(page, 'shipping')
+  await expect(model(page, 'shipping')).toHaveText('null')
+  await shipping.fill('12.5')
+  await expect(model(page, 'shipping')).toHaveText('Decimal 12.5')
+  await shipping.blur()
+  await expect(shipping).toHaveValue('12.50')
 })
 
 test('calc hands a Decimal model back a Decimal of its own class', async ({ page }) => {

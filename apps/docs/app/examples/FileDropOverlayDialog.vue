@@ -3,8 +3,8 @@ const ACCEPT = 'application/pdf,.csv,image/*'
 const toast = useToast()
 const dialog = useTemplateRef<HTMLElement>('dialog')
 
-// What the transfer already holds (from the server), then what is being added.
-const stored = ref<FileListItem[]>([{ id: 'f-1', name: 'engagement-letter.pdf', size: 245_000, type: 'application/pdf' }])
+// What the share already holds (from the server), then what is being added.
+const stored = ref<FileListItem[]>([{ id: 'f-1', name: 'project-brief.pdf', size: 245_000, type: 'application/pdf' }])
 const added = ref<File[]>([])
 
 function report(rejected: RejectedFile[]) {
@@ -26,12 +26,12 @@ async function remove(item: FileListItem) {
 </script>
 
 <template>
-  <ZModal title="Edit transfer" description="Send files to a client">
-    <UButton label="Edit transfer" color="neutral" variant="outline" />
+  <ZModal title="Edit share" description="Share files with the team">
+    <UButton label="Edit share" color="neutral" variant="outline" />
     <template #content="{ close }">
       <div ref="dialog" class="flex flex-col gap-4 rounded-[inherit] p-6">
         <div class="flex items-center justify-between">
-          <h3 class="text-base font-semibold text-highlighted">Edit transfer</h3>
+          <h3 class="text-base font-semibold text-highlighted">Edit share</h3>
           <UButton icon="i-lucide-x" variant="ghost" color="neutral" aria-label="Close" @click="close" />
         </div>
         <UFormField label="Files">

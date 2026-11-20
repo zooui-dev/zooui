@@ -2,7 +2,7 @@
  * Promise-based confirmation: ask, await the answer, carry on.
  *
  *   const { confirm, choose, confirmDelete, confirmDiscard } = useConfirm()
- *   if (await confirmDelete('the Hartwell invoice')) await remove(invoice)
+ *   if (await confirmDelete('the Lakeside order')) await remove(order)
  *   const next = await choose({ title: 'Save before leaving?', actions: [
  *     { label: 'Discard', value: 'discard', color: 'neutral', variant: 'outline' },
  *     { label: 'Save', value: 'save' },

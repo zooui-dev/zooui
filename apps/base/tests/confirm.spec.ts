@@ -72,10 +72,10 @@ test.describe('each helper resolves for each way out', () => {
 test('announced as an alertdialog named by its question and described by its description; details listed', async ({ page }) => {
   await open(page)
   await ask(page, 'delete')
-  const d = page.getByRole('alertdialog', { name: 'Delete the Hartwell invoice', exact: true })
+  const d = page.getByRole('alertdialog', { name: 'Delete the Lakeside order', exact: true })
   await expect(d).toBeVisible()
-  await expect(d).toHaveAccessibleDescription('Are you sure you want to delete the Hartwell invoice? This action cannot be undone.')
-  await expect(d.locator('[data-confirm-details] li')).toHaveText(['Invoice 1042 · $1,200.00', '2 payments recorded'])
+  await expect(d).toHaveAccessibleDescription('Are you sure you want to delete the Lakeside order? This action cannot be undone.')
+  await expect(d.locator('[data-confirm-details] li')).toHaveText(['Order 1042 · $1,200.00', '2 payments recorded'])
   await expect(page.getByRole('dialog')).toHaveCount(0)
   // the icon is decoration: the name is the question alone
   await expect(d.locator('[data-confirm-icon] svg')).toBeVisible()
@@ -350,8 +350,8 @@ test('two-part details: a line break or { title, text } is a heading over its te
   await settled(page)
 
   for (const [i, title, text] of [
-    [0, 'Report Basis Mismatch', 'This file is on the cash basis; the client reports on accrual.'],
-    [1, 'Missing accounts', '3 accounts in the file aren’t in the chart of accounts.'],
+    [0, 'Time Zone Mismatch', 'This file is in UTC; the workspace reports in Pacific time.'],
+    [1, 'Missing people', '3 people in the file aren’t in the team directory.'],
   ] as const) {
     const heading = items.nth(i).locator('[data-confirm-detail-title]')
     await expect(heading).toHaveText(title)
@@ -363,7 +363,7 @@ test('two-part details: a line break or { title, text } is a heading over its te
     expect(below!.y).toBeGreaterThanOrEqual(top!.y + top!.height - 1)
   }
   await expect(items.nth(2).locator('[data-confirm-detail-title], [data-confirm-detail-text]')).toHaveCount(0)
-  await expect(items.nth(2)).toHaveText('12 transactions will be imported')
+  await expect(items.nth(2)).toHaveText('12 tasks will be imported')
 })
 
 test.describe('no description: the icon beside the title', () => {
@@ -372,7 +372,7 @@ test.describe('no description: the icon beside the title', () => {
   test('a title-only warning question shows its icon beside the title, and is still named by the title alone', async ({ page }) => {
     await open(page)
     await ask(page, 'title-only')
-    const d = page.getByRole('alertdialog', { name: 'Close the March period?', exact: true })
+    const d = page.getByRole('alertdialog', { name: 'Archive the March sprint?', exact: true })
     await expect(d).toBeVisible()
     await expect(d).toHaveAccessibleDescription('')
     await expect(d.locator('[data-slot="body"]')).toHaveCount(0)
@@ -382,7 +382,7 @@ test.describe('no description: the icon beside the title', () => {
     await expect(badge.locator('svg')).toBeVisible()
     await expect(d.locator('[data-confirm-icon]')).toHaveCount(1)
     await settled(page)
-    const [b, t] = await Promise.all([badge.boundingBox(), d.locator('[data-slot="title"]').getByText('Close the March period?').boundingBox()])
+    const [b, t] = await Promise.all([badge.boundingBox(), d.locator('[data-slot="title"]').getByText('Archive the March sprint?').boundingBox()])
     expect(b!.width).toBeCloseTo(32, 0)
     // beside the title, centered on its line
     expect(t!.x).toBeGreaterThanOrEqual(b!.x + b!.width)
@@ -417,7 +417,7 @@ test.describe('no description: the icon beside the title', () => {
   test('icon: false shows none, beside the title or anywhere', async ({ page }) => {
     await open(page)
     await ask(page, 'title-only-no-icon')
-    const d = page.getByRole('alertdialog', { name: 'Close the April period?', exact: true })
+    const d = page.getByRole('alertdialog', { name: 'Archive the April sprint?', exact: true })
     await expect(d).toBeVisible()
     await expect(d.locator('[data-confirm-icon]')).toHaveCount(0)
   })

@@ -68,10 +68,10 @@ test('the product\'s selectors and behavior hold in a production build: add focu
   page.on('request', (r) => { if (/_nuxt_icon|iconify/.test(r.url())) icons.push(r.url()) })
   await open(page, 'light')
   const list = sources(page)
-  await list.getByRole('button', { name: 'Add another referral source' }).click()
+  await list.getByRole('button', { name: 'Add another contact' }).click()
   await expect(list.locator('[data-row="3"]').getByLabel('Name', { exact: true })).toBeFocused()
-  await expect(list.locator('[data-announce]')).toHaveText('Referral source 4 added. 4 in the list.')
+  await expect(list.locator('[data-announce]')).toHaveText('Contact 4 added. 4 in the list.')
   // The new row's Remove icon (lucide:trash-2) is drawn on the client, from the layer's bundle list.
-  await expect(list.locator('[data-row="3"]').getByRole('button', { name: 'Remove Referral source 4' }).locator('svg')).toBeVisible()
+  await expect(list.locator('[data-row="3"]').getByRole('button', { name: 'Remove Contact 4' }).locator('svg')).toBeVisible()
   expect(icons).toEqual([])
 })

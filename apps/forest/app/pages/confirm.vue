@@ -19,7 +19,7 @@ async function askChoose() {
   }))
 }
 async function askDelete() {
-  record('delete', await confirmDelete('the Hartwell invoice', { details: ['Invoice 1042 · $1,200.00', '2 payments recorded'] }))
+  record('delete', await confirmDelete('the Lakeside order', { details: ['Order 1042 · $1,200.00', '2 payments recorded'] }))
 }
 async function askDiscard() {
   record('discard', await confirmDiscard())
@@ -40,7 +40,7 @@ function askThenDismissAll() {
 async function askMixed() {
   record('mixed', await confirm({
     title: 'Publish with warnings?',
-    description: 'Two schedules have unreviewed lines.',
+    description: 'Two sections have unreviewed changes.',
     color: 'warning',
     confirmColor: 'primary',
     confirmLabel: 'Publish anyway',
@@ -49,8 +49,8 @@ async function askMixed() {
 /** A warning badge with a red button: destructive, so focus starts on Cancel. The icon comes from `warning`. */
 async function askWarnRed() {
   record('warn-red', await confirm({
-    title: 'Overwrite the filed return?',
-    description: 'The filed copy is replaced by this draft.',
+    title: 'Overwrite the published page?',
+    description: 'The published copy is replaced by this draft.',
     color: 'warning',
     confirmColor: 'error',
     confirmLabel: 'Overwrite',
@@ -62,15 +62,15 @@ async function askErrorIcon() {
 }
 /** `icon: false`: no icon, even in the error color. */
 async function askNoIcon() {
-  record('no-icon', await confirm({ title: 'Remove the client?', description: 'Their engagements stay on file.', color: 'error', icon: false, confirmLabel: 'Remove' }))
+  record('no-icon', await confirm({ title: 'Remove the member?', description: 'Their projects stay on file.', color: 'error', icon: false, confirmLabel: 'Remove' }))
 }
 /** A title and nothing else: the warning icon sits beside the title. */
 async function askTitleOnly() {
-  record('title-only', await confirm({ title: 'Close the March period?', color: 'warning', confirmLabel: 'Close period' }))
+  record('title-only', await confirm({ title: 'Archive the March sprint?', color: 'warning', confirmLabel: 'Archive' }))
 }
 /** A title only, with `icon: false`: no icon beside the title either. */
 async function askTitleOnlyNoIcon() {
-  record('title-only-no-icon', await confirm({ title: 'Close the April period?', color: 'warning', icon: false, confirmLabel: 'Close period' }))
+  record('title-only-no-icon', await confirm({ title: 'Archive the April sprint?', color: 'warning', icon: false, confirmLabel: 'Archive' }))
 }
 /** Two-part details: a `\n` in a string, a `{ title, text }`, and a plain one-line detail beside them. */
 async function askDetails() {
@@ -79,16 +79,16 @@ async function askDetails() {
     color: 'warning',
     confirmLabel: 'Import',
     details: [
-      'Report Basis Mismatch\nThis file is on the cash basis; the client reports on accrual.',
-      { title: 'Missing accounts', text: '3 accounts in the file aren’t in the chart of accounts.' },
-      '12 transactions will be imported',
+      'Time Zone Mismatch\nThis file is in UTC; the workspace reports in Pacific time.',
+      { title: 'Missing people', text: '3 people in the file aren’t in the team directory.' },
+      '12 tasks will be imported',
     ],
   }))
 }
 /** `dismissible: false`: Escape and a click outside do nothing; Cancel and the close button still cancel. */
 async function askSticky() {
   record('sticky', await confirm({
-    title: 'Sign the engagement letter?',
+    title: 'Sign the project charter?',
     description: 'Escape and a click outside won’t close this one.',
     dismissible: false,
     confirmLabel: 'Sign',
@@ -96,7 +96,7 @@ async function askSticky() {
 }
 /** `size: 'lg'`: the widest confirm. */
 async function askWide() {
-  record('wide', await confirm({ title: 'Apply the mapping to every client?', description: 'Each client’s chart of accounts is remapped.', size: 'lg', confirmLabel: 'Apply' }))
+  record('wide', await confirm({ title: 'Apply the template to every project?', description: 'Each project’s task list is rebuilt.', size: 'lg', confirmLabel: 'Apply' }))
 }
 
 // On the server no one can answer: the call resolves at once, as a cancel, and the page still renders.
@@ -266,7 +266,7 @@ const revokeEvents = ref<string[]>([])
           data-button="archive"
           v-model:open="archiveOpen"
           :confirm-enabled="askFirst"
-          question="Archive the engagement?"
+          question="Archive the project?"
           question-icon="i-lucide-triangle-alert"
           confirm-label="Archive"
           @confirm="archiveEvents.push('confirm')"

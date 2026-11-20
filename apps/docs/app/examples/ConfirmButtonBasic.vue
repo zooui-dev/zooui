@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const rows = ref(['Retainer', 'Materials', 'Travel'])
+const rows = ref(['Labor', 'Materials', 'Travel'])
 </script>
 
 <template>

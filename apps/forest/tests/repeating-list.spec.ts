@@ -1,9 +1,8 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { findConflicts } from '@zooui/nuxt/testing/find-conflicts'
 
-// ZRepeatingList: the cases a product's e2e runs against its own list — the cash-flow split
-// (e2e/setup-cash-flow.spec.ts), referral sources (e2e/setup-referrals.spec.ts) and time categories
-// (e2e/setup-time.spec.ts), with the product's selectors (data-testid="repeating-list", data-row) — then focus,
+// ZRepeatingList: the cases a product's e2e runs against its own list — a budget split, contacts and
+// categories, with the product's selectors (data-testid="repeating-list", data-row) — then focus,
 // announcements, and its inks on every Forest scheme in light and dark.
 
 const parts = (page: Page) => page.locator('[data-specimen="repeating-list-parts"]').getByTestId('repeating-list')
@@ -22,7 +21,7 @@ async function open(page: Page) {
 test.describe('a product\'s cases', () => {
   test.beforeEach(async ({ page }) => open(page))
 
-  test('cash-flow split: at least two parts, add and remove, at most 12', async ({ page }) => {
+  test('budget split: at least two parts, add and remove, at most 12', async ({ page }) => {
     const list = parts(page)
     // Two parts is the least: neither can be removed.
     await expect(list.getByRole('button', { name: /^Remove part/ })).toHaveCount(0)
@@ -47,15 +46,15 @@ test.describe('a product\'s cases', () => {
     await expect(list.getByLabel('Part 2 amount')).toHaveValue('6000')
   })
 
-  test('referral sources: saved rows fold to their summary, Add opens a new one with focus in it, Edit opens one', async ({ page }) => {
+  test('contacts: saved rows fold to their summary, Add opens a new one with focus in it, Edit opens one', async ({ page }) => {
     const list = sources(page)
     await expect(row(list, 0)).toContainText('Pat Brown · Brown Architects')
     await expect(row(list, 2)).toContainText('Dana Cruz')
     await expect(row(list, 2).getByLabel('Name', { exact: true })).toHaveCount(0)
 
-    await list.getByRole('button', { name: 'Add another referral source' }).click()
+    await list.getByRole('button', { name: 'Add another contact' }).click()
     await expect(row(list, 3).getByLabel('Name', { exact: true })).toBeFocused()
-    await expect(row(list, 3).locator('legend')).toHaveText('Referral source 4')
+    await expect(row(list, 3).locator('legend')).toHaveText('Contact 4')
     await row(list, 3).getByLabel('Company', { exact: true }).fill('Lee Plumbing')
 
     await row(list, 2).getByRole('button', { name: 'Edit' }).click()

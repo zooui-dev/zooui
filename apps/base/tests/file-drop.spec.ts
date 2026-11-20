@@ -8,11 +8,11 @@ import { findConflicts } from '@zooui/nuxt/testing/find-conflicts'
 // region and the emits.
 
 type Carry = { name: string; type: string; bytes?: number }[] | 'text'
-const RECEIPTS: Carry = [{ name: 'lunch.png', type: 'image/png' }, { name: 'setup.exe', type: 'application/x-msdownload' }, { name: 'invoice.pdf', type: 'application/pdf' }]
+const DRAGGED: Carry = [{ name: 'whiteboard.png', type: 'image/png' }, { name: 'setup.exe', type: 'application/x-msdownload' }, { name: 'agenda.pdf', type: 'application/pdf' }]
 
 /** Dispatch one drag event at the first match of `selector`; answers whether a listener called preventDefault and
  *  the dropEffect it left. */
-const fire = (page: Page, type: 'dragenter' | 'dragleave' | 'dragover' | 'drop', selector: string, carry: Carry = RECEIPTS) =>
+const fire = (page: Page, type: 'dragenter' | 'dragleave' | 'dragover' | 'drop', selector: string, carry: Carry = DRAGGED) =>
   page.evaluate(({ type, selector, carry }) => {
     const dt = new DataTransfer()
     if (carry === 'text') dt.setData('text/plain', 'a sentence dragged within the page')
@@ -32,7 +32,7 @@ const overlay = (page: Page) => page.locator(OVERLAY)
 const announce = (page: Page) => page.locator('[data-file-drop-announce]')
 const shown = async (page: Page) => {
   await expect(overlay(page)).toHaveCount(1)
-  await expect(overlay(page).getByText('Drop receipts to attach them')).toBeVisible()
+  await expect(overlay(page).getByText('Drop photos and PDFs to attach them')).toBeVisible()
 }
 
 /** Counts every time an overlay is put into the page: a flicker is a second mount. */
@@ -61,7 +61,7 @@ test.describe('over the window', () => {
     await fire(page, 'dragenter', '[data-child="b"]')
     await shown(page)
     await expect(page.getByTestId('visible')).toHaveText('true')
-    await expect(page.getByRole('status').filter({ hasText: 'Drop receipts to attach them' })).toHaveCount(1)
+    await expect(page.getByRole('status').filter({ hasText: 'Drop photos and PDFs to attach them' })).toHaveCount(1)
     // The overlay is only a picture (pointer-events: none): the drag's events stay on the page's own elements.
     await expect(overlay(page)).toHaveCSS('pointer-events', 'none')
     await fire(page, 'dragenter', '[data-child="a"]')
@@ -97,7 +97,7 @@ test.describe('over the window', () => {
     await shown(page)
     expect(await fire(page, 'dragover', '[data-child="b"]')).toEqual({ prevented: true, dropEffect: 'copy' })
     expect((await fire(page, 'drop', '[data-child="b"]')).prevented).toBe(true)
-    await expect(page.getByTestId('dropped')).toHaveText('lunch.png, invoice.pdf')
+    await expect(page.getByTestId('dropped')).toHaveText('whiteboard.png, agenda.pdf')
     await expect(page.getByTestId('rejected')).toHaveText('setup.exe accept')
     await expect(overlay(page)).toHaveCount(0)
 
@@ -109,10 +109,10 @@ test.describe('over the window', () => {
   })
 
   test('filter: a file the page\'s own rule refuses goes to @rejected as filter, with its message, and the rest is taken', async ({ page }) => {
-    const carry: Carry = [{ name: 'blank.pdf', type: 'application/pdf', bytes: 0 }, { name: 'lunch.png', type: 'image/png' }, { name: 'setup.exe', type: 'application/x-msdownload', bytes: 0 }]
+    const carry: Carry = [{ name: 'blank.pdf', type: 'application/pdf', bytes: 0 }, { name: 'whiteboard.png', type: 'image/png' }, { name: 'setup.exe', type: 'application/x-msdownload', bytes: 0 }]
     await fire(page, 'dragenter', '[data-child="b"]', carry)
     await fire(page, 'drop', '[data-child="b"]', carry)
-    await expect(page.getByTestId('dropped')).toHaveText('lunch.png')
+    await expect(page.getByTestId('dropped')).toHaveText('whiteboard.png')
     // The empty .exe is refused for accept first: filter runs only on files accept takes.
     await expect(page.getByTestId('rejected')).toHaveText('blank.pdf filter: is empty, setup.exe accept')
   })
@@ -121,7 +121,7 @@ test.describe('over the window', () => {
     await fire(page, 'dragenter', '[data-child="b"]')
     const prevented = await page.evaluate(() => {
       const dt = new DataTransfer()
-      dt.items.add(new File(['x'], 'lunch.png', { type: 'image/png' }))
+      dt.items.add(new File(['x'], 'whiteboard.png', { type: 'image/png' }))
       dt.items.add(new File(['x'], 'setup.exe', { type: 'application/x-msdownload' }))
       // As some browsers hand a drop over: the files in its items, its FileList empty.
       Object.defineProperty(dt, 'files', { get: () => new DataTransfer().files })
@@ -130,7 +130,7 @@ test.describe('over the window', () => {
       return e.defaultPrevented
     })
     expect(prevented).toBe(true)
-    await expect(page.getByTestId('dropped')).toHaveText('lunch.png')
+    await expect(page.getByTestId('dropped')).toHaveText('whiteboard.png')
     await expect(page.getByTestId('rejected')).toHaveText('setup.exe accept')
   })
 
@@ -199,7 +199,7 @@ test.describe('over the window', () => {
     await expect(overlay(page)).toHaveCount(0)
     expect(await fire(page, 'dragover', zone)).toEqual({ prevented: true, dropEffect: 'copy' })
     expect((await fire(page, 'drop', zone)).prevented).toBe(true)
-    await expect(page.getByTestId('uploaded')).toHaveText('lunch.png, setup.exe, invoice.pdf')
+    await expect(page.getByTestId('uploaded')).toHaveText('whiteboard.png, setup.exe, agenda.pdf')
     await expect(page.getByTestId('dropped')).toHaveText('none')
     await expect(overlay(page)).toHaveCount(0)
   })
@@ -219,7 +219,7 @@ test.describe('over the window', () => {
 /** Dispatch one drag step and read the overlay as Vue first patches it, before its enter or leave transition runs. */
 const firstFrame = (page: Page, type: 'dragenter' | 'dragleave') => page.evaluate(async (type) => {
   const dt = new DataTransfer()
-  dt.items.add(new File(['x'], 'lunch.png', { type: 'image/png' }))
+  dt.items.add(new File(['x'], 'whiteboard.png', { type: 'image/png' }))
   document.querySelector('[data-child="b"]')!.dispatchEvent(new DragEvent(type, { dataTransfer: dt, bubbles: true, cancelable: true }))
   await new Promise((resolve) => setTimeout(resolve, 0))
   const o = document.querySelector<HTMLElement>('[data-file-drop-overlay]')

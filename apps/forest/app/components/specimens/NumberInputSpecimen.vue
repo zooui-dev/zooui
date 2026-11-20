@@ -7,7 +7,7 @@ const v = reactive<Record<string, string | number | null>>({
   money: 38500, percent: '12.5', count: 3, hours: '7.5',
   plain: 10, euro: 20, empty: null, clamped: 9, wizard: '', disabled: 4, readonly: 4,
   big: 1234567, de: '1234.5', places: '0.125', whole: 1200, rent: 1200, nospin: 5, highlight: 42,
-  calc: 1200, calc1040: 1000, cell: '250.00', over: 15, dose: 0.005, deFree: '1,233', relocale: 1234.5, edge: 10.004, grouped: '1,500',
+  calc: 1200, calcwhole: 1000, cell: '250.00', over: 15, dose: 0.005, deFree: '1,233', relocale: 1234.5, edge: 10.004, grouped: '1,500',
 })
 const cell = useTemplateRef<{ evaluate: () => unknown }>('cell')
 const cap = ref(10)
@@ -15,7 +15,7 @@ const relocale = ref('en-US')
 const column = [
   { key: 'money', label: 'Revenue', unit: 'money', step: 5000 },
   { key: 'percent', label: 'Margin', unit: 'percent' },
-  { key: 'count', label: 'Clients', unit: 'count' },
+  { key: 'count', label: 'Customers', unit: 'count' },
   { key: 'hours', label: 'Hours a day', unit: 'hours' },
 ] as const
 </script>
@@ -102,7 +102,7 @@ const column = [
     </KsRow>
 
     <KsRow label="spin off / highlight on focus">
-      <UFormField label="Invoice number" class="w-40">
+      <UFormField label="Order number" class="w-40">
         <ZNumberInput v-model="v.nospin" :spin="false" data-specimen="ni-nospin" />
       </UFormField>
       <UFormField label="Quantity" class="w-40">
@@ -115,9 +115,9 @@ const column = [
         <ZNumberInput v-model="v.calc" unit="money" calc data-specimen="ni-calc" />
         <output data-model="calc" class="text-xs text-muted">{{ typeof v.calc }} {{ v.calc }}</output>
       </UFormField>
-      <UFormField label="Line 1 (whole dollars)" class="w-48">
-        <ZNumberInput v-model="v.calc1040" unit="money" calc :max-fraction-digits="0" :min="0" data-specimen="ni-calc1040" />
-        <output data-model="calc1040" class="text-xs text-muted">{{ typeof v.calc1040 }} {{ v.calc1040 }}</output>
+      <UFormField label="Total (whole dollars)" class="w-48">
+        <ZNumberInput v-model="v.calcwhole" unit="money" calc :max-fraction-digits="0" :min="0" data-specimen="ni-calcwhole" />
+        <output data-model="calcwhole" class="text-xs text-muted">{{ typeof v.calcwhole }} {{ v.calcwhole }}</output>
       </UFormField>
       <UFormField label="Grid cell" class="w-48">
         <ZNumberInput ref="cell" v-model="v.cell" unit="money" calc :spin="false" :commit-on-blur="false" data-specimen="ni-cell" />

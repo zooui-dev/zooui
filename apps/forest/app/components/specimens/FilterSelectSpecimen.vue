@@ -15,7 +15,7 @@ interface Kind { label: string }
 const statusOptions: Status[] = [
   { value: 'open', label: 'Open', count: 12, icon: 'i-lucide-circle' },
   { value: 'progress', label: 'In progress', count: 5, icon: 'i-lucide-circle-dot' },
-  { value: 'waiting', label: 'Waiting (on client)', count: 3, icon: 'i-lucide-circle-pause', iconClass: 'text-warning' },
+  { value: 'waiting', label: 'Waiting (on supplier)', count: 3, icon: 'i-lucide-circle-pause', iconClass: 'text-warning' },
   { value: 'review', label: 'Q&A [review]', count: 1, icon: 'i-lucide-circle-help' },
   { value: 'done', label: 'Done', count: 1240, icon: 'i-lucide-circle-check-big', iconClass: 'text-success' },
   { value: 'archived', label: 'Archived', count: 0, icon: 'i-lucide-archive', disabled: true },
@@ -25,7 +25,7 @@ const people: Person[] = [
   { id: 2, name: 'Sam Lee', open: 9 },
   { id: 3, name: 'Dana Cruz', open: 0 },
 ]
-const kinds: Kind[] = [{ label: 'Invoice' }, { label: 'Estimate' }, { label: 'Credit note' }]
+const kinds: Kind[] = [{ label: 'Task' }, { label: 'Bug' }, { label: 'Idea' }]
 const priorities: Priority[] = [
   { value: 'low', label: 'Low' },
   { value: 'normal', label: 'Normal' },

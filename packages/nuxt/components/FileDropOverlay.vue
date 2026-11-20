@@ -51,7 +51,7 @@ function outrankedByModal(container: HTMLElement) {
 // dragged over it an overlay says what dropping does, and the drop hands the files back, sorted by `accept` and
 // `multiple` into @drop and @rejected. Nuxt UI's UFileUpload is the box; this is the page. Written on Nuxt UI's tokens.
 //
-//   <ZFileDropOverlay accept="image/*,.pdf" multiple label="Drop receipts to attach them" @drop="upload" @rejected="warn" />
+//   <ZFileDropOverlay accept="image/*,.pdf" multiple label="Drop photos and PDFs to attach them" @drop="upload" @rejected="warn" />
 //   <div ref="body"> … <ZFileDropOverlay :target="body" @drop="add" /></div>      <!-- contained in the element -->
 //
 // The drag is counted, not tracked by target: dragenter and dragleave fire for every element the pointer crosses,

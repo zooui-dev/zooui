@@ -5,7 +5,7 @@ component: ZRepeatingList
 preview: RepeatingListCompact
 ---
 
-Forms often ask for "one or more" of something: referral sources, contacts, the parts of a split. `ZRepeatingList` owns the list: adding a row, removing one, folding rows to a summary, showing each row's error, moving focus, and announcing the count to screen readers. The fields are yours, in the `#row` slot, so a row can hold any inputs. It is generic: `row` in each slot has your row's type.
+Forms often ask for "one or more" of something: contacts, phone numbers, the parts of a split. `ZRepeatingList` owns the list: adding a row, removing one, folding rows to a summary, showing each row's error, moving focus, and announcing the count to screen readers. The fields are yours, in the `#row` slot, so a row can hold any inputs. It is generic: `row` in each slot has your row's type.
 
 ## Folded to a summary
 

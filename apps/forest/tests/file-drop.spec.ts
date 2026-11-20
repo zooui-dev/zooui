@@ -7,7 +7,7 @@ import { findConflicts } from '@zooui/nuxt/testing/find-conflicts'
 
 const fire = (page: Page, type: 'dragenter' | 'drop', selector: string) => page.evaluate(({ type, selector }) => {
   const dt = new DataTransfer()
-  for (const [name, t] of [['lunch.png', 'image/png'], ['setup.exe', 'application/x-msdownload'], ['invoice.pdf', 'application/pdf']]) {
+  for (const [name, t] of [['whiteboard.png', 'image/png'], ['setup.exe', 'application/x-msdownload'], ['agenda.pdf', 'application/pdf']]) {
     dt.items.add(new File(['x'], name!, { type: t }))
   }
   document.querySelector(selector)!.dispatchEvent(new DragEvent(type, { dataTransfer: dt, bubbles: true, cancelable: true }))
@@ -31,7 +31,7 @@ for (const mode of ['light', 'dark'] as const) {
 
     await fire(page, 'dragenter', '[data-child="b"]')
     const message = page.locator(`${OVERLAY} [data-file-drop-message]`)
-    await expect(message.getByText('Drop receipts to attach them')).toBeVisible()
+    await expect(message.getByText('Drop photos and PDFs to attach them')).toBeVisible()
     await expect(message.locator('[data-file-drop-icon]')).toBeVisible()
     const got = await message.evaluate((m) => ({
       card: getComputedStyle(m).backgroundColor,
@@ -50,7 +50,7 @@ for (const mode of ['light', 'dark'] as const) {
     expect(await page.evaluate(findConflicts)).toEqual([])
 
     await fire(page, 'drop', '[data-child="b"]')
-    await expect(page.getByTestId('dropped')).toHaveText('lunch.png, invoice.pdf')
+    await expect(page.getByTestId('dropped')).toHaveText('whiteboard.png, agenda.pdf')
     await expect(page.getByTestId('rejected')).toHaveText('setup.exe accept')
     await expect(page.locator(OVERLAY)).toHaveCount(0)
   })

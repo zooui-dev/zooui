@@ -14,7 +14,7 @@ const v = reactive<Record<string, string | number>>({ sale: 125000, rate: '25', 
 class Money extends Decimal {}
 // shallowRef: a Decimal is a value, not state to make deeply reactive
 const balance = shallowRef<Decimal | null>(new Money('1234.5'))
-const tax = shallowRef<Decimal | null>(null)
+const shipping = shallowRef<Decimal | null>(null)
 const adjustment = shallowRef<Decimal | null>(new Money('0'))
 const kind = (d: unknown) => (d instanceof Money ? 'Money' : d instanceof Decimal ? 'Decimal' : d === null ? 'null' : typeof d)
 </script>
@@ -40,9 +40,9 @@ const kind = (d: unknown) => (d instanceof Money ? 'Money' : d instanceof Decima
       <ZNumberInput v-model="balance" unit="money" :min="0" data-specimen="ni-balance" />
       <output data-model="balance" class="text-xs text-muted">{{ kind(balance) }} {{ balance }}</output>
     </UFormField>
-    <UFormField label="Tax" class="w-48">
-      <ZNumberInput v-model="tax" unit="money" model-type="decimal" data-specimen="ni-tax" />
-      <output data-model="tax" class="text-xs text-muted">{{ kind(tax) }} {{ tax }}</output>
+    <UFormField label="Shipping" class="w-48">
+      <ZNumberInput v-model="shipping" unit="money" model-type="decimal" data-specimen="ni-shipping" />
+      <output data-model="shipping" class="text-xs text-muted">{{ kind(shipping) }} {{ shipping }}</output>
     </UFormField>
     <UFormField label="Adjustment" class="w-48">
       <ZNumberInput v-model="adjustment" unit="money" calc data-specimen="ni-adjustment" />

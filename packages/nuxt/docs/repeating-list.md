@@ -1,7 +1,7 @@
 # ZRepeatingList
 
 ```vue
-<ZRepeatingList v-model="sources" item-label="referral source" :new-row="() => ({ name: '' })" :row-key="(s) => s.id" :errors="errors">
+<ZRepeatingList v-model="sources" item-label="contact" :new-row="() => ({ name: '' })" :row-key="(s) => s.id" :errors="errors">
   <template #row="{ row, errorId }"><UFormField label="Name"><UInput v-model="row.name" :aria-describedby="errorId" /></UFormField></template>
   <template #summary="{ row }">{{ row.name }}</template>
 </ZRepeatingList>
