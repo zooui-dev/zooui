@@ -9,6 +9,8 @@ import { findConflicts } from '@zooui/nuxt/testing/find-conflicts'
 const statuses = (page: Page) => page.locator('[data-specimen="order-list-statuses"]')
 const steps = (page: Page) => page.locator('[data-specimen="order-list-steps"]')
 const custom = (page: Page) => page.locator('[data-specimen="order-list-custom"]')
+const groups = (page: Page) => page.locator('[data-specimen="order-list-groups"]')
+const folders = (page: Page) => page.locator('[data-specimen="order-list-folders"]')
 const listbox = (scope: Locator) => scope.getByRole('listbox')
 const option = (scope: Locator, name: string) => listbox(scope).getByRole('option', { name, exact: true })
 const order = (page: Page) => statuses(page).locator('[data-order]')
@@ -32,12 +34,12 @@ test('the demo page: a header naming the component, a heading and a "try this" l
   const demo = page.locator('#order-list')
   await expect(demo.getByRole('heading', { name: 'ZOrderList', level: 2 })).toBeVisible()
   await expect(demo.locator('[data-demo-header] p')).toContainText('readouts')
-  for (const specimen of ['statuses', 'steps', 'custom']) {
+  for (const specimen of ['statuses', 'steps', 'groups', 'folders', 'custom']) {
     const section = demo.locator(`[data-specimen="order-list-${specimen}"]`)
     await expect(section.getByRole('heading', { level: 3 })).toBeVisible()
     await expect(section.locator('[data-try]')).toHaveText(/^\s*Try this: /)
   }
-  await expect(demo.locator('[data-readouts] dt')).toHaveText(['Order (v-model)', 'Selected key (v-model:selection)', 'Reorders (@reorder, item from→to)'])
+  await expect(demo.locator('[data-readouts] dt')).toHaveText(['Order (v-model)', 'Selected key (v-model:selection)', 'Reorders (@reorder, item from→to)', 'Refused deletes'])
   await expect(custom(page).getByText('Selected: Beta')).toBeVisible()
 })
 
@@ -87,27 +89,26 @@ test.describe('selecting', () => {
     await expect(listbox(list)).toBeFocused()
   })
 
-  test('Up from nothing selects the last row; Enter and Space select the first', async ({ page }) => {
+  test('as Buoy: Up from nothing selects the first row; Enter and Space select nothing, and keep a selected row', async ({ page }) => {
     const list = statuses(page)
     await listbox(list).focus()
+    // Enter and Space with nothing selected: nothing selected, and Space doesn't scroll the page.
+    const scrollY = await page.evaluate(() => window.scrollY)
+    await page.keyboard.press('Enter')
+    await page.keyboard.press(' ')
+    await expect(selection(page)).toHaveText('none')
+    await expect(selectedRows(list)).toHaveCount(0)
+    expect(await page.evaluate(() => window.scrollY)).toBe(scrollY)
     await page.keyboard.press('ArrowUp')
-    await expect(selection(page)).toHaveText('done')
+    await expect(selection(page)).toHaveText('open')
+    await expect(selectedRows(list)).toHaveText(['Open'])
 
     const c = custom(page)
-    // The custom list starts with Beta selected; Enter on a selected row keeps it.
+    // The custom list starts with Beta selected; Enter and Space on a selected row keep it.
     await listbox(c).focus()
     await page.keyboard.press('Enter')
-    await expect(selectedRows(c)).toHaveText(['Beta'])
-    await page.reload()
-    await page.waitForLoadState('networkidle')
-    await listbox(statuses(page)).focus()
-    await page.keyboard.press('Enter')
-    await expect(selection(page)).toHaveText('open')
-    await page.reload()
-    await page.waitForLoadState('networkidle')
-    await listbox(statuses(page)).focus()
     await page.keyboard.press(' ')
-    await expect(selection(page)).toHaveText('open')
+    await expect(selectedRows(c)).toHaveText(['Beta'])
   })
 
   test('typeahead by the row title: a letter selects the next row starting with it, a word the row it names', async ({ page }) => {
@@ -270,6 +271,64 @@ test.describe('add and remove', () => {
     await s.getByRole('button', { name: 'Remove Step 30' }).click()
     await expect(selectedRows(s)).toHaveText(['Step 29'])
   })
+})
+
+test.describe('remove: who takes the row out', () => {
+  test.beforeEach(async ({ page }) => open(page))
+
+  test('with no @remove listener the list removes the row itself, selects the next row and announces it', async ({ page }) => {
+    const g = groups(page)
+    await option(g, 'Managers').click()
+    await g.getByRole('button', { name: 'Remove Managers' }).click()
+    await page.getByRole('dialog', { name: 'Remove Managers' }).getByRole('button', { name: 'Remove' }).click()
+    await expect(g.locator('[data-groups-order]')).toHaveText('Partners, Staff, Seasonal')
+    await expect(listbox(g).getByRole('option')).toHaveText(['Partners', 'Staff', 'Seasonal'])
+    await expect(g.locator('[data-groups-selection]')).toHaveText('3')
+    await expect(selectedRows(g)).toHaveText(['Staff'])
+    await expect(listbox(g)).toBeFocused()
+    await expect(announced(g)).toHaveText('Removed Managers. 3 in the list.')
+  })
+
+  test('with a listener bound the caller decides: refused, the row stays; a later reload is not announced and keeps the selection', async ({ page }) => {
+    const list = statuses(page)
+    await list.getByRole('switch', { name: 'Refuse deletes (a failed server call)' }).click()
+    await option(list, 'Ready').click()
+    await list.getByRole('button', { name: 'Remove Ready' }).click()
+    await page.getByRole('dialog', { name: 'Remove Ready' }).getByRole('button', { name: 'Remove' }).click()
+    await expect(list.locator('[data-refused]')).toHaveText('Ready')
+    // The caller refused, so the list did not take the row out itself.
+    await expect(order(page)).toHaveText('Open, In progress, Review, Ready, Done')
+    await expect(selection(page)).toHaveText('ready')
+
+    // The user moves on, then a reload drops Ready (deleted elsewhere): that is not this list's remove.
+    await option(list, 'Open').click()
+    await list.locator('[data-reload]').click()
+    await expect(order(page)).toHaveText('Open, In progress, Review, Done')
+    await page.waitForTimeout(300)
+    await expect(selection(page)).toHaveText('open')
+    await expect(selectedRows(list)).toHaveText(['Open'])
+    await expect(announced(list)).not.toHaveText(/Removed/)
+  })
+})
+
+test('fill: the list stretches to the panel it is given, with no max-height; ui.row merges over the row defaults', async ({ page }) => {
+  await open(page)
+  const f = folders(page)
+  const got = await f.locator('[data-fill-panel]').evaluate((panel) => {
+    const pad = parseFloat(getComputedStyle(panel).paddingBottom) + parseFloat(getComputedStyle(panel).borderBottomWidth)
+    const box = panel.querySelector<HTMLElement>('[data-scroller]')!
+    return {
+      gap: Math.round(panel.getBoundingClientRect().bottom - pad - box.getBoundingClientRect().bottom),
+      maxHeight: box.style.maxHeight,
+    }
+  })
+  expect(got).toEqual({ gap: 0, maxHeight: '' })
+  // The steps list keeps its max-height.
+  expect(await steps(page).locator('[data-scroller]').evaluate((b) => b.style.maxHeight)).toBe('10rem')
+  // tailwind-merge: the caller's py-1 replaces the default py-1.5 rather than sitting beside it.
+  const rowClass = await listbox(f).locator('[data-row="1"]').getAttribute('class')
+  expect(rowClass).toMatch(/\bpy-1\b/)
+  expect(rowClass).not.toMatch(/\bpy-1\.5\b/)
 })
 
 test.describe('accessibility', () => {

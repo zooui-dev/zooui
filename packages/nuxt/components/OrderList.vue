@@ -8,9 +8,11 @@
 //   </ZOrderList>
 //
 // The list owns the order: a move hands back a new array of the same items through v-model, and `reorder` says what
-// moved. The caller owns the items: `add` asks for a new one and `remove` hands over the one to go, as in Buoy, so a
-// server call can come first. Selection is the selected item's key, so it follows the item through a move.
+// moved. `add` asks the caller for a new item. `remove` hands over the one to go: with a listener bound the caller
+// takes it out (a server call can come first), and with none the list does, as Buoy's did. Selection is the selected
+// item's key, so it follows the item through a move.
 // Selection follows focus: Up/Down select the next row, so the form beside the list follows the keyboard.
+import { twMerge } from 'tailwind-merge'
 import { moveItem, moveTarget, typeaheadIndex, type OrderMove } from '../utils/order-list'
 
 const props = withDefaults(
@@ -25,8 +27,13 @@ const props = withDefaults(
     title?: string
     /** The listbox's accessible name when there is no title. */
     label?: string
-    /** The list's most height before it scrolls, as CSS. */
+    /** The list's most height before it scrolls, as CSS. Ignored with `fill`. */
     maxHeight?: string
+    /** Fill the height it is given (a grid cell, a panel) instead of stopping at `max-height`. */
+    fill?: boolean
+    /** Classes for its parts, merged over the defaults (tailwind-merge): `root`, `header`, `list` (the bordered box),
+     *  `row`, `controls` (the built-in toolbar). */
+    ui?: Partial<Record<'root' | 'header' | 'list' | 'row' | 'controls', string>>
     /** Every other row tinted. */
     striped?: boolean
     /** Show the Add button. */
@@ -64,6 +71,8 @@ const props = withDefaults(
     title: undefined,
     label: undefined,
     maxHeight: '15rem',
+    fill: false,
+    ui: undefined,
     striped: false,
     allowAdd: true,
     allowRemove: false,
@@ -86,7 +95,7 @@ const selection = defineModel<string | number | null>('selection', { default: nu
 const emit = defineEmits<{
   /** Add was pressed: create the item, put it in the list and select it. */
   add: []
-  /** Remove was pressed (and confirmed): take this item out of the list. */
+  /** Remove was pressed (and confirmed). Bound, the caller takes the item out; unbound, the list does. */
   remove: [item: T, index: number]
   /** A move changed the order; v-model has the new array. */
   reorder: [change: { item: T; from: number; to: number }]
@@ -232,12 +241,16 @@ function add() {
 
 // A remove the list asked for, until the item has left the list: the caller may call a server first.
 let pendingRemove: { key: string | number; index: number; title: string } | null = null
+const instance = getCurrentInstance()
+/** Whether the caller listens to `remove` (and so takes the item out itself). */
+const removeHandled = () => !!instance?.vnode.props?.onRemove
 function remove() {
   const i = selectedIndex.value
   const item = selectedItem.value
   if (!item || !canRemove.value) return
   pendingRemove = { key: keyOf(item), index: i, title: titleOf(i) }
   emit('remove', item, i)
+  if (!removeHandled()) items.value = items.value.filter((_, j) => j !== i)
 }
 // When it has gone, the row that took its place is selected, as in Buoy, and focus stays in the list.
 watch(
@@ -252,6 +265,12 @@ watch(
     keepFocus()
   },
 )
+// A remove the caller decided against (a failed server call) is forgotten at the next selection change, so a later
+// reload doesn't announce it or move the selection. Not when the item went in the same tick (a caller clearing the
+// selection as it removes): the watcher above, which runs first, then selects the row that took its place.
+watch(selection, () => {
+  if (pendingRemove && items.value.some((item) => keyOf(item) === pendingRemove!.key)) pendingRemove = null
+})
 
 // ZConfirmButton's words. Focus goes back to Remove when it is cancelled (ZConfirmButton's own), and to the list
 // once the confirmed item has gone (keepFocus, above).
@@ -297,18 +316,21 @@ function onKeydown(e: KeyboardEvent) {
   }
   if (e.ctrlKey || e.metaKey || e.altKey) return
   let to: number
+  // As Buoy's: with nothing selected, Down and Up both start at the first row, and Enter and Space do nothing (selection
+  // follows focus, so on a selected row they keep it).
   switch (e.key) {
     case 'ArrowDown': to = i < 0 ? 0 : Math.min(i + 1, n - 1); break
-    case 'ArrowUp': to = i < 0 ? n - 1 : Math.max(i - 1, 0); break
+    case 'ArrowUp': to = i < 0 ? 0 : Math.max(i - 1, 0); break
     case 'Home': to = 0; break
     case 'End': to = n - 1; break
-    // Selection already follows focus: Enter and Space only select the first row when none is.
-    case 'Enter': to = i < 0 ? 0 : i; break
+    case 'Enter':
+      e.preventDefault()
+      return
     case ' ':
+      e.preventDefault()
       // Part of a name while one is being typed.
-      if (query) { e.preventDefault(); typeahead(' '); return }
-      to = i < 0 ? 0 : i
-      break
+      if (query) typeahead(' ')
+      return
     default:
       if (e.key.length === 1) { e.preventDefault(); typeahead(e.key) }
       return
@@ -344,12 +366,26 @@ const headerId = `${uid}-header`
 const hasHeader = computed(() => !!props.title || !!slots.header)
 
 function rowClass(i: number, selected: boolean) {
-  return [
+  return twMerge(
     'cursor-pointer select-none rounded px-2.5 py-1.5 text-sm',
     selected ? 'bg-primary/10 text-highlighted hover:bg-primary/15' : ['text-default hover:bg-elevated', props.striped && i % 2 === 1 && 'bg-elevated/50'],
     selected && focused.value && keyboard.value && 'ring-2 ring-inset ring-primary',
-  ]
+    props.ui?.row,
+  )
 }
+
+// With `fill` the root, the list column (a flex column) and the box take the height they are given; the box grows to
+// what the header leaves, rather than h-full, which would overflow by the header's height.
+const rootClass = computed(() => twMerge('flex flex-col gap-3 sm:flex-row', props.fill && 'h-full', props.ui?.root))
+const columnClass = computed(() => twMerge('min-w-0 flex-auto', props.fill && 'flex min-h-0 flex-col'))
+const headerClass = computed(() => twMerge('px-2.5 py-1.5 text-sm font-medium text-muted', props.ui?.header))
+const listClass = computed(() => twMerge(
+  'relative overflow-y-auto rounded-md bg-default p-1 ring ring-default',
+  focused.value && keyboard.value && selectedIndex.value < 0 && 'ring-2 ring-primary',
+  props.fill && 'min-h-0 flex-1',
+  props.ui?.list,
+))
+const controlsClass = computed(() => twMerge('flex flex-row items-start gap-1 sm:flex-col sm:items-stretch', props.ui?.controls))
 
 defineExpose({
   /** Focus the list. */
@@ -360,10 +396,10 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="root" class="flex flex-col gap-3 sm:flex-row" data-testid="order-list">
+  <div ref="root" :class="rootClass" data-testid="order-list">
     <div role="group" :aria-label="controlsLabel" data-controls>
       <slot name="controls" v-bind="controls">
-        <div class="flex flex-row items-start gap-1 sm:flex-col sm:items-stretch">
+        <div :class="controlsClass">
           <UButton v-if="allowAdd" type="button" size="xs" color="primary" variant="soft" square icon="i-lucide-plus" :aria-label="addText" data-add @click="add()" />
           <template v-if="allowRemove">
             <ZConfirmButton
@@ -405,15 +441,14 @@ defineExpose({
       </slot>
     </div>
 
-    <div class="min-w-0 flex-auto">
-      <div v-if="hasHeader" :id="headerId" class="px-2.5 py-1.5 text-sm font-medium text-muted" data-header>
+    <div :class="columnClass">
+      <div v-if="hasHeader" :id="headerId" :class="headerClass" data-header>
         <slot name="header">{{ title }}</slot>
       </div>
       <div
         ref="scroller"
-        class="relative overflow-y-auto rounded-md bg-default p-1 ring"
-        :class="focused && keyboard && selectedIndex < 0 ? 'ring-2 ring-primary' : 'ring-default'"
-        :style="{ maxHeight }"
+        :class="listClass"
+        :style="fill ? undefined : { maxHeight }"
         data-scroller
       >
         <TransitionGroup

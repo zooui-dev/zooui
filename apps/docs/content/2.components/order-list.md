@@ -7,7 +7,7 @@ preview: OrderListEditor
 
 Settings screens often edit a short, ordered list of records one at a time: statuses, milestones, groups, custom fields, email templates. `ZOrderList` is the list half of that screen. It shows the records as a compact list with one selected row, and a toolbar beside it adds, removes and moves that row. The selected record's form sits next to the list, in your own markup, and editing it updates the row.
 
-`v-model` is the array, and `v-model:selection` is the selected item's key, which `row-key` gives. A move hands back a new array of the same items in the new order, and the selection follows the moved item. Add and Remove ask you: `@add` is where you create the item (and select it), and `@remove` hands you the item to take out, so a server call can come first. Remove is a `ZConfirmButton`: it asks first, with `remove-question`, `remove-description`, `remove-confirm-label` and `remove-cancel-label` as its words, unless `:confirm-remove="false"`.
+`v-model` is the array, and `v-model:selection` is the selected item's key, which `row-key` gives. A move hands back a new array of the same items in the new order, and the selection follows the moved item. `@add` is where you create the item (and select it). `@remove` hands you the item to take out, so a server call can come first; with no `@remove` listener, the list takes the row out itself. Remove is a `ZConfirmButton`: it asks first, with `remove-question`, `remove-description`, `remove-confirm-label` and `remove-cancel-label` as its words, unless `:confirm-remove="false"`.
 
 ::component-example{name="OrderListEditor"}
 ::
@@ -20,7 +20,7 @@ Moved rows slide to their new place in 180 ms, and jump straight there under `pr
 
 ## Long lists
 
-`max-height` sets where the list starts to scroll, and `striped` tints every other row.
+`max-height` sets where the list starts to scroll, and `striped` tints every other row. With `fill`, the list drops `max-height` and stretches to the height it is given, such as a grid column beside the form. `ui` takes classes for its `root`, `header`, `list`, `row` and `controls`, merged over the defaults.
 
 ::component-example{name="OrderListStriped"}
 ::
