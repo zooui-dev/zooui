@@ -90,10 +90,10 @@ jobs:
       # per package. Locally it's the rigsmith binary in ~/.local/bin;
       # npm ships the same build.
       - name: Install shiprig
-        run: npm install -g @rigsmith/shiprig@1.27.0
+        run: npm install -g @rigsmith/shiprig@1.29.0
       # With no publish-script the action skips the publish path, rehearsal included. The script isn't run in a dry
       # run (shiprig's own `publish --dry-run` stands in for it), so it needs no token.
-      - uses: rigsmith/shiprig-action@cead07e2afc339c686ce9c31c511cd3bdbc4b9e5  # v0.8.1
+      - uses: rigsmith/shiprig-action@fcabd796842f61a76ab0146299e26898d1700c3c  # v0.8.3
         with:
           dry-run: true
           publish-script: shiprig publish --yes
@@ -121,13 +121,13 @@ jobs:
         with:
           node-version: 24
       - name: Install shiprig
-        run: npm install -g @rigsmith/shiprig@1.27.0   # pinned; see the rehearse job
+        run: npm install -g @rigsmith/shiprig@1.29.0   # pinned; see the rehearse job
       # version: something to release (changesets, or a releaseAs first release); publish: nothing pending, and a
       # version npm doesn't have or a tag that's missing; none: neither.
       - id: mode
-        uses: rigsmith/shiprig-action/select-mode@cead07e2afc339c686ce9c31c511cd3bdbc4b9e5  # v0.8.1
+        uses: rigsmith/shiprig-action/select-mode@fcabd796842f61a76ab0146299e26898d1700c3c  # v0.8.3
       - if: steps.mode.outputs.mode == 'version'
-        uses: rigsmith/shiprig-action/version@cead07e2afc339c686ce9c31c511cd3bdbc4b9e5  # v0.8.1
+        uses: rigsmith/shiprig-action/version@fcabd796842f61a76ab0146299e26898d1700c3c  # v0.8.3
 
   # Only when there's something to publish: in the `release` environment, publishes, tags and
   # makes the GitHub releases.
@@ -158,7 +158,7 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
       - name: Install shiprig
-        run: npm install -g @rigsmith/shiprig@1.27.0   # pinned; see the rehearse job
+        run: npm install -g @rigsmith/shiprig@1.29.0   # pinned; see the rehearse job
       # `shiprig publish` makes annotated tags (`git tag -a`) in the checkout after npm has accepted the tarballs, and an
       # annotated tag needs a tagger: without one, the release is out with no tags and no GitHub releases, and a re-run
       # can't publish it again. The action falls back to a bot identity when none is set; this doesn't rely on that.
@@ -168,7 +168,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
       # Pinned to the commit, not the tag, which could be moved: this step can publish.
-      - uses: rigsmith/shiprig-action/publish@cead07e2afc339c686ce9c31c511cd3bdbc4b9e5  # v0.8.1
+      - uses: rigsmith/shiprig-action/publish@fcabd796842f61a76ab0146299e26898d1700c3c  # v0.8.3
         with:
           script: ${{ secrets.NPM_TOKEN != '' && 'shiprig publish --yes --npm-auth env:NPM_TOKEN' || 'shiprig publish --yes' }}
         env:
