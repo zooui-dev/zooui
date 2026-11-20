@@ -7,7 +7,7 @@ import { findConflicts } from '@zooui/nuxt/testing/find-conflicts'
 // BEFORE dragleave on the one left. Every assertion below is on what that sequence does to the overlay, the live
 // region and the emits.
 
-type Carry = { name: string; type: string }[] | 'text'
+type Carry = { name: string; type: string; bytes?: number }[] | 'text'
 const RECEIPTS: Carry = [{ name: 'lunch.png', type: 'image/png' }, { name: 'setup.exe', type: 'application/x-msdownload' }, { name: 'invoice.pdf', type: 'application/pdf' }]
 
 /** Dispatch one drag event at the first match of `selector`; answers whether a listener called preventDefault and
@@ -16,7 +16,7 @@ const fire = (page: Page, type: 'dragenter' | 'dragleave' | 'dragover' | 'drop',
   page.evaluate(({ type, selector, carry }) => {
     const dt = new DataTransfer()
     if (carry === 'text') dt.setData('text/plain', 'a sentence dragged within the page')
-    else for (const f of carry) dt.items.add(new File(['x'], f.name, { type: f.type }))
+    else for (const f of carry) dt.items.add(new File(['x'.repeat(f.bytes ?? 1)], f.name, { type: f.type }))
     // Outside a real drag Chrome ignores writes to dropEffect, so what the listener sets is kept here.
     let dropEffect = 'unset'
     Object.defineProperty(dt, 'dropEffect', { get: () => dropEffect, set: (v: string) => { dropEffect = v } })
@@ -108,6 +108,32 @@ test.describe('over the window', () => {
     await expect(overlay(page)).toHaveCount(0)
   })
 
+  test('filter: a file the page\'s own rule refuses goes to @rejected as filter, with its message, and the rest is taken', async ({ page }) => {
+    const carry: Carry = [{ name: 'blank.pdf', type: 'application/pdf', bytes: 0 }, { name: 'lunch.png', type: 'image/png' }, { name: 'setup.exe', type: 'application/x-msdownload', bytes: 0 }]
+    await fire(page, 'dragenter', '[data-child="b"]', carry)
+    await fire(page, 'drop', '[data-child="b"]', carry)
+    await expect(page.getByTestId('dropped')).toHaveText('lunch.png')
+    // The empty .exe is refused for accept first: filter runs only on files accept takes.
+    await expect(page.getByTestId('rejected')).toHaveText('blank.pdf filter: is empty, setup.exe accept')
+  })
+
+  test('a drop whose dataTransfer.files is empty is read from dataTransfer.items instead', async ({ page }) => {
+    await fire(page, 'dragenter', '[data-child="b"]')
+    const prevented = await page.evaluate(() => {
+      const dt = new DataTransfer()
+      dt.items.add(new File(['x'], 'lunch.png', { type: 'image/png' }))
+      dt.items.add(new File(['x'], 'setup.exe', { type: 'application/x-msdownload' }))
+      // As some browsers hand a drop over: the files in its items, its FileList empty.
+      Object.defineProperty(dt, 'files', { get: () => new DataTransfer().files })
+      const e = new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true })
+      document.querySelector('[data-child="b"]')!.dispatchEvent(e)
+      return e.defaultPrevented
+    })
+    expect(prevented).toBe(true)
+    await expect(page.getByTestId('dropped')).toHaveText('lunch.png')
+    await expect(page.getByTestId('rejected')).toHaveText('setup.exe accept')
+  })
+
   test('text and links dragged within the page are ignored', async ({ page }) => {
     expect((await fire(page, 'dragenter', '[data-child="b"]', 'text')).prevented).toBe(false)
     expect((await fire(page, 'dragover', '[data-child="b"]', 'text')).prevented).toBe(false)
@@ -187,6 +213,50 @@ test.describe('over the window', () => {
     expect((await fire(page, 'drop', '[data-child="b"]')).prevented).toBe(false)
     await expect(overlay(page)).toHaveCount(0)
     await expect(announce(page)).toHaveCount(0)
+  })
+})
+
+/** Dispatch one drag step and read the overlay as Vue first patches it, before its enter or leave transition runs. */
+const firstFrame = (page: Page, type: 'dragenter' | 'dragleave') => page.evaluate(async (type) => {
+  const dt = new DataTransfer()
+  dt.items.add(new File(['x'], 'lunch.png', { type: 'image/png' }))
+  document.querySelector('[data-child="b"]')!.dispatchEvent(new DragEvent(type, { dataTransfer: dt, bubbles: true, cancelable: true }))
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  const o = document.querySelector<HTMLElement>('[data-file-drop-overlay]')
+  const m = o?.querySelector<HTMLElement>('[data-file-drop-message]')
+  if (!o || !m) return null
+  return {
+    overlay: { opacity: getComputedStyle(o).opacity, duration: getComputedStyle(o).transitionDuration },
+    message: { duration: getComputedStyle(m).transitionDuration, scaled: getComputedStyle(m).scale !== 'none' || getComputedStyle(m).transform !== 'none' },
+  }
+}, type)
+
+// Vue's <Transition> holds the element for its transition-duration, so the durations read here are what the overlay's
+// enter and leave take.
+test.describe('enter and leave', () => {
+  test('the overlay fades in with its message growing into place, and fades out on leave', async ({ page }) => {
+    await open(page)
+    expect(await firstFrame(page, 'dragenter')).toEqual({ overlay: { opacity: '0', duration: '0.15s' }, message: { duration: '0.15s', scaled: true } })
+    await expect(overlay(page)).toHaveCSS('opacity', '1')
+    await expect(overlay(page).locator('[data-file-drop-message]')).toHaveCSS('transition-duration', '0s')
+    // On leave it stays in the page for its fade, then goes.
+    const leaving = await firstFrame(page, 'dragleave')
+    expect(leaving?.overlay.duration).toBe('0.1s')
+    expect(leaving?.message.duration).toBe('0.1s')
+    await expect(overlay(page)).toHaveCount(0)
+  })
+
+  test('with reduced motion, it appears and goes with no transition', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await open(page)
+    const entering = await firstFrame(page, 'dragenter')
+    expect(entering?.overlay.duration).toBe('0s')
+    expect(entering?.message.duration).toBe('0s')
+    await expect(overlay(page)).toHaveCSS('opacity', '1')
+    const leaving = await firstFrame(page, 'dragleave')
+    // Gone already, or leaving with nothing to wait for.
+    if (leaving) expect([leaving.overlay.duration, leaving.message.duration]).toEqual(['0s', '0s'])
+    await expect(overlay(page)).toHaveCount(0)
   })
 })
 

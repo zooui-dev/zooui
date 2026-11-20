@@ -4,7 +4,9 @@
  * whole ZModal takes dropped files, with ZFileDropOverlay contained in it, over a page that has its own window-level
  * overlay. The field lists the files already sent (an edit) and the ones being added in one ZFileList, the stored ones
  * removed through a server call the page answers by hand (so the test sees the spinner), and a UFileUpload under it
- * to browse. Dropped and browsed files go through one rule, sortDroppedFiles with ACCEPT, and what it refuses is a toast.
+ * to browse. Dropped and browsed files go through one rule, sortDroppedFiles with ACCEPT and the names the list already
+ * holds (no file twice), and what it refuses is a toast. The UFileUpload has `reset`, so a file removed from the list can
+ * be browsed for again.
  */
 const ACCEPT = 'application/pdf,.csv,image/*'
 const toast = useToast()
@@ -20,12 +22,16 @@ const stored = ref<FileListItem[]>([
 const added = ref<File[]>([])
 const files = computed<FileListItem[]>(() => [...stored.value, ...added.value])
 
+const WHY: Partial<Record<RejectedFile['reason'], string>> = { accept: 'only PDFs, CSVs and images', duplicate: 'already attached' }
 function report(rejected: RejectedFile[]) {
-  toast.add({ title: 'Not attached', description: `${rejected.map((r) => r.file.name).join(', ')}: only PDFs, CSVs and images.`, color: 'error' })
+  for (const reason of new Set(rejected.map((r) => r.reason))) {
+    const names = rejected.filter((r) => r.reason === reason).map((r) => r.file.name).join(', ')
+    toast.add({ title: 'Not attached', description: `${names}: ${WHY[reason] ?? reason}.`, color: 'error' })
+  }
 }
-/** Every file in, dropped or browsed, through the one rule. */
+/** Every file in, dropped or browsed, through the one rule: the accepted types, and no name the list already holds. */
 function add(incoming: File[]) {
-  const { accepted, rejected } = sortDroppedFiles(incoming, { accept: ACCEPT, multiple: true })
+  const { accepted, rejected } = sortDroppedFiles(incoming, { accept: ACCEPT, multiple: true, existing: files.value.map((f) => f.name) })
   added.value = [...added.value, ...accepted]
   if (rejected.length) report(rejected)
 }
@@ -56,7 +62,8 @@ function remove(item: FileListItem) {
         the page behind has a window-level overlay of its own. While the dialog is open the page takes no drops at all, not even
         on the backdrop; once it closes, the page's overlay works again. The field lists the
         files the transfer already holds (from the server) and the ones being added, with the drop zone under it to
-        browse. Dropped and browsed files go through the same rule (PDFs, CSVs and images); a refused one is a toast.
+        browse. Dropped and browsed files go through the same rule (PDFs, CSVs and images, and no name the list already
+        holds); a refused one is a toast. The drop zone resets before each browse, so a file you removed can be picked again.
         <strong>Dropped on the page</strong> shows what the page's own overlay took.
       </p>
     </header>
@@ -70,7 +77,8 @@ function remove(item: FileListItem) {
 
     <section class="flex flex-col items-start gap-3">
       <h2 class="text-base font-semibold text-highlighted">The dialog</h2>
-      <p class="text-sm text-muted">Try this: open the dialog and drop files anywhere on it; they join the list, and a Word file is refused. Close it and drag over the page again: the page's overlay is back.</p>
+      <p class="text-sm text-muted">Try this: open the dialog and drop files anywhere on it; they join the list, and a Word file is refused. Drop the same file again: it's refused as already attached. Close it and drag over the page again: the page's overlay is back.</p>
+      <p class="text-sm text-muted">Try this too: browse for a file, remove it from the list, and browse for the same file again; it's added again.</p>
     <ZModal v-model:open="open" title="Edit transfer" description="Send files to a client">
       <UButton label="Open the dialog: Edit transfer" data-open-dialog />
       <template #content="{ close }">
@@ -89,6 +97,7 @@ function remove(item: FileListItem) {
                   multiple
                   :accept="ACCEPT"
                   :preview="false"
+                  reset
                   label="Drop files or browse"
                   description="PDFs, CSVs and images"
                   class="min-h-28 w-full"

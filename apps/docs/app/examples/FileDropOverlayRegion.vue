@@ -14,6 +14,7 @@ const refused = ref<RejectedFile[]>([])
       accept="image/*,.pdf"
       multiple
       label="Drop to attach"
+      icon="i-lucide-upload"
       description="Images and PDFs"
       @drop="(f) => (files = f)"
       @rejected="(r) => (refused = r)"

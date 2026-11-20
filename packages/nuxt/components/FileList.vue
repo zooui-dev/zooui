@@ -8,6 +8,9 @@
 //
 // `remove` may return a promise (a server delete): the row shows a spinner and its button is disabled until it
 // settles. A rejected one leaves the row as it was and is handed to @remove-error, for the product's toast.
+//
+// With `preview`, an image `File` shows a thumbnail through an object URL, made on the client when the row first shows
+// and revoked when the row goes or the list unmounts; a stored file shows its `thumbnail` URL, if it has one.
 import { useLocale } from '@nuxt/ui/composables'
 import { formatFileSize, type FileListItem } from '../utils/file-drop'
 
@@ -21,12 +24,22 @@ const props = withDefaults(
     locale?: string
     /** The Remove button's word; its accessible name is this and the file's name: "Remove invoice.pdf". */
     removeLabel?: string
+    /** Sizes in steps of 1024 (`1.2 KB`); `false` for decimal units (`1.2 kB`, 1 kB = 1000 bytes). */
+    binary?: boolean
+    /** Show a thumbnail in place of the icon: an image `File`'s own, or a stored file's `thumbnail` URL. */
+    preview?: boolean
   }>(),
-  { remove: undefined, locale: undefined, removeLabel: 'Remove' },
+  { remove: undefined, locale: undefined, removeLabel: 'Remove', binary: true, preview: false },
 )
 const emit = defineEmits<{
   /** A `remove` promise rejected: the row stays. */
   removeError: [error: unknown, item: FileListItem]
+}>()
+defineSlots<{
+  /** Before the row's icon or thumbnail: a checkbox, say. */
+  leading?(props: { item: FileListItem; index: number; removing: boolean }): unknown
+  /** After the size, before Remove: a badge, say. */
+  trailing?(props: { item: FileListItem; index: number; removing: boolean }): unknown
 }>()
 
 const { locale: uiLocale } = useLocale()
@@ -58,6 +71,33 @@ function iconOf(item: FileListItem) {
   return 'i-lucide-file'
 }
 
+// Thumbnails. An object URL holds its File in memory until revoked, so one is made only on the client (never during
+// SSR, where it would leak and mismatch), only for an image File in a row that is shown, and revoked as soon as that
+// File leaves `items`, `preview` is turned off, or the list unmounts.
+const onClient = ref(false)
+onMounted(() => { onClient.value = true })
+const objectUrls = new Map<File, string>()
+/** Thumbnails that failed to load (a type the browser can't draw, such as HEIC): those rows show the icon. */
+const broken = ref(new Set<string>())
+
+function thumbnailOf(item: FileListItem): string | undefined {
+  if (!props.preview || broken.value.has(keyOf(item))) return undefined
+  if (!(item instanceof File)) return item.thumbnail || undefined
+  if (!onClient.value || !item.type.toLowerCase().startsWith('image/')) return undefined
+  let url = objectUrls.get(item)
+  if (!url) objectUrls.set(item, (url = URL.createObjectURL(item)))
+  return url
+}
+function revoke(keep: ReadonlySet<FileListItem>) {
+  for (const [file, url] of objectUrls) {
+    if (keep.has(file)) continue
+    URL.revokeObjectURL(url)
+    objectUrls.delete(file)
+  }
+}
+watch([() => props.items, () => props.preview], ([items, preview]) => revoke(preview ? new Set(items) : new Set()), { deep: 1 })
+onBeforeUnmount(() => revoke(new Set()))
+
 const removing = ref(new Set<string>())
 async function onRemove(item: FileListItem, index: number) {
   if (!props.remove) return
@@ -86,15 +126,25 @@ async function onRemove(item: FileListItem, index: number) {
       :data-file-row="item.name"
       :data-stored="isStored(item) ? '' : undefined"
     >
-      <UIcon :name="iconOf(item)" class="size-4 shrink-0 text-dimmed" aria-hidden="true" />
+      <slot name="leading" :item="item" :index="index" :removing="removing.has(keyOf(item))" />
+      <img
+        v-if="thumbnailOf(item)"
+        :src="thumbnailOf(item)"
+        alt=""
+        class="size-8 shrink-0 rounded-sm bg-default object-cover"
+        data-file-thumbnail
+        @error="broken = new Set(broken).add(keyOf(item))"
+      >
+      <UIcon v-else :name="iconOf(item)" class="size-4 shrink-0 text-dimmed" aria-hidden="true" />
       <span class="min-w-0 flex-1 truncate text-sm text-default">{{ item.name }}</span>
-      <span class="shrink-0 text-xs text-muted tabular-nums">{{ formatFileSize(item.size, lang) }}</span>
+      <span class="shrink-0 text-xs text-muted tabular-nums">{{ formatFileSize(item.size, lang, { binary }) }}</span>
+      <slot name="trailing" :item="item" :index="index" :removing="removing.has(keyOf(item))" />
       <UButton
         v-if="remove"
         type="button"
         size="xs"
         variant="ghost"
-        color="neutral"
+        color="error"
         icon="i-lucide-x"
         :loading="removing.has(keyOf(item))"
         :aria-label="`${removeLabel} ${item.name}`"
