@@ -43,7 +43,7 @@ const show = (v: string | undefined) => v || '—'
     </header>
     <section class="flex flex-col gap-3">
       <h3 class="font-semibold text-highlighted">Data entry</h3>
-      <p class="text-sm text-muted">Try: Tab through from Payee. Menus open on focus; type to filter and Tab commits the highlighted item. On the closed Kind menu, type s: Statement, found from the top of the list.</p>
+      <p class="text-sm text-muted">Try: Tab through from Payee. Menus open on focus; type to filter and Tab commits the highlighted item. On the Kind menu, pick one with Enter; then, with the menu closed and focus back on it, type s: Statement, found from the top of the list.</p>
       <form data-specimen="entry" class="flex flex-wrap items-end gap-3" @submit.prevent>
         <UFormField label="Payee"><UInput v-model="form.payee" placeholder="Who was paid" data-payee /></UFormField>
         <UFormField label="State">
