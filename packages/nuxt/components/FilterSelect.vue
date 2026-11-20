@@ -11,8 +11,8 @@
 // without one (then compared by identity). Values the options no longer hold are kept, not dropped.
 //
 // SEARCH is literal and case-insensitive (utils/filter-match.ts): what is typed is text, never a pattern, so `(` or
-// `.` match themselves. The options keep their order, and each label is drawn as segments with the matches in <mark>,
-// never through v-html. Checking or unchecking an option clears the search, so the next pick
+// `.` match themselves. The options keep their order, and each label is drawn by ZHighlight, with the matches in
+// <mark>, never through v-html. Checking or unchecking an option clears the search, so the next pick
 // starts from the whole list. All checks every option on screen (the matches, while searching) and leaves the search
 // as it is; Clear empties the filter.
 //
@@ -310,10 +310,7 @@ const searchInput = computed(() => props.searchable
               <UIcon v-if="iconOf(item as T)" :name="iconOf(item as T)!" :class="iconClasses(item as T)" aria-hidden="true" data-icon />
               <span :class="cls('itemLabel', 'min-w-0 flex-1 truncate')" data-label>
                 <slot name="option-label" :option="(item as T)" :segments="filterSelectSegments(labelOf(item as T), query)" :selected="isSelected(item as T)">
-                  <template v-for="(segment, i) in filterSelectSegments(labelOf(item as T), query)" :key="i">
-                    <mark v-if="segment.match" class="rounded-xs bg-primary/15 font-semibold text-highlighted">{{ segment.text }}</mark>
-                    <template v-else>{{ segment.text }}</template>
-                  </template>
+                  <ZHighlight :text="labelOf(item as T)" :query="query" />
                 </slot>
               </span>
               <span v-if="countOf(item as T) !== undefined" :class="cls('itemCount', 'ms-auto shrink-0 text-xs tabular-nums text-muted')" data-count>
