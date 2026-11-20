@@ -31,6 +31,10 @@
       "types": "./utils/date-entry.ts",
       "default": "./utils/date-entry.ts"
     },
+    "./masked-input": {
+      "types": "./utils/masked-input.ts",
+      "default": "./utils/masked-input.ts"
+    },
     "./testing/find-conflicts": {
       "types": "./testing/find-conflicts.d.ts",
       "default": "./testing/find-conflicts.js"

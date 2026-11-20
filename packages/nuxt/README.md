@@ -70,6 +70,7 @@ plain Nuxt UI. Three rules:
 | `ZOptionalDate` | A checkbox in front of a `ZDateField`: the date can be edited only while it's ticked |
 | `ZSelectMenu` | Nuxt UI's `USelectMenu` with typeahead from the top of the list, Tab that moves on, a focus ring on any focus, and optional open on focus |
 | `ZFilterSelect` | A faceted multi-select filter for list and table toolbars: search, counts, All and Clear |
+| `ZMaskedInput` | A text input with a mask (`(###) ###-####`, or a list chosen as typed), with US phone and tax-ID presets |
 
 ## Docs
 
