@@ -36,7 +36,7 @@ const Z_ICONS = ['lucide:sun', 'lucide:moon', 'lucide:monitor', 'lucide:triangle
   'lucide:circle-check', 'lucide:pencil', 'lucide:x', 'lucide:trash-2', 'lucide:plus', 'lucide:chevron-up', 'lucide:chevron-down', 'lucide:calendar',
   'lucide:file', 'lucide:file-image', 'lucide:file-video', 'lucide:file-audio', 'lucide:file-spreadsheet',
   'lucide:file-archive', 'lucide:file-text',
-  'lucide:list-filter', 'lucide:search', 'lucide:check-check']
+  'lucide:list-filter', 'lucide:search', 'lucide:check-check', 'lucide:arrow-up-to-line', 'lucide:arrow-down-to-line']
 
 export default defineNuxtConfig({
   modules: [

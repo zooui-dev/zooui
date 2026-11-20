@@ -18,5 +18,6 @@
     <ForestGrid />
     <RepeatingListSpecimen />
     <FilterSelectSpecimen />
+    <OrderListSpecimen />
   </main>
 </template>

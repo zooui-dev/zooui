@@ -77,5 +77,7 @@ const rows = [{ account: 'Retainer', amount: '1,200.00' }, { account: 'Materials
     </section>
     <SpecimensRepeatingListSpecimen />
     <SpecimensFilterSelectSpecimen />
+
+    <SpecimensOrderListSpecimen />
   </main>
 </template>
