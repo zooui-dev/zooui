@@ -23,11 +23,12 @@
 // "MM/DD/YYYY", "DD/MM/YYYY", "DD.MM.YYYY" or "YYYY-MM-DD" — and when unset it is the locale's own numeric order
 // (dateEntryFormatFor), so `en` gives MM/DD/YYYY. The placeholder is the pattern.
 //
-// Typing (in MM/DD/YYYY): "5" or "12" is that day this month, "0512" is May 12, "051226" and "5/12/26" and
+// Typing (in MM/DD/YYYY): "5" or "12" is that day this month, "0512" is May 12, "051226", "05122026", "5/12/26" and
 // "5/12/2026" carry the year; other formats read the same shapes in their own order. Enter, Tab or leaving the
 // field commits; text that isn't a date clears the field. Shortcut keys (see applyDateShortcut): t today, m/h
 // start/end of month, y/r start/end of year, + and - a day either way (_ too, so a format whose separator is "-"
-// keeps a key for the day before).
+// keeps a key for the day before). A shortcut steps from the committed date (today when there is none), never from
+// text typed but not yet committed: with 03/15/2026 saved, "04/0" then + is 03/16/2026.
 //
 // LIMITS. `minValue`, `maxValue` and `isDateUnavailable`, named as Nuxt UI's UCalendar names them, go to the calendar,
 // which disables those days. A typed date they refuse is not committed: the field keeps the date it had and draws it
@@ -43,8 +44,8 @@
 // the parent's v-model hasn't caught up yet, and fires once per settle: leaving right after Enter, a pick, a
 // shortcut or a clear doesn't announce the same date again. Plain forms can ignore it and read v-model.
 //
-// Also: a leading `icon` whose click emits `iconClick`, a `calendarIcon` in place of the calendar,
-// and one-letter weekday headers (the locale's narrow weekday).
+// Also: a leading `icon` whose click emits `iconClick` (or a `#leading` slot in its place), a `calendarIcon` in place
+// of the calendar, and one-letter weekday headers (the locale's narrow weekday).
 import { CalendarDate } from '@internationalized/date'
 import { formFieldInjectionKey, useLocale } from '@nuxt/ui/composables'
 import type { Temporal } from 'temporal-polyfill/implementation'
@@ -105,6 +106,10 @@ const emit = defineEmits<{
   iconClick: [event: MouseEvent]
 }>()
 const model = defineModel<T | null>({ default: null })
+defineSlots<{
+  /** UInput's leading slot, in place of the `icon` when given; `ui` is the input's, for its `leadingIcon` class. */
+  leading?(props: { ui: Record<string, (options?: { class?: unknown }) => string> }): unknown
+}>()
 
 const { locale: uiLocale } = useLocale()
 const localeCode = computed(() => props.locale ?? uiLocale.value.code)
@@ -281,9 +286,9 @@ function onKeydown(e: KeyboardEvent) {
   if (e.key.length !== 1 || !isDateShortcut(e.key, entryFormat.value)) return
   e.preventDefault()
   const today = useToday()
-  // Shortcuts step from what's on screen, even if it hasn't been committed yet. With no allowed day to go to, the
-  // key does nothing.
-  const next = applyDateShortcut(e.key, parseDateEntry(text.value, today, entryFormat.value) ?? settled, today, entryFormat.value, limits.value)
+  // Shortcuts step from the committed date, not from text typed since: the typed text is dropped. With no allowed day
+  // to go to, the key does nothing.
+  const next = applyDateShortcut(e.key, settled, today, entryFormat.value, limits.value)
   if (!next) return
   flag(null)
   announce(set(next))
@@ -382,7 +387,10 @@ defineExpose({ focus: focusInput })
         @keydown="onKeydown"
         @blur="onBlur"
       >
-        <template v-if="icon" #leading="{ ui: inputUi }">
+        <template v-if="$slots.leading" #leading="slotProps">
+          <slot name="leading" v-bind="slotProps as never" />
+        </template>
+        <template v-else-if="icon" #leading="{ ui: inputUi }">
           <UIcon :name="icon" data-slot="leadingIcon" :class="inputUi.leadingIcon({ class: ui?.leadingIcon })" @click="emit('iconClick', $event)" />
         </template>
         <template #trailing="{ ui: inputUi }">
