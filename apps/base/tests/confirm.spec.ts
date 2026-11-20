@@ -364,9 +364,63 @@ test('two-part details: a line break or { title, text } is a heading over its te
   }
   await expect(items.nth(2).locator('[data-confirm-detail-title], [data-confirm-detail-text]')).toHaveCount(0)
   await expect(items.nth(2)).toHaveText('12 transactions will be imported')
-  // details but no description: no badge, the details still indented to the description's column
-  await expect(dialog(page).locator('[data-confirm-icon]')).toHaveCount(0)
-  await expect(dialog(page).locator('[data-confirm-details]')).toHaveCSS('padding-left', '52px')
+})
+
+test.describe('no description: the icon beside the title', () => {
+  const header = (page: Page) => dialog(page).locator('[data-slot="header"]')
+
+  test('a title-only warning question shows its icon beside the title, and is still named by the title alone', async ({ page }) => {
+    await open(page)
+    await ask(page, 'title-only')
+    const d = page.getByRole('alertdialog', { name: 'Close the March period?', exact: true })
+    await expect(d).toBeVisible()
+    await expect(d).toHaveAccessibleDescription('')
+    await expect(d.locator('[data-slot="body"]')).toHaveCount(0)
+    const badge = d.locator('[data-slot="title"] [data-confirm-icon]')
+    await expect(badge).toHaveAttribute('data-confirm-icon', 'i-lucide-triangle-alert')
+    await expect(badge).toHaveAttribute('aria-hidden', 'true')
+    await expect(badge.locator('svg')).toBeVisible()
+    await expect(d.locator('[data-confirm-icon]')).toHaveCount(1)
+    await settled(page)
+    const [b, t] = await Promise.all([badge.boundingBox(), d.locator('[data-slot="title"]').getByText('Close the March period?').boundingBox()])
+    expect(b!.width).toBeCloseTo(32, 0)
+    // beside the title, centered on its line
+    expect(t!.x).toBeGreaterThanOrEqual(b!.x + b!.width)
+    expect(Math.abs((t!.y + t!.height / 2) - (b!.y + b!.height / 2))).toBeLessThan(2)
+    await expect(header(page).locator('[data-confirm-icon]')).toBeVisible()
+  })
+
+  test('title and details: the icon beside the title, the details in the body in the title text\'s column', async ({ page }) => {
+    await open(page)
+    await ask(page, 'details')
+    const d = dialog(page)
+    await expect(d.locator('[data-slot="title"] [data-confirm-icon]')).toHaveAttribute('data-confirm-icon', 'i-lucide-triangle-alert')
+    await expect(d.locator('[data-slot="body"] [data-confirm-icon]')).toHaveCount(0)
+    await expect(d.locator('[data-slot="body"] [data-confirm-details]')).toBeVisible()
+    await expect(d).toHaveAccessibleName('Import with mismatches?')
+    await settled(page)
+    const [t, li] = await Promise.all([
+      d.locator('[data-slot="title"]').getByText('Import with mismatches?').boundingBox(),
+      d.locator('[data-confirm-details] li').first().boundingBox(),
+    ])
+    expect(li!.x).toBeCloseTo(t!.x, 0)
+  })
+
+  test('with a description the icon stays in the body, not the title', async ({ page }) => {
+    await open(page)
+    await ask(page, 'error-icon')
+    const d = dialog(page)
+    await expect(d.locator('[data-slot="body"] [data-confirm-icon]')).toBeVisible()
+    await expect(d.locator('[data-slot="title"] [data-confirm-icon]')).toHaveCount(0)
+  })
+
+  test('icon: false shows none, beside the title or anywhere', async ({ page }) => {
+    await open(page)
+    await ask(page, 'title-only-no-icon')
+    const d = page.getByRole('alertdialog', { name: 'Close the April period?', exact: true })
+    await expect(d).toBeVisible()
+    await expect(d.locator('[data-confirm-icon]')).toHaveCount(0)
+  })
 })
 
 test.describe('dismissible: false', () => {

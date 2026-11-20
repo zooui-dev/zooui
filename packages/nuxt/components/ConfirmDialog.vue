@@ -5,7 +5,8 @@
  *   <UApp><NuxtPage /><ZConfirmDialog /></UApp>
  *
  * A ZModal announced as an `alertdialog`, titled by the question and described by its description. The description
- * sits in the body with the icon's badge beside it, and the details beneath it. Each question is
+ * sits in the body with the icon's badge beside it, and the details beneath it. A question with no description shows
+ * its icon in a smaller badge beside the title instead, and any details stay in the body. Each question is
  * shown in turn: a call made while one is open waits until it is answered (utils/confirm-queue.ts). Escape, the close
  * button and a click outside are a cancel: `confirm` resolves `false`, `choose` `null`. A question asked with
  * `dismissible: false` ignores Escape and a click outside; Cancel and the close button still cancel it.
@@ -99,6 +100,8 @@ const BADGE: Record<string, string> = {
 }
 const badge = computed(() => BADGE[options.value?.color ?? 'neutral'] ?? BADGE.neutral)
 const icon = computed(() => options.value && confirmIcon(options.value))
+/** With no description to sit beside, the icon goes beside the title. */
+const titleIcon = computed(() => (options.value?.description ? undefined : icon.value))
 const details = computed(() => options.value?.details?.map(confirmDetailParts) ?? [])
 
 /** Into the dialog: Cancel for a destructive question, else the last (confirming) action. */
@@ -135,9 +138,19 @@ const ui = computed(() => ({ content: WIDTH[options.value?.size ?? 'sm'] ?? WIDT
     @update:open="(value: boolean) => { if (!value) dismiss() }"
     @after:leave="afterLeave"
   >
+    <!-- No description: a 32px badge beside the title. The title stays the dialog's name; the badge is aria-hidden. -->
+    <template v-if="titleIcon" #title>
+      <span class="flex items-center gap-3">
+        <span class="grid size-8 shrink-0 place-items-center rounded-full" :class="badge" :data-confirm-icon="titleIcon" aria-hidden="true">
+          <UIcon :name="titleIcon" class="size-4" />
+        </span>
+        <span>{{ options?.title }}</span>
+      </span>
+    </template>
+
     <!-- The badge beside the description, and the details beneath, indented to the description's column
-         (40px badge + 12px gap) whenever there is an icon. The badge shows only beside a description: with none, or
-         with neither a description nor details (no body at all), there is no badge. -->
+         (40px badge + 12px gap). With no description the badge is beside the title, and the details are indented to
+         the title's column (32px badge + 12px gap). -->
     <template v-if="options?.description || details.length" #body>
       <div class="flex flex-col gap-3">
         <div v-if="options?.description" class="flex items-start gap-3">
@@ -149,7 +162,7 @@ const ui = computed(() => ({ content: WIDTH[options.value?.size ?? 'sm'] ?? WIDT
           </p>
         </div>
         <!-- toned, not muted: muted on the elevated ground falls under 4.5:1 on some Forest schemes in light mode -->
-        <ul v-if="details.length" class="flex flex-col gap-1.5 text-sm text-toned" :class="{ 'pl-13': icon }" data-confirm-details>
+        <ul v-if="details.length" class="flex flex-col gap-1.5 text-sm text-toned" :class="titleIcon ? 'pl-11' : { 'pl-13': icon }" data-confirm-details>
           <li v-for="(detail, i) in details" :key="i" class="rounded-md bg-elevated px-3 py-2">
             <template v-if="detail.title">
               <span class="block font-medium text-highlighted" data-confirm-detail-title>{{ detail.title }}</span>
