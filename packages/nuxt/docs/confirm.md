@@ -10,7 +10,7 @@ the queue in `utils/confirm-queue.ts`) and a button that asks in a popover (`com
 
 ```ts
 const { confirm, choose, confirmDelete, confirmDiscard, dismissAll } = useConfirm()
-if (await confirmDelete('the Hartwell invoice')) await remove(invoice)          // true | false
+if (await confirmDelete('the Lakeside order')) await remove(order)          // true | false
 const yes = await confirm({ title: 'Publish the report?', confirmLabel: 'Publish' }) // true | false
 const next = await choose({ title: 'Save before leaving?', actions: [
   { label: 'Discard', value: 'discard', color: 'neutral', variant: 'outline' },

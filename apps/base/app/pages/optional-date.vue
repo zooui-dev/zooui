@@ -25,10 +25,10 @@ const MIN = new CalendarDate(2026, 3, 10)
 
 // Off at mount with a day in hand, in each mode; `writes` counts every update the component emitted.
 const ext = ref<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026-10-15'))
-const extFiled = ref(false)
+const extBooked = ref(false)
 const extWrites = ref(0)
 const extClear = ref<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026-10-15'))
-const extClearFiled = ref(false)
+const extClearBooked = ref(false)
 const extClearWrites = ref(0)
 
 // enabled-change: a tick with no day fetches a default, as an app's form does (here, a fixed day after a moment).
@@ -70,7 +70,7 @@ const disabledDay = ref<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026
     <section data-section="ends" class="flex flex-col gap-2">
       <h2 class="text-lg font-semibold">Unticking keeps the day</h2>
       <p class="text-sm text-muted">Try this: untick the box. The date greys out but stays in the model, and no dateUpdate is announced. Tick it again and focus moves into the date.</p>
-      <UFormField label="Ends" help="Leave it off for an open-ended engagement">
+      <UFormField label="Ends" help="Leave it off for an open-ended project">
         <ZOptionalDate v-model="ends" label="Has an end date" clearable @date-update="(d) => endsEvents.push(describe(d))" />
       </UFormField>
       <p class="text-sm">model: <span data-testid="ends-model">{{ describe(ends) }}</span></p>
@@ -103,46 +103,46 @@ const disabledDay = ref<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026
 
     <section data-section="ext" class="flex flex-col gap-2">
       <h2 class="text-lg font-semibold">Off at mount with a day in hand</h2>
-      <p class="text-sm text-muted">Try this: the box starts off with October 15 loaded, and nothing is written ("writes" stays 0). File and Withdraw set the box from the parent; Set Oct 20 sets the day, which leaves the box as it is.</p>
-      <UFormField label="Extended due date">
+      <p class="text-sm text-muted">Try this: the box starts off with October 15 loaded, and nothing is written ("writes" stays 0). Book and Cancel booking set the box from the parent; Set Oct 20 sets the day, which leaves the box as it is.</p>
+      <UFormField label="Follow-up date">
         <ZOptionalDate
           v-model="ext"
-          v-model:enabled="extFiled"
-          label="Extension filed"
+          v-model:enabled="extBooked"
+          label="Follow-up booked"
           @update:model-value="extWrites++"
           @update:enabled="extWrites++"
         />
       </UFormField>
       <p class="text-sm">model: <span data-testid="ext-model">{{ describe(ext) }}</span></p>
-      <p class="text-sm">enabled: <span data-testid="ext-on">{{ extFiled }}</span></p>
+      <p class="text-sm">enabled: <span data-testid="ext-on">{{ extBooked }}</span></p>
       <p class="text-sm">writes: <span data-testid="ext-writes">{{ extWrites }}</span></p>
       <div class="flex gap-2">
         <UButton data-action="set-day" label="Set Oct 20" size="sm" color="neutral" variant="outline" @click="ext = Temporal.PlainDate.from('2026-10-20')" />
-        <UButton data-action="file" label="File" size="sm" color="neutral" variant="outline" @click="extFiled = true" />
-        <UButton data-action="withdraw" label="Withdraw" size="sm" color="neutral" variant="outline" @click="extFiled = false" />
+        <UButton data-action="file" label="Book" size="sm" color="neutral" variant="outline" @click="extBooked = true" />
+        <UButton data-action="withdraw" label="Cancel booking" size="sm" color="neutral" variant="outline" @click="extBooked = false" />
       </div>
     </section>
 
     <section data-section="ext-clear" class="flex flex-col gap-2">
       <h2 class="text-lg font-semibold">Off at mount with a day in hand, clear-when-off</h2>
       <p class="text-sm text-muted">Try this: as above, nothing is written at mount. Untick after a tick and the model becomes null; Set Oct 20 while it's off ticks the box.</p>
-      <UFormField label="Extended due date (clear when off)">
+      <UFormField label="Follow-up date (clear when off)">
         <ZOptionalDate
           v-model="extClear"
-          v-model:enabled="extClearFiled"
-          label="Extension filed (clear when off)"
+          v-model:enabled="extClearBooked"
+          label="Follow-up booked (clear when off)"
           clear-when-off
           @update:model-value="extClearWrites++"
           @update:enabled="extClearWrites++"
         />
       </UFormField>
       <p class="text-sm">model: <span data-testid="ext-clear-model">{{ describe(extClear) }}</span></p>
-      <p class="text-sm">enabled: <span data-testid="ext-clear-on">{{ extClearFiled }}</span></p>
+      <p class="text-sm">enabled: <span data-testid="ext-clear-on">{{ extClearBooked }}</span></p>
       <p class="text-sm">writes: <span data-testid="ext-clear-writes">{{ extClearWrites }}</span></p>
       <div class="flex gap-2">
         <UButton data-action="set-day" label="Set Oct 20" size="sm" color="neutral" variant="outline" @click="extClear = Temporal.PlainDate.from('2026-10-20')" />
-        <UButton data-action="file" label="File" size="sm" color="neutral" variant="outline" @click="extClearFiled = true" />
-        <UButton data-action="withdraw" label="Withdraw" size="sm" color="neutral" variant="outline" @click="extClearFiled = false" />
+        <UButton data-action="file" label="Book" size="sm" color="neutral" variant="outline" @click="extClearBooked = true" />
+        <UButton data-action="withdraw" label="Cancel booking" size="sm" color="neutral" variant="outline" @click="extClearBooked = false" />
       </div>
     </section>
 

@@ -56,7 +56,7 @@ const contrasts = (page: Page, selectors: Record<string, string>) => page.evalua
 test('works on the theme: confirmDelete resolves on Delete and on Escape; ZConfirmButton emits only on yes', async ({ page, baseURL }) => {
   await open(page, baseURL!)
   await askDelete(page)
-  await expect(page.getByRole('alertdialog', { name: 'Delete the Hartwell invoice', exact: true }).getByRole('button', { name: 'Cancel' })).toBeFocused()
+  await expect(page.getByRole('alertdialog', { name: 'Delete the Lakeside order', exact: true }).getByRole('button', { name: 'Cancel' })).toBeFocused()
   await page.getByRole('alertdialog').getByRole('button', { name: 'Delete' }).click()
   await expect(page.locator('[data-answers] li')).toHaveText(['delete: true'])
   await askDelete(page)

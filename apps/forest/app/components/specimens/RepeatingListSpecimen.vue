@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * ZRepeatingList in the three shapes a product uses it: a cash-flow split (at least 2 parts, at most 12), referral sources
+ * ZRepeatingList in the three shapes a product uses it: a budget split (at least 2 parts, at most 12), contacts
  * folded to a summary with per-row errors, and compact one-field categories. Typed: `row` in each slot is the list's
  * own row type, and the @vue-expect-error below fails the typecheck if ZRepeatingList's generic were lost.
  */
@@ -76,8 +76,8 @@ function checkSteps() {
     </div>
 
     <div data-specimen="repeating-list-sources" class="flex flex-col gap-2">
-      <h3 class="text-sm font-semibold text-highlighted">Referral sources</h3>
-      <ZRepeatingList v-model="sources" item-label="referral source" :new-row="() => ({ name: '', company: '' })" :row-key="sourceKey" :errors="sourceErrors">
+      <h3 class="text-sm font-semibold text-highlighted">Contacts</h3>
+      <ZRepeatingList v-model="sources" item-label="contact" :new-row="() => ({ name: '', company: '' })" :row-key="sourceKey" :errors="sourceErrors">
         <template #row="{ row, errorId }">
           <UFormField label="Name">
             <UInput v-model="row.name" :aria-describedby="errorId" />

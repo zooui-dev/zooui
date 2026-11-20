@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-// ZFileDropOverlay contained in a ZModal, with ZFileList and a UFileUpload: a transfer dialog's Files field
+// ZFileDropOverlay contained in a ZModal, with ZFileList and a UFileUpload: a share dialog's Files field
 // (pages/file-drop-dialog.vue) over a page with a window-level overlay of its own, against the production build. Drags
 // are dispatched step by step as in file-drop.spec.ts: a DragEvent whose DataTransfer carries Files.
 
@@ -32,7 +32,7 @@ const dialogOverlay = (page: Page) => page.locator(`${DIALOG} [data-file-drop-ov
 const pageOverlay = (page: Page) => page.locator('body > [data-file-drop-overlay]')
 const rows = (page: Page) => page.locator('[data-file-row]')
 const names = (page: Page) => rows(page).evaluateAll((els) => els.map((el) => el.getAttribute('data-file-row')))
-const STORED = ['engagement-letter.pdf', '2025-return.pdf']
+const STORED = ['project-brief.pdf', '2025-plan.pdf']
 
 async function openDialog(page: Page) {
   await page.goto('/file-drop-dialog')
@@ -115,10 +115,10 @@ test('once the dialog closes, the page takes drops again with nothing wired up',
 })
 
 test('a file the rule refuses is reported in a toast, and the rest is added', async ({ page }) => {
-  const mixed: Carry = [{ name: 'notes.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }, { name: 'ledger.csv', type: 'text/csv' }]
+  const mixed: Carry = [{ name: 'notes.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }, { name: 'contacts.csv', type: 'text/csv' }]
   await fire(page, 'dragenter', FIELD, mixed)
   await fire(page, 'drop', FIELD, mixed)
-  await expect.poll(() => names(page)).toEqual([...STORED, 'ledger.csv'])
+  await expect.poll(() => names(page)).toEqual([...STORED, 'contacts.csv'])
   await expect(page.getByText('notes.docx: only PDFs, CSVs and images.', { exact: true })).toBeVisible()
 })
 
@@ -152,8 +152,8 @@ test('a drop on the field\'s own drop zone is added once, whether UFileUpload ta
 
 test('remove: an added file at once; a stored one through the server, with the row busy until it answers', async ({ page }) => {
   // Sizes in 1024s by default.
-  await expect(page.locator('[data-file-row="engagement-letter.pdf"]')).toContainText('239.3 KB')
-  await expect(page.locator('[data-file-row="2025-return.pdf"]')).toContainText('1.7 MB')
+  await expect(page.locator('[data-file-row="project-brief.pdf"]')).toContainText('239.3 KB')
+  await expect(page.locator('[data-file-row="2025-plan.pdf"]')).toContainText('1.7 MB')
   await fire(page, 'dragenter', FIELD)
   await fire(page, 'drop', FIELD)
   await expect(page.locator('[data-file-row="report.pdf"]')).toContainText('1.2 KB')
@@ -166,21 +166,21 @@ test('remove: an added file at once; a stored one through the server, with the r
   await page.getByRole('button', { name: 'Remove report.pdf' }).click()
   await expect.poll(() => names(page)).toEqual([...STORED, 'scan.png'])
 
-  const letter = page.locator('[data-file-row="engagement-letter.pdf"]')
-  await page.getByRole('button', { name: 'Remove engagement-letter.pdf' }).click()
+  const letter = page.locator('[data-file-row="project-brief.pdf"]')
+  await page.getByRole('button', { name: 'Remove project-brief.pdf' }).click()
   await expect(letter).toHaveAttribute('aria-busy', 'true')
   await expect(letter.getByRole('button')).toBeDisabled()
   await page.locator('[data-server-ok]').click()
   await expect(letter).toHaveCount(0)
 
-  const ret = page.locator('[data-file-row="2025-return.pdf"]')
-  await page.getByRole('button', { name: 'Remove 2025-return.pdf' }).click()
+  const ret = page.locator('[data-file-row="2025-plan.pdf"]')
+  await page.getByRole('button', { name: 'Remove 2025-plan.pdf' }).click()
   await expect(ret).toHaveAttribute('aria-busy', 'true')
   await page.locator('[data-server-fail]').click()
-  await expect(page.getByText("Couldn't remove 2025-return.pdf", { exact: true })).toBeVisible()
+  await expect(page.getByText("Couldn't remove 2025-plan.pdf", { exact: true })).toBeVisible()
   await expect(ret).not.toHaveAttribute('aria-busy', 'true')
   await expect(ret.getByRole('button')).toBeEnabled()
-  expect(await names(page)).toEqual(['2025-return.pdf', 'scan.png'])
+  expect(await names(page)).toEqual(['2025-plan.pdf', 'scan.png'])
 })
 
 test('closing the dialog takes its listeners with it: its element no longer answers, and the page\'s overlay is whole again', async ({ page }) => {
@@ -208,19 +208,19 @@ test('no file twice: a name the list already holds, stored or added, is refused 
   await fire(page, 'drop', FIELD)
   await expect.poll(() => names(page)).toEqual([...STORED, 'report.pdf', 'scan.png'])
 
-  const again: Carry = [{ name: 'report.pdf', type: 'application/pdf' }, { name: 'engagement-letter.pdf', type: 'application/pdf' }, { name: 'ledger.csv', type: 'text/csv' }]
+  const again: Carry = [{ name: 'report.pdf', type: 'application/pdf' }, { name: 'project-brief.pdf', type: 'application/pdf' }, { name: 'contacts.csv', type: 'text/csv' }]
   await fire(page, 'dragenter', FIELD, again)
   await fire(page, 'drop', FIELD, again)
-  await expect.poll(() => names(page)).toEqual([...STORED, 'report.pdf', 'scan.png', 'ledger.csv'])
-  await expect(page.getByText('report.pdf, engagement-letter.pdf: already attached.', { exact: true })).toBeVisible()
+  await expect.poll(() => names(page)).toEqual([...STORED, 'report.pdf', 'scan.png', 'contacts.csv'])
+  await expect(page.getByText('report.pdf, project-brief.pdf: already attached.', { exact: true })).toBeVisible()
 
   // Once removed, a name can be attached again.
   await page.getByRole('button', { name: 'Remove report.pdf' }).click()
-  await expect.poll(() => names(page)).toEqual([...STORED, 'scan.png', 'ledger.csv'])
+  await expect.poll(() => names(page)).toEqual([...STORED, 'scan.png', 'contacts.csv'])
   const report: Carry = [{ name: 'report.pdf', type: 'application/pdf' }]
   await fire(page, 'dragenter', FIELD, report)
   await fire(page, 'drop', FIELD, report)
-  await expect.poll(() => names(page)).toEqual([...STORED, 'scan.png', 'ledger.csv', 'report.pdf'])
+  await expect.poll(() => names(page)).toEqual([...STORED, 'scan.png', 'contacts.csv', 'report.pdf'])
 })
 
 test('a file browsed for, removed, and browsed for again is added again: the input is reset before each browse', async ({ page }) => {

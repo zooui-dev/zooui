@@ -7,7 +7,7 @@ component: ZFileDropOverlay
 `ZFileDropOverlay` lets a page take files dropped anywhere on it, not only on a drop box. While files are dragged over the window, an overlay covers it and says what dropping does. The drop hands back the files: the ones `accept` takes in `@drop`, the rest in `@rejected`. Nuxt UI's `UFileUpload` is the drop box; this is the whole page. Put one in the page, or the layout, that should take the files.
 
 ```vue
-<ZFileDropOverlay accept="image/*,.pdf" multiple label="Drop receipts to attach them" @drop="attach" @rejected="warn" />
+<ZFileDropOverlay accept="image/*,.pdf" multiple label="Drop photos and PDFs to attach them" @drop="attach" @rejected="warn" />
 ```
 
 ## Contained in a region
@@ -19,7 +19,7 @@ component: ZFileDropOverlay
 
 ## In a dialog
 
-Give the dialog's content as the `target`, and the whole dialog takes drops, with the overlay drawn over the dialog's content and inside its interactive layer. Here the Files field lists what the transfer already holds and what is being added, in one [`ZFileList`](/components/file-list), with Nuxt UI's `UFileUpload` under it to browse. Dropped and browsed files go through the same rule, and what it refuses is reported in a toast.
+Give the dialog's content as the `target`, and the whole dialog takes drops, with the overlay drawn over the dialog's content and inside its interactive layer. Here the Files field lists what the share already holds and what is being added, in one [`ZFileList`](/components/file-list), with Nuxt UI's `UFileUpload` under it to browse. Dropped and browsed files go through the same rule, and what it refuses is reported in a toast.
 
 ::component-example{name="FileDropOverlayDialog"}
 ::

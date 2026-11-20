@@ -114,7 +114,7 @@ test('in a UFormField: the label names the date input, the help describes it, th
   await expect(page.getByRole('textbox', { name: 'Ends', exact: true })).toHaveValue('05/12/2026')
   await expect(page.getByRole('checkbox', { name: 'Has an end date', exact: true })).toBeChecked()
   const ends = input(page, 'ends')
-  await expect(ends).toHaveAccessibleDescription('Leave it off for an open-ended engagement')
+  await expect(ends).toHaveAccessibleDescription('Leave it off for an open-ended project')
   const inputId = await ends.getAttribute('id')
   expect(inputId).toBeTruthy()
   await expect(box(page, 'ends')).toHaveAttribute('aria-controls', inputId!)

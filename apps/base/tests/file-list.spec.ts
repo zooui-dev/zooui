@@ -5,7 +5,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 const row = (page: Page, name: string) => page.locator(`[data-file-row="${name}"]`)
 const names = (page: Page) => page.locator('[data-file-row]').evaluateAll((els) => els.map((el) => el.getAttribute('data-file-row')))
-const ROWS = ['site-photo.png', '2025-return.pdf', 'photo-1.png', 'invoice.pdf']
+const ROWS = ['site-photo.png', '2025-plan.pdf', 'photo-1.png', 'agenda.pdf']
 
 /** Every object URL made and revoked, recorded before the page's own code runs. */
 const recordObjectUrls = (page: Page) => page.addInitScript(() => {
@@ -42,8 +42,8 @@ test('preview: an image File shows its own picture and a stored file its thumbna
   await page.locator('[data-toggle="preview"]').click()
   await expect(thumbnailOf(page, 'photo-1.png')).toHaveAttribute('src', /^blob:/)
   await expect(thumbnailOf(page, 'site-photo.png')).toHaveAttribute('src', /^data:image\/png/)
-  await expect(thumbnailOf(page, 'invoice.pdf')).toHaveCount(0)
-  await expect(thumbnailOf(page, '2025-return.pdf')).toHaveCount(0)
+  await expect(thumbnailOf(page, 'agenda.pdf')).toHaveCount(0)
+  await expect(thumbnailOf(page, '2025-plan.pdf')).toHaveCount(0)
   // The pictures load, and say nothing to a screen reader: the name beside them does.
   for (const name of ['photo-1.png', 'site-photo.png']) {
     await expect.poll(() => thumbnailOf(page, name).evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth)).toBe(2)
@@ -88,10 +88,10 @@ test('preview: unmounting the list, or turning preview off, revokes every object
 
 test('sizes are in 1024s by default; binary off, in decimal units', async ({ page }) => {
   await expect(row(page, 'site-photo.png')).toContainText('239.3 KB')
-  await expect(row(page, '2025-return.pdf')).toContainText('1.7 MB')
+  await expect(row(page, '2025-plan.pdf')).toContainText('1.7 MB')
   await page.locator('[data-toggle="binary"]').click()
   await expect(row(page, 'site-photo.png')).toContainText('245 kB')
-  await expect(row(page, '2025-return.pdf')).toContainText('1.8 MB')
+  await expect(row(page, '2025-plan.pdf')).toContainText('1.8 MB')
 })
 
 test('#leading and #trailing: a checkbox before the icon and a badge before Remove, with the row\'s item, index and removing', async ({ page }) => {
@@ -104,13 +104,13 @@ test('#leading and #trailing: a checkbox before the icon and a badge before Remo
   await expect(row(page, 'photo-1.png').locator('[data-badge="2"]')).toHaveText('New')
 
   await expect(page.getByRole('checkbox', { name: 'Include site-photo.png' })).toBeChecked()
-  await page.getByRole('checkbox', { name: 'Include invoice.pdf' }).click()
-  await expect(page.getByTestId('included')).toHaveText('site-photo.png, invoice.pdf')
+  await page.getByRole('checkbox', { name: 'Include agenda.pdf' }).click()
+  await expect(page.getByTestId('included')).toHaveText('site-photo.png, agenda.pdf')
 
   // While a stored row's delete is pending, the slot sees removing: the page disables that row's checkbox.
-  await page.getByRole('button', { name: 'Remove 2025-return.pdf' }).click()
-  await expect(page.getByRole('checkbox', { name: 'Include 2025-return.pdf' })).toBeDisabled()
+  await page.getByRole('button', { name: 'Remove 2025-plan.pdf' }).click()
+  await expect(page.getByRole('checkbox', { name: 'Include 2025-plan.pdf' })).toBeDisabled()
   await expect(page.getByRole('checkbox', { name: 'Include site-photo.png' })).toBeEnabled()
   await page.locator('[data-server-fail]').click()
-  await expect(page.getByRole('checkbox', { name: 'Include 2025-return.pdf' })).toBeEnabled()
+  await expect(page.getByRole('checkbox', { name: 'Include 2025-plan.pdf' })).toBeEnabled()
 })

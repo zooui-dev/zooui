@@ -50,9 +50,9 @@ for (const mode of ['light', 'dark'] as const) {
 
 test('ZOptionalDate on Forest: a tick enables the date and focuses it, ready to type', async ({ page }) => {
   await open(page, 'light', 'teal')
-  const ext = page.getByRole('textbox', { name: 'Extended due date', exact: true })
+  const ext = page.getByRole('textbox', { name: 'Follow-up date', exact: true })
   await expect(ext).toBeDisabled()
-  await field(page, 'ext').getByRole('checkbox', { name: 'Extension filed' }).click()
+  await field(page, 'ext').getByRole('checkbox', { name: 'Follow-up booked' }).click()
   await expect(ext).toBeEnabled()
   await expect.poll(() => ext.evaluate((el) => document.activeElement === el)).toBe(true)
   await page.keyboard.type('10/15/2026')

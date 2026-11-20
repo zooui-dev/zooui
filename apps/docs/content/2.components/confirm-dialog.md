@@ -10,7 +10,7 @@ Asking "are you sure?" usually means a modal, an `open` ref, and the action spli
 ```ts
 const { confirm, choose, confirmDelete, confirmDiscard } = useConfirm()
 
-if (await confirmDelete('the Hartwell invoice')) await remove(invoice)
+if (await confirmDelete('the Lakeside order')) await remove(order)
 ```
 
 ## Mount the dialog once
@@ -59,8 +59,8 @@ await confirm({
   confirmColor: 'primary',   // the Import button
   confirmLabel: 'Import',
   details: [
-    'Report Basis Mismatch\nThis file is on the cash basis; the client reports on accrual.',
-    { title: 'Missing accounts', text: '3 accounts aren’t in the chart of accounts.' },
+    'Time Zone Mismatch\nThis file is in UTC; the workspace reports in Pacific time.',
+    { title: 'Missing people', text: '3 people aren’t in the team directory.' },
   ],
 })
 ```

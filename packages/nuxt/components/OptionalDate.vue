@@ -1,9 +1,9 @@
 <script setup lang="ts" generic="T extends Temporal.PlainDate | CalendarDateLike | null">
 // An optional date: a checkbox in front of a ZDateField, for a day a record may or may not have — "Has an end date",
-// "Extension filed". The date is editable, and counts, only while the box is ticked.
+// "Follow-up booked". The date is editable, and counts, only while the box is ticked.
 //
 //   <UFormField label="Ends"><ZOptionalDate v-model="form.endDate" label="Has an end date" /></UFormField>
-//   <ZOptionalDate v-model="extDue" v-model:enabled="extFiled" label="Extension filed" model-type="calendar-date" />
+//   <ZOptionalDate v-model="followUp" v-model:enabled="hasFollowUp" label="Follow-up booked" model-type="calendar-date" />
 //
 // THE MODEL. By default, unticking disables the date field and greys it out, and LEAVES the day in v-model,
 // so the form reads `enabled` to know whether it counts. The box and the day are independent: a day the parent sets
@@ -41,7 +41,7 @@ type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
 const props = withDefaults(
   defineProps<{
-    /** The checkbox's accessible name: "Has an end date", "Extension filed". */
+    /** The checkbox's accessible name: "Has an end date", "Follow-up booked". */
     label?: string
     /** Disables the checkbox and the date field. */
     disabled?: boolean

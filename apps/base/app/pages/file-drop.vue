@@ -80,7 +80,7 @@ const describe = (r: RejectedFile) => `${r.file.name} ${r.reason}${r.message ? `
       accept="image/*,.pdf"
       multiple
       :disabled="disabled"
-      label="Drop receipts to attach them"
+      label="Drop photos and PDFs to attach them"
       icon="i-lucide-upload"
       description="Images and PDFs"
       @drop="(files) => (dropped = files.map((f) => f.name))"
