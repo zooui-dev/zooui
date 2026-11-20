@@ -5,7 +5,7 @@
 //   <UFormField label="Ends"><ZOptionalDate v-model="form.endDate" label="Has an end date" /></UFormField>
 //   <ZOptionalDate v-model="extDue" v-model:enabled="extFiled" label="Extension filed" model-type="calendar-date" />
 //
-// THE MODEL. As Buoy's UCheckboxDate: unticking disables the date field and greys it out, and LEAVES the day in v-model,
+// THE MODEL. By default, unticking disables the date field and greys it out, and LEAVES the day in v-model,
 // so the form reads `enabled` to know whether it counts. The box and the day are independent: a day the parent sets
 // doesn't tick the box. Ticked and empty is a state of its own ("has an end date, not yet known"), which is why the box
 // is `v-model:enabled` rather than read off the date. Unbound, the box starts ticked when the model holds a day.
@@ -18,12 +18,12 @@
 // Nothing is written at mount in either mode, so loading a record never marks the form changed: a box off with a day
 // in hand shows the day greyed out until the user ticks or unticks.
 //
-// `enabled-change` fires with the new state when the USER ticks or unticks (Buoy's `enabledChanged`), never when the
+// `enabled-change` fires with the new state when the USER ticks or unticks, never when the
 // parent sets `enabled` or the day — the moment to fetch a default date. A tick by the user moves focus into the date
 // field.
 //
-// SIZE. An explicit `size` prop wins, then a surrounding UFieldGroup's, then a UFormField's: Buoy's behavior, and the
-// order of Nuxt UI's own useFieldGroup and useFormField.
+// SIZE. An explicit `size` prop wins, then a surrounding UFieldGroup's, then a UFormField's, the order
+// Nuxt UI's own useFieldGroup and useFormField read it in.
 //
 // IN A UFormField the date field is the input: the label names it and the field's error and help describe it, as for
 // a bare ZDateField. The checkbox is named by `label` and kept out of the form field (an input in a UFormField takes

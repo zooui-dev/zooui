@@ -2,7 +2,7 @@
 
 An optional date (`components/OptionalDate.vue`): a checkbox in front of a [`ZDateField`](date-field.md), for a day a
 record may or may not have, such as "Has an end date" or "Extension filed". The date is editable only while the box
-is ticked. It is a port of Buoy's `UCheckboxDate` and behaves as that does unless noted.
+is ticked.
 
 ```vue
 <UFormField label="Ends"><ZOptionalDate v-model="form.endDate" label="Has an end date" clearable /></UFormField>
@@ -20,7 +20,7 @@ is ticked. It is a port of Buoy's `UCheckboxDate` and behaves as that does unles
 - **A wrapper, not a prop on `ZDateField`.** The box brings its own model (`enabled`), its own name and its own
   rules for what the date holds, none of which a plain date field needs; as a prop they would sit on every
   `ZDateField` for the few that want them. As a wrapper, `ZDateField` stays one day in one box.
-- **Unticking keeps the day in the model**, as Buoy's does: the field is disabled and greyed out, still showing it,
+- **Unticking keeps the day in the model**: the field is disabled and greyed out, still showing it,
   and the form reads `enabled` to know whether the day counts. The box and the day are independent: a day the parent
   sets doesn't tick the box, and the parent setting `enabled` changes only the box.
 - **`clear-when-off`** (default `false`) is for a form that saves what its model holds, where a day behind an
@@ -36,8 +36,8 @@ is ticked. It is a port of Buoy's `UCheckboxDate` and behaves as that does unles
   not yet known", which a form may want to validate), so the box is not read off the date. Unbound, it starts ticked
   when the model holds a day.
 - **`@enabled-change`** fires with the new state (`true` or `false`) when the **user** ticks or unticks the box, by
-  click or by Space: never when the parent sets `enabled` or the day, and never at mount. It is Buoy's
-  `enabledChanged`, and the moment to fetch a default date for a box just ticked.
+  click or by Space: never when the parent sets `enabled` or the day, and never at mount: the moment
+  to fetch a default date for a box just ticked.
 - **Focus.** A tick by the user, by click or by Space, moves focus into the date field, ready to type; the parent
   ticking it moves nothing. Unticked, the disabled field is out of the tab order.
 - **In a `UFormField`** the date input is the field's input: the label names it, and the field's help and error
@@ -55,21 +55,11 @@ is ticked. It is a port of Buoy's `UCheckboxDate` and behaves as that does unles
   away (an inline editor saves then); a restored day is announced by the field when focus leaves it, as any settle is.
 - **`disabled`** disables the box and the date.
 - **Size.** An explicit `size` prop wins, then a surrounding `UFieldGroup`'s, then a `UFormField`'s (`md` by
-  default), as in Buoy and as Nuxt UI's own inputs read it; it sizes both the box and the date.
+  default), as Nuxt UI's own inputs read it; it sizes both the box and the date.
 - **Exposed `focus()`** focuses the date field while the box is ticked, and the box while it isn't.
 - **Look.** The checkbox sits in a segment joined to the field's start edge, on Nuxt UI's `bg-default` and
   `ring-accented`, so a product's palette and dark mode reach it. A `class` goes on the outer element; `w-full` makes
   the field take the rest of the width.
-
-## Coming from Buoy
-
-`ZOptionalDate` is Buoy's `UCheckboxDate`, and `ZDateField` its `UInputDate` (see
-[ZDateField's note](date-field.md#coming-from-buoy) for the date field's own renames):
-
-- **The model is a `Temporal.PlainDate`** (or a `CalendarDate`), never a JavaScript `Date`. Convert at the API
-  boundary: a `date` column as `Temporal.PlainDate.from(iso)` when it comes in, `day.toString()` when it goes out.
-- **`@enabled-changed` → `@enabled-change`**, and it now carries the new state.
-- **Unticking keeps the day**, as Buoy's does; `clear-when-off` is new, for a form that should save `null` instead.
 
 Its tests are `apps/base/tests/optional-date.spec.ts` (`pages/optional-date.vue`) and the Forest specimen's in
 `apps/forest/tests/optional-date.spec.ts`.

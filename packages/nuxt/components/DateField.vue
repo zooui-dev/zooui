@@ -28,7 +28,7 @@
 // field commits; text that isn't a date clears the field. Shortcut keys (see applyDateShortcut): t today, m/h
 // start/end of month, y/r start/end of year, + and - a day either way (_ too, so a format whose separator is "-"
 // keeps a key for the day before). A shortcut steps from the committed date (today when there is none), never from
-// text typed but not yet committed, as Buoy's does: with 03/15/2026 saved, "04/0" then + is 03/16/2026.
+// text typed but not yet committed: with 03/15/2026 saved, "04/0" then + is 03/16/2026.
 //
 // LIMITS. `minValue`, `maxValue` and `isDateUnavailable`, named as Nuxt UI's UCalendar names them, go to the calendar,
 // which disables those days. A typed date they refuse is not committed: the field keeps the date it had and draws it

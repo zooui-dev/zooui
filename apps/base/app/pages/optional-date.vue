@@ -60,7 +60,7 @@ const disabledDay = ref<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026
       <h1 class="text-2xl font-semibold">ZOptionalDate</h1>
       <p class="text-muted">
         A checkbox in front of a ZDateField, for a day a record may or may not have. Unticking greys out the date and,
-        by default, leaves the day in the model, as Buoy's UCheckboxDate does; <code>clear-when-off</code> makes the model
+        by default, leaves the day in the model; <code>clear-when-off</code> makes the model
         null while the box is off instead. Each section shows what the parent holds: "model" is the v-model, "enabled"
         the box's v-model, and the lists are the events the component emitted, oldest first. The text box at the
         bottom is somewhere to Tab or click to.

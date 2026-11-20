@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * ZDateField's entry, as Buoy's UInputDate behaves (tests/date-field.spec.ts drives it): a `#leading` slot in place of
+ * ZDateField's keyboard entry (tests/date-field.spec.ts drives it): a `#leading` slot in place of
  * the `icon`, shortcut keys that step from the committed date rather than from text typed since, and eight digits
  * typed as month, day and year.
  */
@@ -19,7 +19,7 @@ const eight = ref<Temporal.PlainDate | null>(null)
     <header class="flex flex-col gap-2">
       <h1 class="text-2xl font-semibold">ZDateField: typing and shortcuts</h1>
       <p class="text-muted">
-        How ZDateField reads the keyboard, matched to Buoy's UInputDate. "model" under each field is the parent's
+        How ZDateField reads the keyboard. "model" under each field is the parent's
         v-model, as an ISO day. The text box at the bottom is somewhere to Tab or click to.
       </p>
     </header>

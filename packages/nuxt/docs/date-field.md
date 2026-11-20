@@ -53,7 +53,7 @@ instant, and every conversion to a day goes through a time zone. A `CalendarDate
 - **Shortcut keys**: `t` today; `m`/`h` first and last of the month, `y`/`r` of the year (again to keep walking); `+`
   or `=` the next day, `-` or `_` the day before. The format's separator is never a shortcut, so in `YYYY-MM-DD`, `-`
   types a dash and `_` is the day before. A shortcut steps from the **committed** date (today when the field is
-  empty), never from text typed since, which it drops, as Buoy's does: with 03/15/2026 saved, typing `04/0` then `+`
+  empty), never from text typed since, which it drops: with 03/15/2026 saved, typing `04/0` then `+`
   gives 03/16/2026. Alt+↓ opens the calendar. Shortcuts stop at 1000-01-01 and 9999-12-31,
   and at the limits below.
 - **Format and locale.** `format` is a pattern of `MM`, `DD` and `YYYY` in month-day-year, day-month-year or
@@ -80,21 +80,6 @@ instant, and every conversion to a day goes through a time zone. A `CalendarDate
 - **Look.** Nuxt UI's `UInput` and `UCalendar` in the product's colors; while the calendar is open the field takes
   Nuxt UI's `highlight` ring. The placeholder keeps the input's own ink: a product that wants it darker (its own
   placeholder color token) passes `:ui="{ base: 'placeholder:…' }"` or sets it on `ui.input` in `app.config`.
-
-## Coming from Buoy
-
-`ZDateField` is Buoy's `UInputDate`, and behaves as it does unless noted. What changes for code moving over:
-
-- **The model is a `Temporal.PlainDate`** (or an `@internationalized/date` `CalendarDate`), never a JavaScript `Date`.
-  Convert at the API boundary: `Temporal.PlainDate.from(row.dueDate)` when a `date` column comes in, `day.toString()`
-  (`YYYY-MM-DD`) when it goes out. Don't round-trip through `new Date()`: that goes through a time zone.
-- **`@clear-click` → `@clear`.**
-- **`teleport` → `portal`** (Nuxt UI's name: `true` for the body, a selector, or `false`).
-- **`suffix-icon` → `calendar-icon`.**
-- **`prefix-icon` → `icon`**, and `@prefix-icon-click` → `@icon-click`. The `#leading` slot is as Buoy's.
-- **`@enabled-changed` → `@enabled-change`** on [`ZOptionalDate`](optional-date.md), Buoy's `UCheckboxDate`.
-
-Not ported: Buoy's month, month-and-year and year pickers.
 
 **The parser** is framework-free TypeScript, auto-imported in a product and importable anywhere as
 `@zooui/nuxt/date-entry` (a server route, a domain package): `parseDateEntry`, `formatDateEntry`, `commitDateEntry`,

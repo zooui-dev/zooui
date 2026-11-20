@@ -307,7 +307,7 @@ test('limits: unavailable days are disabled in the calendar, refused when typed,
   await expect(page.getByTestId('wrong-type')).toHaveText('')
 })
 
-// ── Typing and shortcuts, as Buoy's UInputDate (pages/date-field-entry.vue) ────────────────────────────────────
+// ── Typing and shortcuts (pages/date-field-entry.vue) ──────────────────────────────────────────────────────────
 
 async function entryPage(page: Page) {
   await page.goto('/date-field-entry')

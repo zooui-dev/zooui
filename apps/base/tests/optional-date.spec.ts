@@ -185,7 +185,7 @@ test('v-model:enabled, off at mount with a day: nothing written, the day shown d
   await section(page, 'ext').locator('[data-action="withdraw"]').click()
   await expect(box(page, 'ext')).not.toBeChecked()
   await expect(text(page, 'ext-model')).toHaveText('PlainDate 2026-10-15')
-  // The parent sets a day while it's off: the box stays off, as Buoy's does.
+  // The parent sets a day while it's off: the box stays off: the box and the day are independent.
   await section(page, 'ext').locator('[data-action="set-day"]').click()
   await expect(ext).toHaveValue('10/20/2026')
   await expect(box(page, 'ext')).not.toBeChecked()

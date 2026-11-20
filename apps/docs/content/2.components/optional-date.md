@@ -50,7 +50,3 @@ Inside a `UFormField`, the date input is the field's input: the label names it, 
 ## Everything a date field takes
 
 `v-model` is a `Temporal.PlainDate`, a `CalendarDate` or `null`, handed back in its own type, a restored day included. `model-type`, `min-value`, `max-value` and `is-date-unavailable` are the date field's, and everything else (`format`, `locale`, `clearable`, `@invalid` …) passes through to it. See [Date field](/components/date-field).
-
-## Coming from Buoy
-
-`ZOptionalDate` is Buoy's `UCheckboxDate`. The model is a `Temporal.PlainDate` (or a `CalendarDate`) rather than a JavaScript `Date`, so convert at the API boundary; `@enabled-changed` is now `@enabled-change`, carrying the new state; and `clear-when-off` is new. The date field's own renames are under [Date field](/components/date-field#coming-from-buoy).
