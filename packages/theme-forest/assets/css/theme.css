@@ -162,6 +162,32 @@
   --color-pine-info-950: var(--info-950);
 }
 
+/* Status INK apart from status FILL. Nuxt UI paints both from one token (`text-warning` and `bg-warning` both read
+   --ui-warning, its 500 in light), and Forest's fills stay that 500. As ink on white or on its own 10% tint, though,
+   the 500 of warning, success and info is under 3:1 (an icon in a confirm badge, an alert's icon, an outline
+   button's label), so in light their TEXT reads the 700, as the design source's --warn-text does. Dark mode keeps
+   Nuxt UI's 400, which already clears it. Error and primary clear 3:1 at their 500 and stay as shipped.
+   Plain rules, not @utility: Tailwind emits its own `text-warning` after a same-named @utility, so that one would
+   lose. These come after Tailwind's utilities (forest.css imports base.css first) and so replace them; `bg-*`,
+   `border-*` and the `/75`-style alpha inks are untouched. */
+@layer base {
+  :root, :host, .light {
+    --zoo-ink-warning: var(--ui-color-warning-700);
+    --zoo-ink-success: var(--ui-color-success-700);
+    --zoo-ink-info: var(--ui-color-info-700);
+  }
+  .dark {
+    --zoo-ink-warning: var(--ui-warning);
+    --zoo-ink-success: var(--ui-success);
+    --zoo-ink-info: var(--ui-info);
+  }
+}
+@layer utilities {
+  .text-warning { color: var(--zoo-ink-warning); }
+  .text-success { color: var(--zoo-ink-success); }
+  .text-info { color: var(--zoo-ink-info); }
+}
+
 /* The page ground. Nuxt UI paints the light page with --ui-bg (white), the same token its cards, inputs, menus
    and overlays use. Forest separates the two: the ground is its paper (--pine-50) and raised surfaces are white.
    So the GROUND changes and --ui-bg does not — every component Nuxt UI draws on bg-default stays white and now
