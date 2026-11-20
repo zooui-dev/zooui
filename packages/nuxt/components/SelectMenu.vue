@@ -40,7 +40,7 @@ const props = withDefaults(
     typeahead?: boolean
     /** Keyboard focus opens the menu: for data entry, where every field is filled in turn. */
     openOnFocus?: boolean
-    /** Tab closes the open menu and moves on, committing the highlighted item in a single-select search menu. */
+    /** Tab closes the open menu and moves on, taking the highlighted item in a single-select menu once the highlight has moved. */
     closeOnTab?: boolean
   }>(),
   {

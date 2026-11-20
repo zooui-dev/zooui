@@ -7,7 +7,7 @@ trigger, the menu's DOM, and the keys reka-ui already handles), with no fork and
 ```vue
 <ZSelectMenu v-model="fruit" :items="fruits" />                                  <!-- type "bl" on the closed menu -->
 <ZSelectMenu v-model="state" :items="states" value-key="code" label-key="name" open-on-focus />
-<ZSelectMenu v-model="tags" :items="tags" multiple :close-on-tab="false" />
+<ZSelectMenu v-model="tags" :items="allTags" multiple :close-on-tab="false" />
 ```
 
 **Everything else passes through unchanged**: every `USelectMenu` prop (`multiple`, `search-input`, grouped `items`,
