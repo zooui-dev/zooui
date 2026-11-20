@@ -3,7 +3,8 @@ import { findConflicts } from '@zooui/nuxt/testing/find-conflicts'
 
 // useConfirm(), <ZConfirmDialog> and <ZConfirmButton> on Forest (page: app/pages/confirm.vue, host in app.vue). The
 // behavior is covered in full on the base (apps/base/tests/confirm.spec.ts); here, that it works on the theme, and
-// that on every scheme in light and dark the dialog's and the popover's text clears 4.5:1 (two-part details included)
+// that on every scheme in light and dark the dialog's and the popover's text clears 4.5:1 (the description in the body
+// beside the badge, and two-part details, included)
 // and the dialog's and the popover's icons 3:1; and that a warning dialog keeps its warning badge beside a primary or
 // a red button.
 
@@ -79,7 +80,7 @@ for (const mode of ['light', 'dark'] as const) {
         const d = '[role="alertdialog"]'
         const text = await contrasts(page, {
           title: `${d} [data-slot="title"]`,
-          description: `${d} [data-slot="description"]`,
+          description: `${d} [data-confirm-description]`,
           detail: `${d} [data-confirm-details] li`,
           cancel: `${d} [data-confirm-cancel]`,
           delete: `${d} [data-confirm-action]`,

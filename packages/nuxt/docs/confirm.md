@@ -39,7 +39,7 @@ Options (`ConfirmOptions`; `ChooseOptions<V>` has `actions` in place of the thre
 | `title` | The question. It names the dialog. |
 | `description` | A sentence under the title. It describes the dialog. |
 | `details` | Lines listed under the description. A `ConfirmDetail` is a string, or `{ title, text? }`. A string with a `\n` is two-part too: its first line is a heading (`font-medium text-highlighted`) and the rest is the text beneath it (`text-toned`). |
-| `icon` | An icon beside the title, in `color`. Left out, `color: 'error'` brings `i-lucide-circle-alert` and `color: 'warning'` `i-lucide-triangle-alert` (`CONFIRM_COLOR_ICONS`); other colors bring none. `false` shows none. |
+| `icon` | An icon in a 40px badge beside the description, in `color`. Left out, `color: 'error'` brings `i-lucide-circle-alert` and `color: 'warning'` `i-lucide-triangle-alert` (`CONFIRM_COLOR_ICONS`); other colors bring none. `false` shows none. |
 | `color` | The edge, the icon's badge, and the confirming button unless `confirmColor` says otherwise. Any `ButtonProps['color']`, so a product's own `ui.colors` too. |
 | `confirmColor` | `confirm()` only: the confirming button's color, where it differs from the dialog's. A warning badge with a primary button, or with a red one. Default: `color`, else `primary`. |
 | `confirmVariant` | `confirm()` only: the confirming button's variant. Default: `solid`. |
@@ -63,14 +63,16 @@ The types are exported from `composables/useConfirm.ts`.
 ## ZConfirmDialog
 
 The one place the questions render: a `ZModal` (with the question's `color` as its edge) whose content has
-`role="alertdialog"`, named by the title and described by the description. Props: `cancel-label` and
+`role="alertdialog"`, named by the title and described by the description. As in Buoy's dialog, the description
+sits in the body with the icon's badge beside it and the details beneath it, in its column; a question with neither a
+description nor details has no body, and so no icon. Props: `cancel-label` and
 `confirm-label`, the defaults for questions that don't give their own (Cancel, Confirm). Escape, the close button and a
 click outside resolve as a cancel, unless the question is `dismissible: false`. The footer has Cancel on the left and
 the answers together on the right. **Focus** starts on Cancel for a destructive question and on the last
 (confirming) action otherwise, so Enter is safe on a delete and quick on everything else. The icon is decoration
 (`aria-hidden`); its badge is the color at 10% under the color itself. Hooks for tests: `data-confirm-dialog` on the
 content, `data-confirm-cancel`, `data-confirm-actions`, `data-confirm-action`, `data-confirm-icon` (its value is the
-icon's name), `data-confirm-details`, `data-confirm-detail-title`, `data-confirm-detail-text`.
+icon's name), `data-confirm-description`, `data-confirm-details`, `data-confirm-detail-title`, `data-confirm-detail-text`.
 
 ## ZConfirmButton
 

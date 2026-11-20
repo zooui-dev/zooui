@@ -23,6 +23,10 @@ async function ask(page: Page, which: string) {
   }).toPass()
 }
 
+/** Wait out the dialog's opening animation, which scales it: measure only once it has settled. */
+const settled = (page: Page) => dialog(page).evaluate((el) =>
+  Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished)).then(() => undefined))
+
 type Exit = 'action' | 'cancel' | 'escape' | 'close'
 
 async function leave(page: Page, exit: Exit, action?: string) {
@@ -75,6 +79,34 @@ test('announced as an alertdialog named by its question and described by its des
   await expect(page.getByRole('dialog')).toHaveCount(0)
   // the icon is decoration: the name is the question alone
   await expect(d.locator('[data-confirm-icon] svg')).toBeVisible()
+})
+
+test("Buoy's layout: the badge beside the description in the body, the details beneath it in its column", async ({ page }) => {
+  await open(page)
+  await ask(page, 'delete')
+  const d = dialog(page)
+  await settled(page)
+  const box = async (sel: string) => (await d.locator(sel).first().boundingBox())!
+  // nothing but the question in the title: the badge is in the body
+  await expect(d.locator('[data-slot="title"] [data-confirm-icon]')).toHaveCount(0)
+  await expect(d.locator('[data-slot="body"] [data-confirm-icon]')).toBeVisible()
+  await expect(d.locator('[data-slot="header"] [data-slot="description"]')).toHaveCount(0)
+  const badge = await box('[data-confirm-icon]')
+  const description = await box('[data-confirm-description]')
+  const detail = await box('[data-confirm-details] li')
+  expect(badge.width).toBeCloseTo(40, 0)
+  expect(description.x).toBeGreaterThanOrEqual(badge.x + badge.width)
+  expect(description.y).toBeLessThan(badge.y + badge.height)
+  expect(detail.x).toBeCloseTo(description.x, 0)
+  expect(detail.y).toBeGreaterThan(description.y)
+})
+
+test('a question with no description is not described by an empty element, and shows no body', async ({ page }) => {
+  await open(page)
+  await ask(page, 'two')
+  const d = page.getByRole('alertdialog', { name: 'First question?' })
+  await expect(d).toHaveAccessibleDescription('')
+  await expect(d.locator('[data-slot="body"]')).toHaveCount(0)
 })
 
 test.describe('where focus starts', () => {
@@ -315,6 +347,7 @@ test('two-part details: a line break or { title, text } is a heading over its te
   await ask(page, 'details')
   const items = dialog(page).locator('[data-confirm-details] li')
   await expect(items).toHaveCount(3)
+  await settled(page)
 
   for (const [i, title, text] of [
     [0, 'Report Basis Mismatch', 'This file is on the cash basis; the client reports on accrual.'],
@@ -417,6 +450,28 @@ test.describe('ZConfirmButton options', () => {
     await expect(events).toHaveText('confirm,confirm')
     await question.getByRole('button', { name: 'Archive' }).click()
     await expect(events).toHaveText('confirm,confirm,confirm')
+  })
+
+  test('confirm-enabled turned off while the question is open: it closes as a cancel and does not come back', async ({ page }) => {
+    await open(page)
+    const question = page.getByRole('dialog', { name: 'Archive' })
+    const events = page.locator('[data-archive-events]')
+    const box = page.getByRole('checkbox', { name: 'Ask before archiving' })
+    await expect(async () => {
+      await page.locator('[data-open-then-stop]').click()
+      await expect(question).toBeVisible({ timeout: 1000 })
+    }).toPass()
+    // the page unticks the box from code 600ms later
+    await expect(box).not.toBeChecked()
+    await expect(question).toHaveCount(0)
+    await expect(events).toHaveText('cancel')
+    await expect(page.locator('[data-archive-open]')).toHaveText('false')
+
+    await box.click()
+    await expect(box).toBeChecked()
+    await page.waitForTimeout(300)
+    await expect(question).toHaveCount(0)
+    await expect(events).toHaveText('cancel')
   })
 
   async function openPopover(page: Page, name: string) {

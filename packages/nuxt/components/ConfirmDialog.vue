@@ -4,7 +4,8 @@
  *
  *   <UApp><NuxtPage /><ZConfirmDialog /></UApp>
  *
- * A ZModal announced as an `alertdialog`, titled by the question and described by its description. Each question is
+ * A ZModal announced as an `alertdialog`, titled by the question and described by its description. As in Buoy's dialog,
+ * the description sits in the body with the icon's badge beside it, and the details beneath it. Each question is
  * shown in turn: a call made while one is open waits until it is answered (utils/confirm-queue.ts). Escape, the close
  * button and a click outside are a cancel: `confirm` resolves `false`, `choose` `null`. A question asked with
  * `dismissible: false` ignores Escape and a click outside; Cancel and the close button still cancel it.
@@ -13,7 +14,7 @@
  * Enter can't do the harm; otherwise on the last action, the confirming one. The dialog closes, and focus goes back where it was, before
  * the next question opens.
  */
-import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, shallowRef, useId, watch } from 'vue'
 import { EDGE_COLORS, type EdgeColor } from './edge'
 import {
   confirmController,
@@ -109,7 +110,14 @@ function placeFocus(event: Event) {
   target.focus()
 }
 
-const content = { 'role': 'alertdialog', 'data-confirm-dialog': '', 'onOpenAutoFocus': placeFocus }
+// the description is in the body, not UModal's header, so the dialog is pointed at it by id: still its description
+const descriptionId = useId()
+const content = computed(() => ({
+  'role': 'alertdialog',
+  'data-confirm-dialog': '',
+  'aria-describedby': options.value?.description ? descriptionId : undefined,
+  'onOpenAutoFocus': placeFocus,
+}))
 
 /** The dialog's width for each `size`: the widths Buoy's confirm dialog had. */
 const WIDTH = { sm: 'sm:max-w-md', md: 'sm:max-w-xl', lg: 'sm:max-w-3xl' } as const
@@ -120,7 +128,6 @@ const ui = computed(() => ({ content: WIDTH[options.value?.size ?? 'sm'] ?? WIDT
   <ZModal
     :open="open"
     :title="options?.title"
-    :description="options?.description"
     :color="edgeColor"
     :dismissible="options?.dismissible !== false"
     :content="content"
@@ -128,26 +135,35 @@ const ui = computed(() => ({ content: WIDTH[options.value?.size ?? 'sm'] ?? WIDT
     @update:open="(value: boolean) => { if (!value) dismiss() }"
     @after:leave="afterLeave"
   >
-    <template v-if="icon" #title>
-      <span class="flex items-center gap-3">
-        <span class="grid size-8 shrink-0 place-items-center rounded-full" :class="badge" :data-confirm-icon="icon">
-          <UIcon :name="icon" class="size-4" aria-hidden="true" />
+    <!-- Buoy's layout: the badge beside the description, the details beneath it in the description's column. With
+         neither a description nor details there is no body, and no icon. -->
+    <template v-if="options?.description || details.length" #body>
+      <div class="flex items-start gap-3">
+        <span v-if="icon" class="grid size-10 shrink-0 place-items-center rounded-full" :class="badge" :data-confirm-icon="icon">
+          <UIcon :name="icon" class="size-5" aria-hidden="true" />
         </span>
-        {{ options?.title }}
-      </span>
-    </template>
-
-    <template v-if="details.length" #body>
-      <!-- toned, not muted: muted on the elevated ground falls under 4.5:1 on some Forest schemes in light mode -->
-      <ul class="flex flex-col gap-1.5 text-sm text-toned" data-confirm-details>
-        <li v-for="(detail, i) in details" :key="i" class="rounded-md bg-elevated px-3 py-2">
-          <template v-if="detail.title">
-            <span class="block font-medium text-highlighted" data-confirm-detail-title>{{ detail.title }}</span>
-            <span v-if="detail.text" class="block whitespace-pre-line text-toned" data-confirm-detail-text>{{ detail.text }}</span>
-          </template>
-          <template v-else>{{ detail.text }}</template>
-        </li>
-      </ul>
+        <div class="flex min-w-0 flex-1 flex-col gap-3">
+          <p
+            v-if="options?.description"
+            :id="descriptionId"
+            class="text-sm text-toned"
+            :class="{ 'pt-2': icon }"
+            data-confirm-description
+          >
+            {{ options.description }}
+          </p>
+          <!-- toned, not muted: muted on the elevated ground falls under 4.5:1 on some Forest schemes in light mode -->
+          <ul v-if="details.length" class="flex flex-col gap-1.5 text-sm text-toned" data-confirm-details>
+            <li v-for="(detail, i) in details" :key="i" class="rounded-md bg-elevated px-3 py-2">
+              <template v-if="detail.title">
+                <span class="block font-medium text-highlighted" data-confirm-detail-title>{{ detail.title }}</span>
+                <span v-if="detail.text" class="block whitespace-pre-line text-toned" data-confirm-detail-text>{{ detail.text }}</span>
+              </template>
+              <template v-else>{{ detail.text }}</template>
+            </li>
+          </ul>
+        </div>
+      </div>
     </template>
 
     <template #footer>

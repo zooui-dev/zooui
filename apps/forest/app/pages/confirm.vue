@@ -58,11 +58,11 @@ async function askWarnRed() {
 }
 /** `color: 'error'` and no icon given: the error color's own icon. */
 async function askErrorIcon() {
-  record('error-icon', await confirm({ title: 'Revoke the API token?', color: 'error', confirmLabel: 'Revoke' }))
+  record('error-icon', await confirm({ title: 'Revoke the API token?', description: 'Apps using it stop working.', color: 'error', confirmLabel: 'Revoke' }))
 }
 /** `icon: false`: no icon, even in the error color. */
 async function askNoIcon() {
-  record('no-icon', await confirm({ title: 'Remove the client?', color: 'error', icon: false, confirmLabel: 'Remove' }))
+  record('no-icon', await confirm({ title: 'Remove the client?', description: 'Their engagements stay on file.', color: 'error', icon: false, confirmLabel: 'Remove' }))
 }
 /** Two-part details: a `\n` in a string, a `{ title, text }`, and a plain one-line detail beside them. */
 async function askDetails() {
@@ -98,6 +98,13 @@ if (import.meta.server) serverAnswer.value = String(await confirm({ title: 'Aske
 const buttonEvents = ref<string[]>([])
 const askFirst = ref(true)
 const archiveEvents = ref<string[]>([])
+const archiveOpen = ref(false)
+/** Open Archive's question, then turn asking off while it is open: it closes as a cancel and stays closed. */
+function openThenStopAsking() {
+  askFirst.value = true
+  archiveOpen.value = true
+  setTimeout(() => { askFirst.value = false }, 600)
+}
 const revokeEvents = ref<string[]>([])
 </script>
 
@@ -224,7 +231,9 @@ const revokeEvents = ref<string[]>([])
       <h3 class="font-semibold text-highlighted">Asking only sometimes (confirm-enabled)</h3>
       <p class="text-sm text-muted">
         Try: untick "Ask before archiving" and click Archive: it emits confirm at once, with no question. Tick it again
-        and Archive asks first, with its own question icon (question-icon="i-lucide-triangle-alert").
+        and Archive asks first, with its own question icon (question-icon="i-lucide-triangle-alert"). "Open, then stop
+        asking" opens the question and unticks the box from code a moment later: the question closes as a cancel, and
+        doesn't come back when the box is ticked again.
       </p>
       <div class="flex items-center gap-4">
         <UCheckbox v-model="askFirst" label="Ask before archiving" data-ask-first />
@@ -234,6 +243,7 @@ const revokeEvents = ref<string[]>([])
           variant="outline"
           size="sm"
           data-button="archive"
+          v-model:open="archiveOpen"
           :confirm-enabled="askFirst"
           question="Archive the engagement?"
           question-icon="i-lucide-triangle-alert"
@@ -242,7 +252,11 @@ const revokeEvents = ref<string[]>([])
           @cancel="archiveEvents.push('cancel')"
         />
       </div>
+      <div>
+        <UButton label="Open, then stop asking" color="neutral" variant="ghost" size="sm" data-open-then-stop @click="openThenStopAsking" />
+      </div>
       <p class="text-sm text-muted">Events: <span data-archive-events class="text-default">{{ archiveEvents.join(',') }}</span></p>
+      <p class="text-sm text-muted">Question open: <span data-archive-open class="text-default">{{ archiveOpen }}</span></p>
     </section>
 
     <section class="flex flex-col gap-2">
