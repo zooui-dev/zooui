@@ -76,27 +76,42 @@ test('typeahead from the top: c from Colorado is California, and c again cycles 
   await expect(value(page, 'states')).toHaveText('Connecticut')
 })
 
-test('focus ring: after a mouse pick ZSelectMenu shows one and USelectMenu does not', async ({ page }) => {
-  await openPage(page)
-  await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important; animation: none !important }' })
-  const ring = (l: Locator) => l.evaluate((el) => getComputedStyle(el).boxShadow)
-  const mousePick = async (trigger: Locator) => {
-    await trigger.click()
-    await listbox(page).getByRole('option', { name: 'Date' }).click()
-    await expect(listbox(page)).toHaveCount(0)
-    await expect(trigger).toBeFocused()
-  }
-  const native = section(page, 'ring').locator('[data-ring-native]')
-  const wrapped = section(page, 'ring').locator('[data-ring-wrapped]')
-  const nativeBefore = await ring(native)
-  const wrappedBefore = await ring(wrapped)
-  await mousePick(native)
-  expect(await ring(native)).toBe(nativeBefore)
-  await mousePick(wrapped)
-  await expect.poll(() => ring(wrapped)).not.toBe(wrappedBefore)
-  await section(page, 'ring').getByPlaceholder('Field before').click()
-  await expect.poll(() => ring(wrapped)).toBe(wrappedBefore)
-})
+// The focus look, ring (box-shadow) and halo (outline) with their colors, must be a focused UInput's on each scheme.
+for (const [scheme, mode] of [['teal', 'light'], ['ember', 'light'], ['slate-cobalt', 'dark']] as const) {
+  test(`focus ring (${scheme}, ${mode}): after a mouse pick ZSelectMenu looks like a focused UInput, USelectMenu shows nothing`, async ({ page, baseURL }) => {
+    await page.context().addCookies([{ name: 'zooui-scheme', value: scheme, url: baseURL as string }])
+    await page.addInitScript((m) => localStorage.setItem('zooui-color-mode', m), mode)
+    await openPage(page)
+    if (mode === 'dark') await expect(page.locator('html')).toHaveClass(/dark/)
+    await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important; animation: none !important }' })
+    const look = (l: Locator) => l.evaluate((el) => {
+      const c = getComputedStyle(el)
+      return { ring: c.boxShadow, outline: `${c.outlineStyle} ${c.outlineWidth} ${c.outlineColor}`, offset: c.outlineOffset }
+    })
+    const mousePick = async (trigger: Locator) => {
+      await trigger.click()
+      await listbox(page).getByRole('option', { name: 'Date' }).click()
+      await expect(listbox(page)).toHaveCount(0)
+      await expect(trigger).toBeFocused()
+    }
+    const input = section(page, 'ring').getByPlaceholder('Field before')
+    const native = section(page, 'ring').locator('[data-ring-native]')
+    const wrapped = section(page, 'ring').locator('[data-ring-wrapped]')
+    const nativeBefore = await look(native)
+    const wrappedBefore = await look(wrapped)
+    await input.click()
+    await expect(input).toBeFocused()
+    const inputFocused = await look(input)
+    expect(inputFocused.outline).toMatch(/^solid 3px /)
+    expect(inputFocused).not.toEqual(wrappedBefore)
+    await mousePick(native)
+    expect(await look(native)).toEqual(nativeBefore)
+    await mousePick(wrapped)
+    await expect.poll(() => look(wrapped)).toEqual(inputFocused)
+    await input.click()
+    await expect.poll(() => look(wrapped)).toEqual(wrappedBefore)
+  })
+}
 
 test('in a UForm validating on change: a typeahead pick is validated', async ({ page }) => {
   await openPage(page)

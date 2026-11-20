@@ -203,17 +203,20 @@ test.describe('typeahead on the closed menu', () => {
 test.describe('the focus ring shows on any focus', () => {
   const ringNative = (page: Page) => section(page, 'ring').locator('[data-ring-native]')
   const ringWrapped = (page: Page) => section(page, 'ring').locator('[data-ring-wrapped]')
-  const ring = (l: Locator) => l.evaluate((el) => getComputedStyle(el).boxShadow)
-  // An inset ring in the primary color: 2px is ZSelectMenu's, 1px stock's on keyboard focus.
-  const primaryRing = (page: Page, width = 2) => page.evaluate((w) => {
-    const probe = document.createElement('div')
-    probe.className = w === 2 ? 'ring-2 ring-inset ring-primary' : 'ring ring-inset ring-primary'
-    document.body.append(probe)
-    const shadow = getComputedStyle(probe).boxShadow
-    probe.remove()
-    return shadow
-  }, width)
-  const outline = (l: Locator) => l.evaluate((el) => getComputedStyle(el).outlineWidth)
+  const textField = (page: Page) => section(page, 'ring').getByPlaceholder('Text field')
+  // The focus look: the ring (a box-shadow) and the halo (the outline), colors included.
+  const look = (l: Locator) => l.evaluate((el) => {
+    const c = getComputedStyle(el)
+    return { ring: c.boxShadow, outline: `${c.outlineStyle} ${c.outlineWidth} ${c.outlineColor}`, offset: c.outlineOffset }
+  })
+  // A focused UInput's look, the one a focused menu must match: Nuxt UI's 1px ring and its 3px translucent halo.
+  const inputFocused = async (page: Page) => {
+    await textField(page).click()
+    await expect(textField(page)).toBeFocused()
+    const focused = await look(textField(page))
+    expect(focused.outline).toMatch(/^solid 3px /)
+    return focused
+  }
   test.beforeEach(async ({ page }) => {
     await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important; animation: none !important }' })
   })
@@ -227,30 +230,28 @@ test.describe('the focus ring shows on any focus', () => {
     await expect(trigger).toHaveText(item)
   }
 
-  test('mouse focus: ZSelectMenu shows the ring, stock does not; it goes when focus leaves', async ({ page }) => {
-    const expected = await primaryRing(page)
-    const unfocused = await ring(ringWrapped(page))
-    expect(unfocused).not.toBe(expected)
-    const stockUnfocused = await ring(ringNative(page))
+  test('mouse focus: ZSelectMenu looks like a focused UInput, stock shows nothing; it goes when focus leaves', async ({ page }) => {
+    const unfocused = await look(ringWrapped(page))
+    const stockUnfocused = await look(ringNative(page))
+    const expected = await inputFocused(page)
+    expect(unfocused).not.toEqual(expected)
     await mousePick(page, ringNative(page), 'Date')
-    expect(await ring(ringNative(page))).toBe(stockUnfocused)
+    expect(await look(ringNative(page))).toEqual(stockUnfocused)
     await mousePick(page, ringWrapped(page), 'Date')
-    await expect.poll(() => ring(ringWrapped(page))).toBe(expected)
+    await expect.poll(() => look(ringWrapped(page))).toEqual(expected)
     await section(page, 'ring').locator('[data-before]').click()
-    await expect.poll(() => ring(ringWrapped(page))).toBe(unfocused)
+    await expect.poll(() => look(ringWrapped(page))).toEqual(unfocused)
   })
 
-  test('keyboard focus: stock\'s own ring and outline, and ZSelectMenu\'s 2px ring with the same outline', async ({ page }) => {
+  test('keyboard focus: stock and ZSelectMenu both look like a focused UInput', async ({ page }) => {
+    const expected = await inputFocused(page)
     await section(page, 'ring').locator('[data-before]').focus()
     await page.keyboard.press('Tab')
     await expect(ringNative(page)).toBeFocused()
-    await expect.poll(() => ring(ringNative(page))).toBe(await primaryRing(page, 1))
-    const stockOutline = await outline(ringNative(page))
-    expect(stockOutline).toBe('3px')
+    await expect.poll(() => look(ringNative(page))).toEqual(expected)
     await page.keyboard.press('Tab')
     await expect(ringWrapped(page)).toBeFocused()
-    await expect.poll(() => ring(ringWrapped(page))).toBe(await primaryRing(page))
-    expect(await outline(ringWrapped(page))).toBe(stockOutline)
+    await expect.poll(() => look(ringWrapped(page))).toEqual(expected)
   })
 })
 

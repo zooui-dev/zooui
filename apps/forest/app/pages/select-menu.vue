@@ -75,7 +75,7 @@ const show = (v: string | undefined) => v || '—'
 
     <section data-specimen="ring" class="flex flex-col gap-3">
       <h3 class="font-semibold text-highlighted">Focus ring</h3>
-      <p class="text-sm text-muted">Try: click each menu and pick a fruit with the mouse. Focus comes back to the trigger: ZSelectMenu shows its ring, Nuxt UI's USelectMenu shows one only after a key. Tab in from "Field before" and both show it.</p>
+      <p class="text-sm text-muted">Try: click each menu and pick a fruit with the mouse. Focus comes back to the trigger: ZSelectMenu shows its ring, Nuxt UI's USelectMenu shows one only after a key. Tab in from "Field before" and both show it. A focused menu looks exactly like the focused text field.</p>
       <div class="flex flex-wrap items-end gap-4">
         <UFormField label="Field before"><UInput placeholder="Field before" data-before /></UFormField>
         <UFormField label="Nuxt UI USelectMenu">

@@ -20,7 +20,7 @@
 //   there would add or remove an item just by leaving the field; Enter and a click toggle it).
 //
 // The trigger shows its focus ring on any focus, a click's included (stock shows it on keyboard focus only): while it
-// has focus, the menu is drawn with USelectMenu's `highlight` and a 2px ring.
+// has focus, the menu is drawn with stock's keyboard-focus look, the ring and halo a focused UInput shows.
 import type { SelectMenuItem, SelectMenuProps } from '@nuxt/ui'
 import { formFieldInjectionKey, useFormField } from '@nuxt/ui/composables'
 import { itemLabel, itemValue, selectableItems, typeaheadMatch, type TypeaheadKeys } from './select-typeahead.ts'
@@ -224,14 +224,19 @@ function withModifiers(value: unknown): unknown {
 
 // ── Focus ring on any focus ────────────────────────────────────────────────────────────────────────────────────
 const focused = ref(false)
-// While the trigger has focus: USelectMenu's highlight, with its ring widened to 2px (stock's keyboard ring is 1px).
+const appConfig = useAppConfig() as { ui?: { selectMenu?: { defaultVariants?: { variant?: string } } } }
+// While the trigger has focus, stock's keyboard-focus look, as a focused UInput draws it: `highlight` is the 1px ring in
+// the menu's color, and `outline-3` the width stock's `focus-visible:outline-3` gives the `outline-<color>/25` halo the
+// theme already sets. The `none` variant has no halo in the theme, so it gets the ring alone.
 const focusRing = computed(() => {
   if (!focused.value) return {}
+  const variant = (attrs.variant as string | undefined) ?? appConfig.ui?.selectMenu?.defaultVariants?.variant ?? 'outline'
+  if (variant === 'none') return { highlight: true }
   const ui = (attrs.ui ?? {}) as NonNullable<SelectMenuProps['ui']>
   const base = ui.base
-  // A `ui.base` may be classes to merge or a function that replaces the defaults; the ring goes on after either.
-  const ringed: typeof base = typeof base === 'function' ? (defaults: string) => [base(defaults), 'ring-2'] : [base, 'ring-2']
-  return { highlight: true, ui: { ...ui, base: ringed } }
+  // A `ui.base` may be classes to merge or a function that replaces the defaults; the outline goes on after either.
+  const halo: typeof base = typeof base === 'function' ? (defaults: string) => [base(defaults), 'outline-3'] : [base, 'outline-3']
+  return { highlight: true, ui: { ...ui, base: halo } }
 })
 
 function onTriggerFocusout(e: FocusEvent) {

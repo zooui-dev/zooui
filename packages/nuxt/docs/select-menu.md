@@ -58,10 +58,12 @@ and paint alike in light and dark, on the base and on every Forest scheme.
 
 The trigger shows its focus ring whenever it has focus, from a click as much as from the keyboard. Stock
 `USelectMenu` shows it on keyboard focus only (`focus-visible`: a 1px ring and a translucent outline), so after a mouse
-pick, with focus back on the trigger, nothing shows where focus is. While the trigger has focus, `ZSelectMenu` passes
-`USelectMenu` its own `highlight` (the ring in the menu's `color`, `error` in a field with an error) and adds `ring-2`
-to `ui.base`, so the ring is 2px; keyboard focus adds stock's outline around it. It is Nuxt UI's own ring on Nuxt UI's tokens, so a product's palette and dark mode
-carry through; a `highlight` or `ui.base` you pass is kept.
+pick, with focus back on the trigger, nothing shows where focus is. `ZSelectMenu` draws stock's keyboard-focus look on
+any focus, so a focused menu looks exactly like a focused `UInput`: it passes `USelectMenu` its own `highlight` (the
+1px ring in the menu's `color`, `error` in a field with an error) and adds `outline-3` to `ui.base`, the width
+stock's `focus-visible:outline-3` gives the translucent `outline-<color>/25` halo the theme already sets. The `none`
+variant, which has no halo in the theme, gets the ring alone. It is Nuxt UI's own focus style on Nuxt UI's tokens, so a
+product's palette and dark mode carry through; a `highlight` or `ui.base` you pass is kept.
 
 ## API
 
