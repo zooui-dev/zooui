@@ -129,11 +129,12 @@ function dayFromParts(order: DateEntryOrder, parts: string[], today: PlainDate):
  * In MM/DD/YYYY (the default):
  *
  * - `5`, `12` (up to 31) — that day of today's month
- * - `0512` — May 12 this year; `051226` — May 12, 2026
+ * - `0512` — May 12 this year; `051226` and `05122026` — May 12, 2026
  * - `5/12` — this year; `5/12/26`, `5/12/2026`
  *
  * Other formats read the same shapes in their own order: in DD/MM/YYYY `1205` and `12/5` are May 12, and
- * `120526` is May 12, 2026; in YYYY-MM-DD `0512` and `5-12` are May 12 and `260512` and `2026-5-12` carry the year.
+ * `120526` and `12052026` are May 12, 2026; in YYYY-MM-DD `0512` and `5-12` are May 12 and `260512`, `20260512` and
+ * `2026-5-12` carry the year.
  * A bare day of the month reads the same in all of them. Returns null for anything that doesn't name a real day,
  * including blank text and a year of all zeros (`5/12/0`, `5/12/00`, `051200`).
  */
@@ -149,6 +150,12 @@ export function parseDateEntry(text: string, today: PlainDate, format: DateEntry
     return dayOf(today.year, today.month, Number(value))
   if (value.length === 4) return dayFromParts(order, [value.slice(0, 2), value.slice(2, 4)], today)
   if (value.length === 6) return dayFromParts(order, [value.slice(0, 2), value.slice(2, 4), value.slice(4, 6)], today)
+  // Eight digits carry a four-digit year, wherever the format puts it: MMDDYYYY, DDMMYYYY, YYYYMMDD.
+  if (value.length === 8) {
+    let at = 0
+    const parts = [...order].map((field) => value.slice(at, (at += field === 'Y' ? 4 : 2)))
+    return dayFromParts(order, parts, today)
+  }
   return null
 }
 
