@@ -54,8 +54,8 @@ is ticked. It is a port of Buoy's `UCheckboxDate` and behaves as that does unles
 - **`@date-update`** is `ZDateField`'s. With `clear-when-off` it also fires with `null` when unticking takes a day
   away (an inline editor saves then); a restored day is announced by the field when focus leaves it, as any settle is.
 - **`disabled`** disables the box and the date.
-- **Size.** A surrounding `UFieldGroup`'s size wins, then a `UFormField`'s, then the `size` prop (`md` by default); it
-  sizes both the box and the date. (In Buoy an explicit `size` prop wins over both.)
+- **Size.** An explicit `size` prop wins, then a surrounding `UFieldGroup`'s, then a `UFormField`'s (`md` by
+  default), as in Buoy and as Nuxt UI's own inputs read it; it sizes both the box and the date.
 - **Exposed `focus()`** focuses the date field while the box is ticked, and the box while it isn't.
 - **Look.** The checkbox sits in a segment joined to the field's start edge, on Nuxt UI's `bg-default` and
   `ring-accented`, so a product's palette and dark mode reach it. A `class` goes on the outer element; `w-full` makes

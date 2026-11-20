@@ -43,6 +43,7 @@ async function onEnabledChange(on: boolean) {
 }
 
 const grouped = ref<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026-05-12'))
+const groupedSized = ref<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026-05-12'))
 const sized = ref<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026-05-12'))
 
 const errored = ref<Temporal.PlainDate | null>(null)
@@ -163,14 +164,19 @@ const disabledDay = ref<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026
 
     <section data-section="sizes" class="flex flex-col gap-2">
       <h2 class="text-lg font-semibold">Size</h2>
-      <p class="text-sm text-muted">Try this: compare the checkboxes. In a UFieldGroup the group's size (xl) wins over the UFormField's (sm) and the prop (xs); in a UFormField alone its size (lg) wins over the prop (xs).</p>
+      <p class="text-sm text-muted">Try this: compare the checkboxes. With no size prop, a UFieldGroup's size (xl) is used over the UFormField's (sm); an explicit size prop (xs) wins over the group; and a UFormField alone gives its size (lg).</p>
       <UFormField label="In a group" size="sm" data-size="group">
         <UFieldGroup size="xl">
-          <ZOptionalDate v-model="grouped" label="Grouped" size="xs" />
+          <ZOptionalDate v-model="grouped" label="Grouped" />
+        </UFieldGroup>
+      </UFormField>
+      <UFormField label="In a group, with size xs" size="sm" data-size="group-prop">
+        <UFieldGroup size="xl">
+          <ZOptionalDate v-model="groupedSized" label="Grouped, sized" size="xs" />
         </UFieldGroup>
       </UFormField>
       <UFormField label="In a form field" size="lg" data-size="form-field">
-        <ZOptionalDate v-model="sized" label="Sized" size="xs" />
+        <ZOptionalDate v-model="sized" label="Sized" />
       </UFormField>
     </section>
 

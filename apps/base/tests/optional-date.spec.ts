@@ -4,7 +4,7 @@ import { findConflicts } from '@zooui/nuxt/testing/find-conflicts'
 // ZOptionalDate (pages/optional-date.vue) on the theme-free base: the box gates the date — off, the field is disabled
 // and the day stays in the model (or, with clear-when-off, the model is null and the day comes back on a tick) — and
 // nothing is written at mount in either mode; enabled-change fires on the user's tick or untick only; the size comes
-// from a UFieldGroup, then a UFormField, then the prop; a tick by the user moves focus into the date, Space toggles it,
+// from the prop, then a UFieldGroup, then a UFormField; a tick by the user moves focus into the date, Space toggles it,
 // and it works in a UFormField (the label names the date input, help and error describe it, ids stay unique) with
 // either type of day and ZDateField's limits.
 
@@ -268,14 +268,16 @@ test('enabled-change: a tick with no day lets the app fetch a default, which lan
   await expect(input(page, 'toggle')).toHaveValue('12/31/2026')
 })
 
-test('size: a UFieldGroup\'s wins over the UFormField\'s and the prop; a UFormField\'s wins over the prop', async ({ page }) => {
+test('size: with no prop a UFieldGroup\'s is used over the UFormField\'s; an explicit size prop wins over the group', async ({ page }) => {
   const width = (name: string) => page.locator(`[data-size="${name}"] [role="checkbox"]`).evaluate((el) => el.getBoundingClientRect().width)
   const md = await page.locator('[data-section="ends"] [role="checkbox"]').evaluate((el) => el.getBoundingClientRect().width)
-  // xl, lg, md: each a step up from the one after it (the prop's xs, and the form field's sm, would be smaller than md).
-  const group = await width('group')
-  const formField = await width('form-field')
+  // Checkbox widths step with size: xs < sm < md < lg < xl.
+  const group = await width('group') // the group's xl, not the form field's sm
+  const groupProp = await width('group-prop') // the prop's xs, not the group's xl
+  const formField = await width('form-field') // the form field's lg
   expect(formField).toBeGreaterThan(md)
   expect(group).toBeGreaterThan(formField)
+  expect(groupProp).toBeLessThan(md)
 })
 
 test('in a UForm: a tick or untick revalidates the field, so an error for a date no longer asked for goes away', async ({ page }) => {

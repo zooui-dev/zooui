@@ -41,7 +41,7 @@ Ticked and empty means "has an end date, not yet known", which a form may want t
 
 ## Size
 
-A surrounding `UFieldGroup`'s size wins, then a `UFormField`'s, then the `size` prop.
+An explicit `size` prop wins, then a surrounding `UFieldGroup`'s, then a `UFormField`'s, as Nuxt UI's own inputs read it.
 
 ## In a form field
 

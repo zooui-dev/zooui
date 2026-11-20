@@ -22,8 +22,8 @@
 // parent sets `enabled` or the day — the moment to fetch a default date. A tick by the user moves focus into the date
 // field.
 //
-// SIZE. A surrounding UFieldGroup's size wins, then a UFormField's, then the `size` prop. (Buoy's comment names this
-// order, though there an explicit `size` prop wins, since Nuxt UI's useFieldGroup and useFormField read it first.)
+// SIZE. An explicit `size` prop wins, then a surrounding UFieldGroup's, then a UFormField's: Buoy's behavior, and the
+// order of Nuxt UI's own useFieldGroup and useFormField.
 //
 // IN A UFormField the date field is the input: the label names it and the field's error and help describe it, as for
 // a bare ZDateField. The checkbox is named by `label` and kept out of the form field (an input in a UFormField takes
@@ -76,7 +76,7 @@ const ownId = useId()
 // Inside a UFormField the date input takes the field's id (so its label names it); outside, one of ours.
 const inputId = computed(() => (formField?.value ? formInputId?.value : undefined) ?? ownId)
 const fieldGroup = inject(fieldGroupInjectionKey, undefined)
-const size = computed<Size>(() => fieldGroup?.value?.size ?? (formField?.value?.size as Size | undefined) ?? props.size ?? 'md')
+const size = computed<Size>(() => props.size ?? fieldGroup?.value?.size ?? (formField?.value?.size as Size | undefined) ?? 'md')
 
 // The checkbox outside the form field: no shared id, no field error color, no form events on its own.
 const OutsideFormField = defineComponent({
