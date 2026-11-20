@@ -102,6 +102,6 @@ Hooks: `data-confirm-popover`, `data-confirm-question`, `data-confirm-descriptio
 
 Tested by `scripts/confirm-queue.test.mjs` (the queue), `apps/base/tests/confirm.spec.ts` (every helper for every way
 out, focus, the role and name, queuing, the server, the button's events, `confirmColor`, the icon from the color,
-the icon beside the title when there is no description, two-part details, `dismissible`, `size`, the footer, `confirm-enabled`, `confirm-variant`, `question-icon` and `arrow`,
-the product's error color in light and dark) and `apps/forest/tests/confirm.spec.ts` (the inks on every Forest scheme
+the icon beside the title when there is no description, two-part details, `dismissible`, `size`, the footer,
+`confirm-enabled`, `confirm-variant`, `question-icon` and `arrow`, the product's error color in light and dark) and `apps/forest/tests/confirm.spec.ts` (the inks on every Forest scheme
 in light and dark, details, the popover's icon and the title-row icon included, and `confirmColor` on the theme).
