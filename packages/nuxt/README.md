@@ -65,6 +65,7 @@ plain Nuxt UI. Three rules:
 | `ZNumberInput` | One number input for money, percent, count and hours, with a calc mode |
 | `ZDateField` | A calendar-day field on `Temporal.PlainDate` or `CalendarDate`, with Nuxt UI's limit props |
 | `ZConfirmDialog`, `ZConfirmButton` | `useConfirm()`'s promise-based questions, and a button that asks in a popover |
+| `ZOptionalDate` | A checkbox in front of a `ZDateField`: the date counts only while it's ticked |
 
 ## Docs
 
@@ -73,7 +74,8 @@ plain Nuxt UI. Three rules:
     [ZOrderList](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/order-list.md),
     [ZNumberInput](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/number-input.md),
     [ZDateField](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/date-field.md),
-    [useConfirm and ZConfirmButton](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/confirm.md)
+    [useConfirm and ZConfirmButton](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/confirm.md),
+    [ZOptionalDate](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/optional-date.md)
 - [The base and a theme](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/base-and-theme.md): what each layer carries, and why they're two layers
 - [Accents and colored edges](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/accents-and-edges.md): `data-accent` sections and the `color` edge
 - [Mechanisms](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/mechanisms.md): `light-dark()`, the hydration label fix, icon bundling, shipping as source

@@ -14,6 +14,7 @@
     <ForestComponents />
     <NumberInputSpecimen />
     <DateFieldSpecimen />
+    <OptionalDateSpecimen />
     <ForestGrid />
     <RepeatingListSpecimen />
     <OrderListSpecimen />
