@@ -32,8 +32,8 @@ With none mounted, a question is never shown and its promise never settles. In d
 
 `confirm(options)` resolves to `true` when confirmed, and `false` when cancelled. Escape, the close button and a click outside all count as a cancel. The presets set the words, the icon and the color for you:
 
-- **`confirmDelete(what?, overrides?)`** asks "Delete {what}?", in the error color, with Delete and Cancel.
-- **`confirmDiscard(overrides?)`** asks "Discard your changes?", with Discard and Keep editing.
+- **`confirmDelete(what?, overrides?)`** asks "Delete {what}", in the error color, with Delete and Cancel.
+- **`confirmDiscard(overrides?)`** asks about "Unsaved Changes", in the warning color, with a red Discard and Keep Editing.
 
 ::component-example{name="ConfirmDialogDelete"}
 ::
@@ -42,11 +42,28 @@ With none mounted, a question is never shown and its promise never settles. In d
 | --- | --- |
 | `title` | The question. It names the dialog. |
 | `description` | A sentence under the title. It describes the dialog. |
-| `details` | Lines listed under the description, such as the records affected. |
-| `icon` | An icon beside the title, in `color`. |
+| `details` | Lines listed under the description, such as the records affected. A line with a `\n` in it, or a `{ title, text }`, shows a heading over its text. |
+| `icon` | An icon beside the description, in `color`. Left out, `error` shows a circle-alert and `warning` a triangle. `false` shows none. |
 | `color` | The dialog's edge, its icon and its confirming button. Any color Nuxt UI's buttons take. |
-| `destructive` | Focus starts on Cancel. Defaults to `color === 'error'`. |
+| `confirmColor` | The confirming button's color, where it differs: a warning dialog with a primary button, or with a red one. |
+| `confirmVariant` | The confirming button's variant. Default: `solid`. |
+| `destructive` | Focus starts on Cancel. Defaults to `color` or `confirmColor` being `error`. |
+| `dismissible` | `false` keeps the dialog open on Escape and a click outside. Cancel and the close button still cancel it. |
+| `size` | `sm` (the default), `md` or `lg`. |
 | `confirmLabel`, `cancelLabel` | The buttons' labels. Default: Confirm and Cancel. |
+
+```ts
+await confirm({
+  title: 'Import with mismatches?',
+  color: 'warning',          // the badge and the edge
+  confirmColor: 'primary',   // the Import button
+  confirmLabel: 'Import',
+  details: [
+    'Report Basis Mismatch\nThis file is on the cash basis; the client reports on accrual.',
+    { title: 'Missing accounts', text: '3 accounts aren’t in the chart of accounts.' },
+  ],
+})
+```
 
 ## Choose
 
@@ -63,6 +80,8 @@ The dialog is an `alertdialog`, named by its title and described by its descript
 - **Any other question** opens on its last action, the confirming one.
 
 When the dialog closes, focus goes back to where it was.
+
+In the footer, Cancel sits on the left and the answers together on the right.
 
 ## One at a time
 

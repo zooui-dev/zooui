@@ -19,26 +19,44 @@ export type ConfirmVariant = NonNullable<ButtonProps['variant']>
 
 /** What every dialog says. */
 export interface ConfirmBaseOptions {
-  /** The question, as the dialog's title: "Delete the Hartwell invoice?" */
+  /** The question, as the dialog's title: "Publish the report?" */
   title: string
   /** A sentence under the title saying what happens. */
   description?: string
-  /** Lines listed under the description: the records affected, say. */
-  details?: string[]
-  /** An icon beside the title, in `color`. `confirmDelete` and `confirmDiscard` set their own. */
-  icon?: string
-  /** The dialog's color: its edge, its icon and its confirming button. `error` makes it destructive. */
+  /** Lines listed under the description: the records affected, say. A line with a `\n` in it, or a `{ title, text }`,
+   *  is two-part: a heading, and the text beneath it. */
+  details?: ConfirmDetail[]
+  /** An icon beside the description, in `color`. Left out, `error` and `warning` bring their own (CONFIRM_COLOR_ICONS);
+   *  `false` shows none. `confirmDelete` and `confirmDiscard` set their own. */
+  icon?: string | false
+  /** The dialog's color: its edge, its icon and, unless `confirmColor` says otherwise, its confirming button.
+   *  `error` makes it destructive. */
   color?: ConfirmColor
-  /** Destructive: focus starts on Cancel, so Enter can't do the harm. Defaults to `color === 'error'`. */
+  /** Destructive: focus starts on Cancel, so Enter can't do the harm. Defaults to `color` or `confirmColor` being
+   *  `error`. */
   destructive?: boolean
   /** The dismissing button's label. Default: "Cancel". */
   cancelLabel?: string
+  /** Whether Escape and a click outside cancel. Default: true. When false, only Cancel and the close button do. */
+  dismissible?: boolean
+  /** The dialog's width: `sm` (the default), `md` or `lg`. */
+  size?: ConfirmSize
 }
+
+export type ConfirmSize = 'sm' | 'md' | 'lg'
+
+/** One line of `details`: a string (a `\n` splits it into heading and text), or the two parts given apart. */
+export type ConfirmDetail = string | { title: string, text?: string }
 
 /** A yes-or-no question. */
 export interface ConfirmOptions extends ConfirmBaseOptions {
   /** The confirming button's label. Default: "Confirm". */
   confirmLabel?: string
+  /** The confirming button's color, where it differs from the dialog's: a warning dialog with a primary button.
+   *  Default: `color`, else `primary`. `error` makes the question destructive. */
+  confirmColor?: ConfirmColor
+  /** The confirming button's variant. Default: `solid`. */
+  confirmVariant?: ConfirmVariant
 }
 
 /** One of several answers `choose()` offers. */
@@ -67,12 +85,34 @@ export type ConfirmEntry = ConfirmQueueEntry<ConfirmRequest, unknown>
 
 export const CONFIRM_DELETE_ICON = 'i-lucide-trash-2'
 export const CONFIRM_WARNING_ICON = 'i-lucide-triangle-alert'
+export const CONFIRM_ERROR_ICON = 'i-lucide-circle-alert'
+
+/** The icon a question gets from its color when it names none. */
+export const CONFIRM_COLOR_ICONS: Partial<Record<ConfirmColor, string>> = {
+  error: CONFIRM_ERROR_ICON,
+  warning: CONFIRM_WARNING_ICON,
+}
+
+/** The icon shown beside the title: the question's own, else its color's, and none for `icon: false`. */
+export function confirmIcon(options: ConfirmBaseOptions): string | undefined {
+  if (options.icon === false) return undefined
+  return options.icon || (options.color && CONFIRM_COLOR_ICONS[options.color])
+}
+
+/** A detail as its parts: `"Report Basis Mismatch\nThis file is…"` is a heading and its text; a plain line is text. */
+export function confirmDetailParts(detail: ConfirmDetail): { title?: string, text: string } {
+  if (typeof detail !== 'string') return { title: detail.title, text: detail.text ?? '' }
+  const at = detail.indexOf('\n')
+  return at < 0 ? { text: detail } : { title: detail.slice(0, at), text: detail.slice(at + 1) }
+}
 
 /** `confirmDelete('the Hartwell invoice')`: an error-colored, destructive question with Delete and Cancel. */
 export function deleteOptions(what?: string, overrides?: Partial<ConfirmOptions>): ConfirmOptions {
   return {
-    title: what ? `Delete ${what}?` : 'Delete this?',
-    description: 'This can’t be undone.',
+    title: what ? `Delete ${what}` : 'Delete',
+    description: what
+      ? `Are you sure you want to delete ${what}? This action cannot be undone.`
+      : 'Are you sure? This action cannot be undone.',
     icon: CONFIRM_DELETE_ICON,
     color: 'error',
     confirmLabel: 'Delete',
@@ -80,22 +120,24 @@ export function deleteOptions(what?: string, overrides?: Partial<ConfirmOptions>
   }
 }
 
-/** `confirmDiscard()`: unsaved changes, with Discard and Keep editing. Destructive: focus starts on Keep editing. */
+/** `confirmDiscard()`: unsaved changes, with a red Discard and Keep Editing. Destructive: focus starts on Keep Editing. */
 export function discardOptions(overrides?: Partial<ConfirmOptions>): ConfirmOptions {
   return {
-    title: 'Discard your changes?',
-    description: 'You have changes that haven’t been saved.',
+    title: 'Unsaved Changes',
+    description: 'You have unsaved changes. Discard them?',
     icon: CONFIRM_WARNING_ICON,
     color: 'warning',
+    confirmColor: 'error',
     destructive: true,
     confirmLabel: 'Discard',
-    cancelLabel: 'Keep editing',
+    cancelLabel: 'Keep Editing',
     ...overrides,
   }
 }
 
-/** Whether a request is destructive: its own say, else whether it is error-colored. */
-export const isDestructive = (options: ConfirmBaseOptions) => options.destructive ?? options.color === 'error'
+/** Whether a request is destructive: its own say, else whether it, or its confirming button, is error-colored. */
+export const isDestructive = (options: ConfirmBaseOptions & Pick<ConfirmOptions, 'confirmColor'>) =>
+  options.destructive ?? (options.color === 'error' || options.confirmColor === 'error')
 
 /** A Nuxt app's queue, with its head as a Vue ref for the host to render, and how many hosts are mounted. */
 export interface ConfirmController {
