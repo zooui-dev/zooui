@@ -12,7 +12,7 @@
 //
 // SEARCH is literal and case-insensitive (utils/filter-match.ts): what is typed is text, never a pattern, so `(` or
 // `.` match themselves. The options keep their order, and each label is drawn as segments with the matches in <mark>,
-// never through v-html. Checking or unchecking an option clears the search, as Buoy's control does, so the next pick
+// never through v-html. Checking or unchecking an option clears the search, so the next pick
 // starts from the whole list. All checks every option on screen (the matches, while searching) and leaves the search
 // as it is; Clear empties the filter.
 //

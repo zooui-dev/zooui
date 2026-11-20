@@ -46,7 +46,7 @@ character at a time, so a match maps back onto whole characters even where lower
 options keep their order (Nuxt UI's own filter reorders by score and ignores accents, so `UListbox` gets
 `ignore-filter`), and each label is drawn as segments with the matches in `<mark>`, never `v-html`. All checks every
 option on screen (the matches, while searching), added to the model; Clear empties it. After either, focus goes back to
-the search box. Checking or unchecking an option clears the search, as Buoy's control does, so the next pick starts
+the search box. Checking or unchecking an option clears the search, so the next pick starts
 from the whole list; All leaves it as it is. A closed panel forgets its search. Tested by `scripts/filter-match.test.mjs`.
 
 **Keyboard.** Focus opens in the search box, which carries `aria-activedescendant` (reka-ui's Listbox) and

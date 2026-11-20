@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { findConflicts } from '@zooui/nuxt/testing/find-conflicts'
 
-// ZFilterSelect's options from Buoy's control, on the theme-free base: how many values the button names before a
+// ZFilterSelect's options, on the theme-free base: how many values the button names before a
 // count (max-shown), the All button (show-select-all), per-option icon classes (iconClass) and the parts' classes (ui).
 // The specimens are components/specimens/FilterSelectSpecimen.vue.
 
@@ -148,7 +148,7 @@ test.describe('icon colors and classes', () => {
   })
 })
 
-test.describe('the search after a check (as Buoy\'s control)', () => {
+test.describe('the search after a check', () => {
   test.beforeEach(async ({ page }) => open(page))
 
   const search = (page: Page) => panel(page).locator('[data-search]')
