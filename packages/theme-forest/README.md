@@ -163,6 +163,7 @@ otherwise, and the layer does not depend on nu-grid (`apps/forest` installs it):
 | Header | Forest's kicker, in the mono face — through `ui.table`, which nu-grid inherits — and group labels the same |
 | Group band | neutral (`bg-elevated/50`), **3px** accent leading edge on both modes |
 | Cells | tabular figures |
+| Stacking | `isolate` on the grid's root: its own stacking context, so its sticky header cells and group labels stay under a product's sticky page header |
 
 The band overrides spell out `dark:` too: tailwind-merge only replaces a class with the same variant, and
 `compact` tints its band `dark:bg-primary/12`. Tests check the band and edge in light and dark on both modes.

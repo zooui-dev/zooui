@@ -345,8 +345,10 @@ const groupBand = (page: Page, grid: string) => page.locator(`[data-grid="${grid
   }
 })
 
-test('grid: all three render, and cells use tabular figures', async ({ page }) => {
-  for (const g of ['default', 'default-grouped', 'compact-grouped']) {
+const GRIDS = ['default', 'default-grouped', 'compact-grouped', 'default-scrolling']
+
+test('grid: every grid renders, and cells use tabular figures', async ({ page }) => {
+  for (const g of GRIDS) {
     await expect(page.locator(`[data-grid="${g}"] [data-row-id]`).first()).toBeVisible()
     expect(await page.locator(`[data-grid="${g}"] [data-row-id] > *`).first().evaluate((el) => getComputedStyle(el).fontVariantNumeric), g).toBe('tabular-nums')
   }
