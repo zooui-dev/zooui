@@ -65,21 +65,3 @@ The overlay is drawn over everything, on Nuxt UI's `bg-default` and `bg-elevated
 ## Accessibility
 
 A polite live region announces the `label` as the overlay appears. The overlay is hidden from assistive tech and holds nothing focusable, so focus stays where it was and isn't trapped.
-
-## Coming from Buoy
-
-| Buoy | Zoo UI |
-| --- | --- |
-| `UFullscreenDropFile` | `ZFileDropOverlay`, with the same default label and no icon. `filterFileDropped` becomes `accept` for types or `filter` for size and name rules, and what they refuse comes in `@rejected`. There's no need for `:disabled="anyDialogOpen"` any more: an overlay in an open modal holds the page by itself. |
-| `BFileDropZone`, and its `compact` | Nuxt UI's `UFileUpload`, with `size`, `label` and `description`. |
-| `BUpload` | `UFileUpload`'s default slot with a labeled `UButton` calling `open`. (`variant="button"` shows only an icon, with no label.) |
-| `UInputFileHeadless` | `UFileUpload`'s default slot, plus `ZFileDropOverlay` with `target` for drops on the element. Its no-duplicates append is `sortDroppedFiles` with `existing`. |
-| `useFilePreview` | [`ZFileList`](/components/file-list) with `preview`. |
-| `CreateTransferDialog`'s file list | [`ZFileList`](/components/file-list): stored and new files in one list, an async remove with a spinner, and sizes in 1024s. |
-
-```vue
-<!-- BUpload -->
-<UFileUpload v-slot="{ open }" accept=".csv" @update:model-value="(file) => file && importCsv(file)">
-  <UButton label="Upload" icon="i-lucide-upload" variant="outline" @click="open()" />
-</UFileUpload>
-```

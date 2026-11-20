@@ -151,13 +151,13 @@ test('a drop on the field\'s own drop zone is added once, whether UFileUpload ta
 })
 
 test('remove: an added file at once; a stored one through the server, with the row busy until it answers', async ({ page }) => {
-  // Sizes in 1024s by default, as Buoy showed them.
+  // Sizes in 1024s by default.
   await expect(page.locator('[data-file-row="engagement-letter.pdf"]')).toContainText('239.3 KB')
   await expect(page.locator('[data-file-row="2025-return.pdf"]')).toContainText('1.7 MB')
   await fire(page, 'dragenter', FIELD)
   await fire(page, 'drop', FIELD)
   await expect(page.locator('[data-file-row="report.pdf"]')).toContainText('1.2 KB')
-  // Remove is in the error color, as Buoy's was.
+  // Remove is in the error color.
   const errorColor = await page.evaluate(() => {
     const d = document.createElement('div'); d.style.color = 'var(--ui-error)'; document.body.append(d)
     const c = getComputedStyle(d).color; d.remove(); return c

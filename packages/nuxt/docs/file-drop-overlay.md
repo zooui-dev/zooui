@@ -164,20 +164,5 @@ says what they are. Why not `UFileUpload`'s own list: its
 model is `File[]` (it calls `URL.createObjectURL` on each), so it can't hold a file already on the server, and its
 remove is synchronous, by index. The icon is chosen by MIME type or extension (image, video, audio, spreadsheet,
 archive, document, or plain). Sizes are `formatFileSize(bytes, locale, { binary })`: by default in 1024s with one
-decimal at most, `512 B`, `1.2 KB`, `239.3 KB` (`1,2 KB` in German), as Buoy and most file managers show them; with
+decimal at most, `512 B`, `1.2 KB`, `239.3 KB` (`1,2 KB` in German), as most file managers show them; with
 `binary: false`, decimal units, one decimal under 10, `512 bytes`, `1.2 kB`, `245 kB`. Rows carry `data-file-row` (the name) and stored ones `data-stored`.
-
-## Coming from Buoy
-
-What each of Buoy's file components becomes. Nothing it did is lost; the overlay also nests, stands down behind a
-modal and leaves a drop zone's drop alone, so Buoy's `:disabled="anyDialogOpen"` and `pointer-events-none` workarounds
-go.
-
-| Buoy | Zoo UI | Notes |
-| --- | --- | --- |
-| `UFullscreenDropFile` | `ZFileDropOverlay` | Same default label (`Drop your files`) and no icon by default. `filterFileDropped` becomes `accept` for types, or `filter` for size and name rules; refused files arrive in `@rejected` rather than being dropped silently. `@drop` hands back `File[]`, not a `FileList`. No `:disabled="anyDialogOpen"` any more: an overlay in an open modal holds the page by itself. Buoy's internal-drag check (`application/buoy-*` types) needs nothing: only drags carrying `Files` count. |
-| `BFileDropZone` | `UFileUpload` with `size`, `label` and `description` | `compact` is `size="sm"` (or a `class` with less height). Its `isAllowedFileType` check is `sortDroppedFiles` with `accept`, its toast is `@rejected`. Its `dataTransfer.items` fallback is built into `ZFileDropOverlay` and `droppedFiles()`. |
-| `BUpload` | `UFileUpload`'s default slot with a labeled `UButton` calling `open` | `<UFileUpload v-slot="{ open }" :accept="accept"><UButton :label="label" icon="i-lucide-upload" variant="outline" @click="open()" /></UFileUpload>`. `variant="button"` shows only the icon, no label. |
-| `UInputFileHeadless` | `UFileUpload`'s default slot, plus `ZFileDropOverlay` `target` | `open` comes from the slot; drops on the element are `ZFileDropOverlay :target="el"`. Its no-duplicate-names append is `sortDroppedFiles` with `existing`. Its `preview` is `ZFileList` `preview`. |
-| `useFilePreview` (`file-preview.ts`) | `ZFileList` `preview` | An object URL, revoked when the row goes, instead of a data URL read into memory and kept. |
-| `CreateTransferDialog`'s file list | `ZFileList` | Stored and new files in one list, a per-row spinner on an async remove, the red `x` Remove, file-type icons, and sizes in 1024s (`formatFileSize`). Its dialog drop is `ZFileDropOverlay :target`; its browse box is `UFileUpload` with `reset`. |

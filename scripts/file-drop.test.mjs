@@ -147,7 +147,7 @@ describe('dragCarriesFiles', () => {
 })
 
 describe('formatFileSize', () => {
-  it('by default counts in 1024s with one decimal at most, as Buoy did: B, KB, MB', () => {
+  it('by default counts in 1024s with one decimal at most: B, KB, MB', () => {
     assert.equal(formatFileSize(0, 'en'), '0 B')
     assert.equal(formatFileSize(512, 'en'), '512 B')
     assert.equal(formatFileSize(1000, 'en'), '1,000 B')
