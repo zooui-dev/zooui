@@ -70,6 +70,7 @@ plain Nuxt UI. Three rules:
 | `ZOptionalDate` | A checkbox in front of a `ZDateField`: the date can be edited only while it's ticked |
 | `ZSelectMenu` | Nuxt UI's `USelectMenu` with typeahead from the top of the list, Tab that moves on, a focus ring on any focus, and optional open on focus |
 | `ZFilterSelect` | A faceted multi-select filter for list and table toolbars: search, counts, All and Clear |
+| `ZSearchInput` | A search box for list and table toolbars: handed back once typing pauses, with a clear button and Escape |
 | `ZUrlInput` | A website address field: adds `https://` and checks for a real host when you leave it |
 
 ## Docs
@@ -83,6 +84,7 @@ plain Nuxt UI. Three rules:
     [ZOptionalDate](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/optional-date.md),
     [ZSelectMenu](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/select-menu.md),
     [ZFilterSelect](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/filter-select.md),
+    [ZSearchInput](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/search-input.md),
     [ZUrlInput](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/url-input.md)
 - [The base and a theme](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/base-and-theme.md): what each layer carries, and why they're two layers
 - [Accents and colored edges](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/accents-and-edges.md): `data-accent` sections and the `color` edge
