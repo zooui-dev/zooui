@@ -14,8 +14,9 @@ const PEOPLE = [
   { id: 4, name: 'Katherine Johnson' },
 ]
 const GROUPED = [
-  [{ type: 'label' as const, label: 'Fruit' }, { label: 'Apple' }, { label: 'Avocado', disabled: true }, { label: 'Cherry' }],
-  [{ type: 'separator' as const }, { type: 'label' as const, label: 'Vegetables' }, { label: 'Asparagus' }, { label: 'Carrot' }],
+  // Nuxt UI draws the line between groups; a separator belongs inside one, between two items.
+  [{ type: 'label' as const, label: 'Fruit' }, { label: 'Apple' }, { type: 'separator' as const }, { label: 'Avocado', disabled: true }, { label: 'Cherry' }],
+  [{ type: 'label' as const, label: 'Vegetables' }, { label: 'Asparagus' }, { label: 'Carrot' }],
 ]
 
 const plain = ref('Cherry')
