@@ -69,6 +69,7 @@ plain Nuxt UI. Three rules:
 | `ZConfirmDialog`, `ZConfirmButton` | `useConfirm()`'s promise-based questions, and a button that asks in a popover |
 | `ZOptionalDate` | A checkbox in front of a `ZDateField`: the date counts only while it's ticked |
 | `ZSelectMenu` | Nuxt UI's `USelectMenu` with typeahead, Tab that moves on, and optional open on focus |
+| `ZFilterSelect` | A faceted multi-select filter for list and table toolbars: search, counts, All and Clear |
 
 ## Docs
 
@@ -79,7 +80,8 @@ plain Nuxt UI. Three rules:
     [ZDateField](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/date-field.md),
     [useConfirm and ZConfirmButton](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/confirm.md),
     [ZOptionalDate](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/optional-date.md),
-    [ZSelectMenu](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/select-menu.md)
+    [ZSelectMenu](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/select-menu.md),
+    [ZFilterSelect](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/filter-select.md)
 - [The base and a theme](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/base-and-theme.md): what each layer carries, and why they're two layers
 - [Accents and colored edges](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/accents-and-edges.md): `data-accent` sections and the `color` edge
 - [Mechanisms](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/mechanisms.md): `light-dark()`, the hydration label fix, icon bundling, shipping as source
