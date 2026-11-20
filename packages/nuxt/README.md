@@ -61,6 +61,7 @@ plain Nuxt UI. Three rules:
 | `ZEcosystemMark` | A package manager as a two-letter tile |
 | `ZThemeToggle` | Light / dark / system |
 | `ZRepeatingList` | A generic list editor |
+| `ZOrderList` | An ordered list with one selected row and a move toolbar, for master-detail editors |
 | `ZNumberInput` | One number input for money, percent, count and hours, with a calc mode |
 | `ZDateField` | A calendar-day field on `Temporal.PlainDate` or `CalendarDate`, with Nuxt UI's limit props |
 | `ZConfirmDialog`, `ZConfirmButton` | `useConfirm()`'s promise-based questions, and a button that asks in a popover |
@@ -69,6 +70,7 @@ plain Nuxt UI. Three rules:
 
 - [Components](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/components.md): every prop, the select-none helpers and the nav marker
   - [ZRepeatingList](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/repeating-list.md),
+    [ZOrderList](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/order-list.md),
     [ZNumberInput](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/number-input.md),
     [ZDateField](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/date-field.md),
     [useConfirm and ZConfirmButton](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/confirm.md)
