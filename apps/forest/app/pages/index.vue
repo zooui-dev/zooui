@@ -16,5 +16,6 @@
     <DateFieldSpecimen />
     <ForestGrid />
     <RepeatingListSpecimen />
+    <FilterSelectSpecimen />
   </main>
 </template>

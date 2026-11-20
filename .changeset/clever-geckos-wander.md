@@ -1,0 +1,6 @@
+---
+type: feat
+"@zooui/nuxt"
+---
+
+New: ZFilterSelect, a faceted multi-select filter for list and table toolbars. A button names the filter and shows the chosen value (or how many) in a badge; it opens a searchable list of checkbox options, each with an optional count and icon, with All and Clear. v-model is an array of values, generic over your option type with value-key and label-key. The search is literal and case-insensitive, so ( or . match themselves, and matches are marked in the label. Arrow keys, Space and Enter to check, Escape back to the button, and each change announced to screen readers.
