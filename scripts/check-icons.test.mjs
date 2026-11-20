@@ -12,7 +12,8 @@ const layer = fileURLToPath(new URL('../packages/nuxt/', import.meta.url))
 /** `i-lucide-triangle-alert` in any component → `lucide:triangle-alert`, the form the bundle list takes. */
 function used() {
   const icons = new Set()
-  for (const file of readdirSync(`${layer}components`).filter((f) => /\.(vue|ts)$/.test(f))) {
+  // Subfolders too: components/internal holds the pieces the Z* components are built from.
+  for (const file of readdirSync(`${layer}components`, { recursive: true }).filter((f) => /\.(vue|ts)$/.test(f))) {
     for (const [, collection, name] of readFileSync(`${layer}components/${file}`, 'utf8').matchAll(/['"]i-([a-z0-9]+)-([a-z0-9-]+)['"]/g)) {
       icons.add(`${collection}:${name}`)
     }

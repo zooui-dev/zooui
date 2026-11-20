@@ -31,6 +31,14 @@
       "types": "./utils/date-entry.ts",
       "default": "./utils/date-entry.ts"
     },
+    "./month-entry": {
+      "types": "./utils/month-entry.ts",
+      "default": "./utils/month-entry.ts"
+    },
+    "./year-entry": {
+      "types": "./utils/year-entry.ts",
+      "default": "./utils/year-entry.ts"
+    },
     "./testing/find-conflicts": {
       "types": "./testing/find-conflicts.d.ts",
       "default": "./testing/find-conflicts.js"

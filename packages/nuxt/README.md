@@ -64,6 +64,7 @@ plain Nuxt UI. Three rules:
 | `ZOrderList` | An ordered list with one selected row and a move toolbar, for master-detail editors |
 | `ZNumberInput` | One number input for money, percent, count and hours, with a calc mode |
 | `ZDateField` | A calendar-day field on `Temporal.PlainDate` or `CalendarDate`, with Nuxt UI's limit props |
+| `ZMonthField`, `ZYearField` | ZDateField for a month (`Temporal.PlainYearMonth` or `CalendarDate`) and for a year (a number), with calendars of months and years |
 | `ZFileDropOverlay` | Files dropped anywhere in the window, or contained in a dialog or region; nested overlays defer to the innermost |
 | `ZFileList` | A form's files, stored and newly added, with an async remove, thumbnails and row slots |
 | `ZConfirmDialog`, `ZConfirmButton` | `useConfirm()`'s promise-based questions, and a button that asks in a popover |
@@ -78,6 +79,7 @@ plain Nuxt UI. Three rules:
     [ZOrderList](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/order-list.md),
     [ZNumberInput](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/number-input.md),
     [ZDateField](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/date-field.md),
+    [ZMonthField and ZYearField](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/month-year-field.md),
     [useConfirm and ZConfirmButton](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/confirm.md),
     [ZOptionalDate](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/optional-date.md),
     [ZSelectMenu](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/select-menu.md),
