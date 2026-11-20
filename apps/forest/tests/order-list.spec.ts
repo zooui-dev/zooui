@@ -89,7 +89,7 @@ test.describe('selecting', () => {
     await expect(listbox(list)).toBeFocused()
   })
 
-  test('as Buoy: Up from nothing selects the first row; Enter and Space select nothing, and keep a selected row', async ({ page }) => {
+  test('with nothing selected, Up selects the first row; Enter and Space select nothing, and keep a selected row', async ({ page }) => {
     const list = statuses(page)
     await listbox(list).focus()
     // Enter and Space with nothing selected: nothing selected, and Space doesn't scroll the page.

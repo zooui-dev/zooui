@@ -1,7 +1,7 @@
 <script setup lang="ts" generic="T">
 // An order list: the left half of a master-detail editor. A compact listbox with ONE selected row, and a toolbar
 // beside it that adds, removes and moves that row; the selected item's form sits next to it, in the caller's markup.
-// Written on Nuxt UI's tokens. Zoo UI's version of Buoy's UOrderList.
+// Written on Nuxt UI's tokens.
 //
 //   <ZOrderList v-model="statuses" v-model:selection="selectedId" :row-key="(s) => s.id" item-label="status" allow-remove @add="add" @remove="remove">
 //     <template #item="{ item }">{{ item.name }}</template>
@@ -9,7 +9,7 @@
 //
 // The list owns the order: a move hands back a new array of the same items through v-model, and `reorder` says what
 // moved. `add` asks the caller for a new item. `remove` hands over the one to go: with a listener bound the caller
-// takes it out (a server call can come first), and with none the list does, as Buoy's did. Selection is the selected
+// takes it out (a server call can come first), and with none the list does. Selection is the selected
 // item's key, so it follows the item through a move.
 // Selection follows focus: Up/Down select the next row, so the form beside the list follows the keyboard.
 import { twMerge } from 'tailwind-merge'
@@ -252,7 +252,7 @@ function remove() {
   emit('remove', item, i)
   if (!removeHandled()) items.value = items.value.filter((_, j) => j !== i)
 }
-// When it has gone, the row that took its place is selected, as in Buoy, and focus stays in the list.
+// When it has gone, the row that took its place is selected, and focus stays in the list.
 watch(
   () => items.value.map(keyOf),
   (keys) => {
@@ -316,7 +316,7 @@ function onKeydown(e: KeyboardEvent) {
   }
   if (e.ctrlKey || e.metaKey || e.altKey) return
   let to: number
-  // As Buoy's: with nothing selected, Down and Up both start at the first row, and Enter and Space do nothing (selection
+  // With nothing selected, Down and Up both start at the first row, and Enter and Space do nothing (selection
   // follows focus, so on a selected row they keep it).
   switch (e.key) {
     case 'ArrowDown': to = i < 0 ? 0 : Math.min(i + 1, n - 1); break

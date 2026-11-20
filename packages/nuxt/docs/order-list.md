@@ -19,31 +19,31 @@
 <StatusForm v-if="selected" v-model="selected" />   <!-- the detail half: the caller's own -->
 ```
 
-The list half of a master-detail editor, as Buoy's `UOrderList`: a compact `listbox` with **one** selected row, a
+The list half of a master-detail editor: a compact `listbox` with **one** selected row, a
 toolbar beside it (Add, Remove, then to top, up, down, to bottom), and the selected item's form in the caller's markup.
 Generic over the item type (`T`), so `item` in `#item` is the list's own type.
 
 **The model.** `v-model` is the array. A move hands back a new array holding the same item objects, and `@reorder`
-says `{ item, from, to }`. `v-model:selection` is the selected item's key, from `row-key`, a function rather than
-Buoy's `data-key` string: it is typed against `T`, it can build a key from more than one field, and it is the name and
-shape `ZRepeatingList` uses. Because the selection is a key, it follows the item through a move. A key that is not in
-the list counts as nothing selected.
+says `{ item, from, to }`. `v-model:selection` is the selected item's key, from `row-key`, a function: it is typed
+against `T`, it can build a key from more than one field, and it is the name and shape `ZRepeatingList` uses. One row
+is selected at a time; there is no multiple selection. Because the selection is a key, it follows the item through a
+move. A key that is not in the list counts as nothing selected.
 
-**Add and remove.** `@add` asks the caller to create the item, put it in the list and select it, as Buoy's `addClick`.
+**Add and remove.** `@add` asks the caller to create the item, put it in the list and select it.
 `@remove` hands over the selected item and its index. With a listener bound, the caller takes it out (after a server
-call, if it likes); with none, the list takes it out of v-model itself, as Buoy's did. Either way, once it has gone the
+call, if it likes); with none, the list takes it out of v-model itself. Either way, once it has gone the
 row that took its place is selected, the remove is announced, and focus stays in the list. A remove the caller decides
 against (a failed server call) is forgotten at the next selection change, so a later reload that drops the item is
 neither announced nor moves the selection. `allow-add` (on by default) and
 `allow-remove` (off) show the buttons; `removable` disables Remove for an item that may not go. Remove is a
 `ZConfirmButton`, so it asks in a popover first: `remove-question` ("Remove Review?"), `remove-description`,
 `remove-confirm-label` (the Remove word) and `remove-cancel-label` ("Cancel") are passed through to it.
-`:confirm-remove="false"` makes it a plain button that acts at once. (Buoy's `confirm-label` was the question; here
-it is `remove-question`, because `ZConfirmButton`'s own `confirm-label` names its Yes button.)
+`:confirm-remove="false"` makes it a plain button that acts at once. The question is `remove-question`, not
+`confirm-label`, because `ZConfirmButton`'s own `confirm-label` names its Yes button.
 
 **The keyboard.** One tab stop with `aria-activedescendant`. Selection follows focus, which is what an editor wants:
-Up/Down select the next row and the form follows. As in Buoy, Up or Down with nothing selected selects the first row,
-and Enter and Space select nothing (on a selected row they keep it). Home/End select the ends. Typing selects by the row's title, and the same letter
+Up/Down select the next row and the form follows. With nothing selected, Up and Down both select the first row, and
+Enter and Space select nothing (on a selected row they keep it). Home/End select the ends. Typing selects by the row's title, and the same letter
 again moves on to the next row starting with it. Alt+Up/Down move the selected row one place, Alt+Home/End to the
 ends. Every move is announced in a polite live region ("Moved Review to position 3 of 5."), as is a remove ("Removed
 Review. 4 in the list.").
@@ -72,23 +72,6 @@ given `{ selected, index, add, remove, move, moveTop, moveUp, moveDown, moveBott
 
 The list carries `data-testid="order-list"`, each row `data-row` and `data-selected`, the toolbar `data-controls`, its
 buttons `data-add`, `data-remove` and `data-move="top|up|down|bottom"`, for e2e selectors.
-
-## Coming from Buoy
-
-| Buoy's `UOrderList` | `ZOrderList` |
-| --- | --- |
-| `data-key` / `key-expr` | `row-key`, a function: `:row-key="(s) => s.statusId"` |
-| `v-model:selection`, an array of the selected objects | `v-model:selection`, the selected item's key |
-| `@selection-change` | `@update:selection` (or watch the `v-model:selection` ref) |
-| `@add-click` | `@add` |
-| `@remove-click` | `@remove(item, index)`; the component removes the row itself unless you handle it |
-| `confirm-label` | `remove-question` |
-| `confirm-sublabel` | `remove-description` |
-| `@reorder` with `{ value }` | `v-model` holds the new order; `@reorder` gives `{ item, from, to }` |
-| `:ui="{ content: 'max-h-none h-full' }"` | `fill` |
-
-Left out, being dead or unused in Buoy: multiple selection and `metaKeySelection`, touch handling, `listProps`,
-`tabindex`, and the `focus`/`blur` events.
 
 ## ZOrderList or ZRepeatingList
 

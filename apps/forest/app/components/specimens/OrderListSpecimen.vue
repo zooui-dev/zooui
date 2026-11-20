@@ -2,8 +2,8 @@
 /**
  * ZOrderList in the shapes a product uses it: a master-detail status editor (the selected status's form beside the
  * list, Add and a confirmed Remove, which can be refused as a failed server call would), a long striped list that
- * scrolls, titled by its rows' own text, groups whose Remove has no handler (the list removes the row itself, as
- * Buoy's did), folders that fill a fixed-height panel with `fill` and `ui`, and a toolbar of the caller's own through
+ * scrolls, titled by its rows' own text, groups whose Remove has no handler (the list removes the row itself),
+ * folders that fill a fixed-height panel with `fill` and `ui`, and a toolbar of the caller's own through
  * #controls. Typed: the @vue-expect-error below fails the typecheck if the generic were lost.
  */
 interface Status { id: string; name: string; stage: 'pending' | 'active' | 'done' }
@@ -140,7 +140,7 @@ const tagKey = ref<string | number | null>('b')
       <h3 class="text-sm font-semibold text-highlighted">Groups: Remove with no handler</h3>
       <p class="text-sm text-muted" data-try>
         Try this: select Managers and remove it. Nothing listens to @remove here, so the list takes the row out of
-        v-model itself and selects the row that took its place, as Buoy's did.
+        v-model itself and selects the row that took its place.
       </p>
       <p class="text-xs text-muted" data-toolbar-key>
         Toolbar, in order: Remove, Move to top, Move up, Move down, Move to bottom.
