@@ -1,6 +1,6 @@
 {
   "name": "@zooui/theme-forest",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Forest, a Zoo UI theme: a Nuxt layer that extends @zooui/nuxt with Forest's colors, page ground, typefaces (Inter and JetBrains Mono, self-hosted), accent schemes and component styling. A product extends this one layer for Zoo UI and the theme together.",
   "license": "MIT",
   "repository": {
