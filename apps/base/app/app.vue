@@ -14,5 +14,6 @@ useHead({ title: 'Zoo UI base — a product with its own look' })
       </header>
       <NuxtPage />
     </div>
+    <ZConfirmDialog />
   </UApp>
 </template>
