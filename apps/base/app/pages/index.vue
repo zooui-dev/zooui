@@ -76,5 +76,7 @@ const rows = [{ account: 'Retainer', amount: '1,200.00' }, { account: 'Materials
       <span data-probe="val-input" class="rounded px-2 py-0.5 bg-val-input-bg text-val-input ring ring-inset ring-val-input-line">12,000</span>
     </section>
     <SpecimensRepeatingListSpecimen />
+
+    <SpecimensOrderListSpecimen />
   </main>
 </template>
