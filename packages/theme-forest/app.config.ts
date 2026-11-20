@@ -62,6 +62,11 @@ export default defineAppConfig({
   nuGrid: {
     ui: {
       slots: {
+        // `isolate` makes the grid its own stacking context. Its root is `relative` with no z-index, so without it
+        // the grid's z-10 header cells and z-50 group labels compete with the page's own chrome, and paint over a
+        // sticky page header (`z-10`) as the page scrolls the grid under it. Inside, nothing changes: the grid is
+        // still its own scroll container, and its sticky rows keep their order among themselves.
+        root: 'isolate',
         groupHeader: 'bg-elevated/50 hover:bg-elevated dark:bg-elevated/50 dark:hover:bg-elevated',
         groupHeaderLeft: 'border-l-3',
         // headers come from `ui.table` (nu-grid inherits it); the group band's labels are its own slots
