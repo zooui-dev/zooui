@@ -94,7 +94,9 @@ and later ones are refused as `multiple`.
 | --- | --- |
 | `accept`, `multiple`, `filter` | As the component's props. |
 | `existing` | Names already held (the list the files join): a file of one of these names is refused as `duplicate`. Implies `dedupe: 'name'`. |
-| `dedupe` | `'name'`: also refuse a name that came earlier in the same drop. Unset (and no `existing`), names may repeat. | Tested by `scripts/file-drop.test.mjs`; the component by `apps/base/tests/file-drop.spec.ts`,
+| `dedupe` | `'name'`: also refuse a name that came earlier in the same drop. Unset (and no `existing`), names may repeat. |
+
+Tested by `scripts/file-drop.test.mjs`; the component by `apps/base/tests/file-drop.spec.ts`,
 `apps/base/tests/file-drop-dialog.spec.ts` (contained in a `ZModal`, the page standing down behind it, with
 `ZFileList`) and
 `apps/forest/tests/file-drop.spec.ts`.
