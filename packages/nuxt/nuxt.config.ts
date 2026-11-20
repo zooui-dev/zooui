@@ -35,7 +35,8 @@ interface LayerNuxt {
 const Z_ICONS = ['lucide:sun', 'lucide:moon', 'lucide:monitor', 'lucide:triangle-alert', 'lucide:check',
   'lucide:circle-check', 'lucide:pencil', 'lucide:x', 'lucide:trash-2', 'lucide:plus', 'lucide:chevron-up', 'lucide:chevron-down', 'lucide:calendar',
   'lucide:file', 'lucide:file-image', 'lucide:file-video', 'lucide:file-audio', 'lucide:file-spreadsheet',
-  'lucide:file-archive', 'lucide:file-text']
+  'lucide:file-archive', 'lucide:file-text',
+  'lucide:list-filter', 'lucide:search', 'lucide:check-check']
 
 export default defineNuxtConfig({
   modules: [
