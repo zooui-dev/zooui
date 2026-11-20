@@ -1,9 +1,11 @@
 <script setup lang="ts">
 /**
  * ZSelectMenu on the Forest theme (tests/select-menu.spec.ts drives it): a data-entry row of open-on-focus menus
- * between text fields, filled from the keyboard alone, and a plain USelectMenu beside a ZSelectMenu with the same
- * props, which must paint alike on every scheme in light and dark (but for ZSelectMenu's focus ring on any focus,
- * which apps/base/tests/select-menu.spec.ts checks). The `data-*` attributes are the spec's selectors.
+ * between text fields, filled from the keyboard alone; typeahead from the top of a list whose value sits lower down;
+ * the focus ring beside a plain USelectMenu's; a UForm validating on change; and a plain USelectMenu beside a
+ * ZSelectMenu with the same props, which must paint alike on every scheme in light and dark (but for ZSelectMenu's
+ * focus ring on any focus). Each behavior in full is in apps/base/tests/select-menu.spec.ts. The `data-*` attributes
+ * are the spec's selectors.
  */
 const STATES = [
   { code: 'CA', name: 'California' },
@@ -16,6 +18,16 @@ const KINDS = ['Invoice', 'Receipt', 'Statement']
 const form = reactive({ payee: '', state: undefined as string | undefined, kind: undefined as string | undefined, memo: '' })
 const native = ref('Receipt')
 const wrapped = ref('Receipt')
+
+const FRUIT = ['Apple', 'Banana', 'Blueberry', 'Cherry', 'Date', 'Elderberry', 'Fig', 'Grape']
+const STATE_NAMES = ['Alabama', 'Alaska', 'California', 'Colorado', 'Connecticut', 'Delaware']
+const stateName = ref('Colorado')
+const ringNative = ref('Cherry')
+const ringWrapped = ref('Cherry')
+
+// A form that validates only on change: a typeahead pick has to tell it.
+const formState = reactive({ fruit: undefined as string | undefined })
+const validate = (s: typeof formState) => (s.fruit === 'Banana' ? [{ name: 'fruit', message: 'Bananas are out of season' }] : [])
 
 const show = (v: string | undefined) => v || '—'
 </script>
@@ -46,6 +58,44 @@ const show = (v: string | undefined) => v || '—'
         Form value:
         <output data-form class="text-default">payee: {{ show(form.payee) }}, state: {{ show(form.state) }}, kind: {{ show(form.kind) }}, memo: {{ show(form.memo) }}</output>
       </p>
+    </section>
+
+    <section data-specimen="states" class="flex flex-col gap-3">
+      <h3 class="font-semibold text-highlighted">Typeahead from the top</h3>
+      <p class="text-sm text-muted">Try: focus the menu (Colorado is selected) and type c: California, the first C from the top. Type c again and again: Colorado, Connecticut, then California.</p>
+      <div class="flex flex-wrap items-end gap-3">
+        <UFormField label="Field before"><UInput placeholder="Field before" data-before /></UFormField>
+        <UFormField label="State">
+          <ZSelectMenu v-model="stateName" :items="STATE_NAMES" data-menu class="w-48" />
+        </UFormField>
+        <UFormField label="Field after"><UInput placeholder="Field after" data-after /></UFormField>
+      </div>
+      <p class="text-sm text-muted">Value: <output data-value class="text-default">{{ stateName }}</output></p>
+    </section>
+
+    <section data-specimen="ring" class="flex flex-col gap-3">
+      <h3 class="font-semibold text-highlighted">Focus ring</h3>
+      <p class="text-sm text-muted">Try: click each menu and pick a fruit with the mouse. Focus comes back to the trigger: ZSelectMenu shows its ring, Nuxt UI's USelectMenu shows one only after a key. Tab in from "Field before" and both show it.</p>
+      <div class="flex flex-wrap items-end gap-4">
+        <UFormField label="Field before"><UInput placeholder="Field before" data-before /></UFormField>
+        <UFormField label="Nuxt UI USelectMenu">
+          <USelectMenu v-model="ringNative" :items="FRUIT" :search-input="false" data-ring-native class="w-48" />
+        </UFormField>
+        <UFormField label="ZSelectMenu">
+          <ZSelectMenu v-model="ringWrapped" :items="FRUIT" :search-input="false" data-ring-wrapped class="w-48" />
+        </UFormField>
+      </div>
+    </section>
+
+    <section data-specimen="form" class="flex flex-col gap-3">
+      <h3 class="font-semibold text-highlighted">In a UForm that validates on change</h3>
+      <p class="text-sm text-muted">Try: focus the menu and type b: Banana, and the form flags it at once. Type b again: Blueberry, and the error clears.</p>
+      <UForm :state="formState" :validate="validate" :validate-on="['change']" class="flex flex-wrap items-end gap-3">
+        <UFormField label="Fruit" name="fruit">
+          <ZSelectMenu v-model="formState.fruit" :items="FRUIT" placeholder="Choose a fruit" data-menu class="w-48" />
+        </UFormField>
+      </UForm>
+      <p class="text-sm text-muted">Value: <output data-value class="text-default">{{ show(formState.fruit) }}</output></p>
     </section>
 
     <section class="flex flex-col gap-3">

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 // ZSelectMenu on the Forest theme (pages/select-menu.vue): a data-entry row filled from the keyboard alone — open on
 // focus, typed or arrowed to, Tab to take it and move on — and a ZSelectMenu painting exactly as a plain USelectMenu does
@@ -57,6 +57,56 @@ test('the kind menu, no search input: arrow down and Tab takes the highlighted k
   await expect(page.locator('[data-memo]')).toBeFocused()
   await expect(listbox(page)).toHaveCount(0)
   await expect(form(page)).toHaveText('payee: Acme, state: —, kind: Receipt, memo: —')
+})
+
+// The base page's typeahead, focus-ring and UForm sections, on Forest: a smoke test each.
+const section = (page: Page, name: string) => page.locator(`[data-specimen="${name}"]`)
+const value = (page: Page, name: string) => section(page, name).locator('[data-value]')
+
+test('typeahead from the top: c from Colorado is California, and c again cycles on', async ({ page }) => {
+  await openPage(page)
+  await section(page, 'states').locator('[data-menu]').focus()
+  await expect(value(page, 'states')).toHaveText('Colorado')
+  await page.keyboard.press('c')
+  await expect(value(page, 'states')).toHaveText('California')
+  await page.keyboard.press('c')
+  await expect(value(page, 'states')).toHaveText('Colorado')
+  await page.keyboard.press('c')
+  await expect(value(page, 'states')).toHaveText('Connecticut')
+})
+
+test('focus ring: after a mouse pick ZSelectMenu shows one and USelectMenu does not', async ({ page }) => {
+  await openPage(page)
+  await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important; animation: none !important }' })
+  const ring = (l: Locator) => l.evaluate((el) => getComputedStyle(el).boxShadow)
+  const mousePick = async (trigger: Locator) => {
+    await trigger.click()
+    await listbox(page).getByRole('option', { name: 'Date' }).click()
+    await expect(listbox(page)).toHaveCount(0)
+    await expect(trigger).toBeFocused()
+  }
+  const native = section(page, 'ring').locator('[data-ring-native]')
+  const wrapped = section(page, 'ring').locator('[data-ring-wrapped]')
+  const nativeBefore = await ring(native)
+  const wrappedBefore = await ring(wrapped)
+  await mousePick(native)
+  expect(await ring(native)).toBe(nativeBefore)
+  await mousePick(wrapped)
+  await expect.poll(() => ring(wrapped)).not.toBe(wrappedBefore)
+  await section(page, 'ring').getByPlaceholder('Field before').click()
+  await expect.poll(() => ring(wrapped)).toBe(wrappedBefore)
+})
+
+test('in a UForm validating on change: a typeahead pick is validated', async ({ page }) => {
+  await openPage(page)
+  const form = section(page, 'form')
+  await form.locator('[data-menu]').focus()
+  await page.keyboard.press('b')
+  await expect(value(page, 'form')).toHaveText('Banana')
+  await expect(form.getByText('Bananas are out of season')).toBeVisible()
+  await page.keyboard.press('b')
+  await expect(value(page, 'form')).toHaveText('Blueberry')
+  await expect(form.getByText('Bananas are out of season')).toHaveCount(0)
 })
 
 const SCHEMES = ['teal', 'slate-cobalt', 'graphite-violet', 'paper-olive', 'ink-indigo', 'ember']
