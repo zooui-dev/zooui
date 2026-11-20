@@ -1,9 +1,11 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 // ZSelectMenu on the Forest theme (pages/select-menu.vue): a data-entry row filled from the keyboard alone — open on
-// focus, typed or arrowed to, Tab to take it and move on — and a ZSelectMenu painting exactly as a plain USelectMenu does
-// on every Forest scheme in light and dark (it adds behavior, never a look). The behaviors one by one, with
-// `multiple`, grouped items and each switch off, are in apps/base/tests/select-menu.spec.ts.
+// focus, typed or arrowed to, Tab to take it and move on —, a smoke test each of typeahead from the top, the focus ring
+// after a mouse pick (kept while the menu is open and after Escape, gone on Tab) and a UForm validating a typeahead
+// pick; and a ZSelectMenu painting exactly as a plain USelectMenu does on every Forest scheme in light and dark (it adds
+// behavior, and a focus ring on mouse focus). The behaviors one by one, with `multiple`, grouped items and each switch
+// off, are in apps/base/tests/select-menu.spec.ts.
 
 const hydrated = (page: Page) => page.waitForFunction(() => !!(document.querySelector('#__nuxt') as { __vue_app__?: unknown } | null)?.__vue_app__)
 const listbox = (page: Page) => page.locator('[role="listbox"][data-state="open"]')
@@ -57,6 +59,128 @@ test('the kind menu, no search input: arrow down and Tab takes the highlighted k
   await expect(page.locator('[data-memo]')).toBeFocused()
   await expect(listbox(page)).toHaveCount(0)
   await expect(form(page)).toHaveText('payee: Acme, state: —, kind: Receipt, memo: —')
+})
+
+// The base page's typeahead, focus-ring and UForm sections, on Forest: a smoke test each.
+const section = (page: Page, name: string) => page.locator(`[data-specimen="${name}"]`)
+const value = (page: Page, name: string) => section(page, name).locator('[data-value]')
+
+test('typeahead from the top: c from Colorado is California, and c again cycles on', async ({ page }) => {
+  await openPage(page)
+  await section(page, 'states').locator('[data-menu]').focus()
+  await expect(value(page, 'states')).toHaveText('Colorado')
+  await page.keyboard.press('c')
+  await expect(value(page, 'states')).toHaveText('California')
+  await page.keyboard.press('c')
+  await expect(value(page, 'states')).toHaveText('Colorado')
+  await page.keyboard.press('c')
+  await expect(value(page, 'states')).toHaveText('Connecticut')
+})
+
+// The focus look, ring (box-shadow) and halo (outline) with their colors, must be a focused UInput's on each scheme.
+const look = (l: Locator) => l.evaluate((el) => {
+  const c = getComputedStyle(el)
+  return { ring: c.boxShadow, outline: `${c.outlineStyle} ${c.outlineWidth} ${c.outlineColor}`, offset: c.outlineOffset }
+})
+for (const [scheme, mode] of [['teal', 'light'], ['ember', 'light'], ['slate-cobalt', 'dark']] as const) {
+  test(`focus ring (${scheme}, ${mode}): after a mouse pick ZSelectMenu looks like a focused UInput, USelectMenu shows nothing`, async ({ page, baseURL }) => {
+    await page.context().addCookies([{ name: 'zooui-scheme', value: scheme, url: baseURL as string }])
+    await page.addInitScript((m) => localStorage.setItem('zooui-color-mode', m), mode)
+    await openPage(page)
+    if (mode === 'dark') await expect(page.locator('html')).toHaveClass(/dark/)
+    await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important; animation: none !important }' })
+    const mousePick = async (trigger: Locator) => {
+      await trigger.click()
+      await listbox(page).getByRole('option', { name: 'Date' }).click()
+      await expect(listbox(page)).toHaveCount(0)
+      await expect(trigger).toBeFocused()
+    }
+    const input = section(page, 'ring').getByPlaceholder('Field before')
+    const native = section(page, 'ring').locator('[data-ring-native]')
+    const wrapped = section(page, 'ring').locator('[data-ring-wrapped]')
+    const nativeBefore = await look(native)
+    const wrappedBefore = await look(wrapped)
+    await input.click()
+    await expect(input).toBeFocused()
+    const inputFocused = await look(input)
+    expect(inputFocused.outline).toMatch(/^solid 3px /)
+    expect(inputFocused).not.toEqual(wrappedBefore)
+    await mousePick(native)
+    expect(await look(native)).toEqual(nativeBefore)
+    await mousePick(wrapped)
+    await expect.poll(() => look(wrapped)).toEqual(inputFocused)
+    await input.click()
+    await expect.poll(() => look(wrapped)).toEqual(wrappedBefore)
+  })
+}
+
+// Open, focus is in the menu (its search input or its list), not on the trigger; the trigger keeps the look.
+test.describe('the focus look stays while the menu is open', () => {
+  const ring = (page: Page) => section(page, 'ring')
+  const input = (page: Page) => ring(page).getByPlaceholder('Field before')
+  const wrapped = (page: Page) => ring(page).locator('[data-ring-wrapped]')
+  const withSearch = (page: Page) => ring(page).locator('[data-ring-search]')
+  const inputFocused = async (page: Page) => {
+    await input(page).click()
+    await expect(input(page)).toBeFocused()
+    const focused = await look(input(page))
+    expect(focused.outline).toMatch(/^solid 3px /)
+    return focused
+  }
+  test.beforeEach(async ({ page }) => {
+    await openPage(page)
+    await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important; animation: none !important }' })
+  })
+
+  test('open with a click, with a search input', async ({ page }) => {
+    const expected = await inputFocused(page)
+    await withSearch(page).click()
+    await expect(listbox(page).locator('input')).toBeFocused()
+    await expect.poll(() => look(withSearch(page))).toEqual(expected)
+  })
+
+  test('open with a click, no search input', async ({ page }) => {
+    const expected = await inputFocused(page)
+    await wrapped(page).click()
+    await expect(listbox(page)).toBeVisible()
+    await expect(wrapped(page)).not.toBeFocused()
+    await expect.poll(() => look(wrapped(page))).toEqual(expected)
+  })
+
+  test('closed with Escape: the look stays, as focus comes back to the trigger', async ({ page }) => {
+    const expected = await inputFocused(page)
+    await withSearch(page).click()
+    await expect(listbox(page).locator('input')).toBeFocused()
+    await page.keyboard.press('Escape')
+    await expect(listbox(page)).toHaveCount(0)
+    await expect(withSearch(page)).toBeFocused()
+    await expect.poll(() => look(withSearch(page))).toEqual(expected)
+  })
+
+  test('Tab away from the open menu: the look goes with the focus', async ({ page }) => {
+    const unfocused = await look(withSearch(page))
+    const expected = await inputFocused(page)
+    await withSearch(page).click()
+    await expect(listbox(page).locator('input')).toBeFocused()
+    await page.keyboard.press('Tab')
+    await expect(listbox(page)).toHaveCount(0)
+    await expect(withSearch(page)).not.toBeFocused()
+    await expect.poll(() => look(withSearch(page))).toEqual(unfocused)
+    expect(await look(withSearch(page))).not.toEqual(expected)
+    await expect(withSearch(page)).toHaveText('Cherry')
+  })
+})
+
+test('in a UForm validating on change: a typeahead pick is validated', async ({ page }) => {
+  await openPage(page)
+  const form = section(page, 'form')
+  await form.locator('[data-menu]').focus()
+  await page.keyboard.press('b')
+  await expect(value(page, 'form')).toHaveText('Banana')
+  await expect(form.getByText('Bananas are out of season')).toBeVisible()
+  await page.keyboard.press('b')
+  await expect(value(page, 'form')).toHaveText('Blueberry')
+  await expect(form.getByText('Bananas are out of season')).toHaveCount(0)
 })
 
 const SCHEMES = ['teal', 'slate-cobalt', 'graphite-violet', 'paper-olive', 'ink-indigo', 'ember']

@@ -1,9 +1,9 @@
 /**
  * ZSelectMenu's typeahead, apart from the component so the rules read in one place: which items a typed search can
  * land on, how an item's label and value are read (as Nuxt UI's USelectMenu reads them, by `labelKey` and `valueKey`,
- * dotted paths included), and which item a search matches. The matching is a native `<select>`'s: a search matches
- * the first item whose label starts with it, after the current one; pressing one letter again and again cycles
- * through the items that start with it.
+ * dotted paths included), and which item a search matches. The matching searches from the top of the list, whatever
+ * is selected: a search matches the first item whose label starts with it; pressing one letter again and again cycles
+ * through the items that start with it, onward from the current one.
  */
 
 /** How the menu reads its items: the props of the same names on USelectMenu. */
@@ -58,19 +58,22 @@ export function sameValue(a: unknown, b: unknown, keys: TypeaheadKeys = {}): boo
 }
 
 /**
- * The item a typed search lands on, or undefined when nothing matches (or the only match is the current item).
+ * The item a typed search lands on, or undefined when nothing matches (or the match is the current item).
  * `search` is everything typed since the last pause; `current` is the model's value.
  */
 export function typeaheadMatch<T>(items: readonly T[], search: string, current: unknown, keys: TypeaheadKeys = {}): T | undefined {
   if (!search) return undefined
   const lower = search.toLocaleLowerCase()
-  // "bbb" is pressing b three times: cycle through the b's, as a native select does.
-  const repeated = lower.length > 1 && [...lower].every((c) => c === lower[0])
-  const wanted = repeated ? lower[0]! : lower
-  const at = items.findIndex((item) => sameValue(itemValue(item, keys), current, keys))
-  // Start at the current item, so a longer search can stay on it; a single letter moves past it.
-  let order = at < 0 ? [...items] : [...items.slice(at), ...items.slice(0, at)]
-  if (wanted.length === 1 && at >= 0) order = order.slice(1)
-  const match = order.find((item) => itemLabel(item, keys).toLocaleLowerCase().startsWith(wanted))
-  return match === undefined || (at >= 0 && match === items[at]) ? undefined : match
+  const startsWith = (prefix: string) => (item: T) => itemLabel(item, keys).toLocaleLowerCase().startsWith(prefix)
+  const isCurrent = (item: T) => sameValue(itemValue(item, keys), current, keys)
+  let match: T | undefined
+  if (lower.length > 1 && [...lower].every((c) => c === lower[0])) {
+    // "bbb" is pressing b three times: the next item that starts with b after the current one, round to the first.
+    const matches = items.filter(startsWith(lower[0]!))
+    match = matches[(matches.findIndex(isCurrent) + 1) % matches.length]
+  } else {
+    // From the top of the list, not from the current item.
+    match = items.find(startsWith(lower))
+  }
+  return match === undefined || isCurrent(match) ? undefined : match
 }

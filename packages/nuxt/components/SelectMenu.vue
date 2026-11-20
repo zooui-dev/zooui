@@ -1,15 +1,16 @@
 <script setup lang="ts" generic="T extends SelectMenuItem, V = unknown">
 // Nuxt UI's USelectMenu with the keyboard a data-entry form wants. Every USelectMenu prop, slot, event and v-model
 // passes through unchanged; this adds four switches, each driving USelectMenu (and reka-ui under it) only through its
-// public surface: the trigger, the menu's DOM and the keys reka-ui already handles.
+// public surface: its props, the trigger, the menu's DOM and the keys reka-ui already handles.
 //
 //   <ZSelectMenu v-model="fruit" :items="fruits" />                      <!-- type "ch" on the closed menu: Cherry -->
 //   <ZSelectMenu v-model="state" :items="states" value-key="code" open-on-focus />
 //
 // - highlightSelectedOnOpen: reka-ui already highlights the checked item when the menu opens (the first checked one
 //   with `multiple`), so arrow keys go on from it; that is kept. Off, the menu opens on the first item instead.
-// - typeahead: printable keys on the closed trigger pick the first item whose label starts with what was typed, as a
-//   native <select> does, and announce it in a polite live region beside the trigger (whose accessible name is its
+// - typeahead: printable keys on the closed trigger pick the first item from the top of the list whose label starts
+//   with what was typed (one letter pressed again and again cycles through the items that start with it), tell a
+//   surrounding UForm, and announce it in a polite live region beside the trigger (whose accessible name is its
 //   label, not its value). With `multiple` it never replaces the selection: it opens the menu on the match instead.
 // - openOnFocus: keyboard focus opens the menu (not a click, which opens it anyway, and not focus coming back from it).
 // - closeOnTab: Tab and Shift+Tab close the open menu and move on to the next or previous field. reka-ui otherwise
@@ -17,7 +18,12 @@
 //   the person has moved the highlight in this opening (arrow keys, typing in the search or the list, a hover): type
 //   or arrow to an item, Tab to take it. An untouched menu leaves the value as it was, and so does `multiple` (Tab
 //   there would add or remove an item just by leaving the field; Enter and a click toggle it).
-import type { SelectMenuItem } from '@nuxt/ui'
+//
+// The trigger shows its focus ring on any focus, a click's included (stock shows it on keyboard focus only): while it
+// has focus, and while the menu is open, the menu is drawn with stock's keyboard-focus look, the ring and halo a focused
+// UInput shows.
+import type { SelectMenuItem, SelectMenuProps } from '@nuxt/ui'
+import { formFieldInjectionKey, useFormField } from '@nuxt/ui/composables'
 import { itemLabel, itemValue, selectableItems, typeaheadMatch, type TypeaheadKeys } from './select-typeahead.ts'
 
 defineOptions({ inheritAttrs: false })
@@ -61,6 +67,12 @@ const [model, modelModifiers] = defineModel<V>()
 const emit = defineEmits<{ change: [event: Event] }>()
 const attrs = useAttrs()
 const slots = useSlots()
+
+// useFormField() clears the form field it hands its own component, for the input inside it; here that input is the
+// wrapped USelectMenu, which needs the field (its id, name, aria and error color), so it is handed on again.
+const formField = inject(formFieldInjectionKey, undefined)
+const { emitFormChange, emitFormInput } = useFormField()
+provide(formFieldInjectionKey, formField)
 
 const menu = useTemplateRef<{ triggerRef: HTMLElement | null; viewportRef: HTMLElement | null }>('menu')
 const trigger = () => menu.value?.triggerRef ?? null
@@ -190,16 +202,54 @@ function onTriggerKeydown(e: KeyboardEvent) {
   }
   const match = typeaheadMatch(selectableItems(props.items), search, model.value, keys.value)
   if (match === undefined) return
-  model.value = itemValue(match, keys.value) as V
+  model.value = withModifiers(itemValue(match, keys.value)) as V
   emit('change', new Event('change'))
+  emitFormChange()
+  emitFormInput()
   // The trigger's accessible name is its label, not its value, so a pick made with the menu closed is announced.
   announced.value = itemLabel(match, keys.value)
+}
+
+/** A value as USelectMenu's own update applies `v-model`'s modifiers to it. */
+function withModifiers(value: unknown): unknown {
+  const m = (modelModifiers ?? {}) as Record<string, boolean | undefined>
+  if (m.trim && (typeof value === 'string' || value == null)) value = (value as string | null | undefined)?.trim() ?? null
+  if (m.number) {
+    const n = Number.parseFloat(value as string)
+    if (!Number.isNaN(n)) value = n
+  }
+  if (m.nullable) value ??= null
+  if (m.optional && !m.nullable && value !== null) value ??= undefined
+  return value
+}
+
+// ── Focus ring on any focus ────────────────────────────────────────────────────────────────────────────────────
+const focused = ref(false)
+const appConfig = useAppConfig() as { ui?: { selectMenu?: { defaultVariants?: { variant?: string } } } }
+// While the trigger has focus, or the menu is open (focus is then in the menu, but the field is still the one being
+// filled in), stock's keyboard-focus look, as a focused UInput draws it: `highlight` is the 1px ring in the menu's
+// color, and `outline-3` the width stock's `focus-visible:outline-3` gives the `outline-<color>/25` halo the theme
+// already sets. The `none` variant has no halo in the theme, so it gets the ring alone.
+const focusRing = computed(() => {
+  if (!focused.value && !isOpen.value) return {}
+  const variant = (attrs.variant as string | undefined) ?? appConfig.ui?.selectMenu?.defaultVariants?.variant ?? 'outline'
+  if (variant === 'none') return { highlight: true }
+  const ui = (attrs.ui ?? {}) as NonNullable<SelectMenuProps['ui']>
+  const base = ui.base
+  // A `ui.base` may be classes to merge or a function that replaces the defaults; the outline goes on after either.
+  const halo: typeof base = typeof base === 'function' ? (defaults: string) => [base(defaults), 'outline-3'] : [base, 'outline-3']
+  return { highlight: true, ui: { ...ui, base: halo } }
+})
+
+function onTriggerFocusout(e: FocusEvent) {
+  if (!(e.currentTarget as Node).contains(e.relatedTarget as Node | null)) focused.value = false
 }
 
 // ── Open on focus ──────────────────────────────────────────────────────────────────────────────────────────────
 let movingFocus = false
 
 function onTriggerFocusin(e: FocusEvent) {
+  focused.value = true
   // Every way back into the menu starts here, so a menu left inert by Tab is usable again (it may be reopened while
   // it is still animating closed, as the same element).
   if (left) left.inert = false
@@ -252,7 +302,7 @@ defineExpose({
 <template>
   <USelectMenu
     ref="menu"
-    v-bind="$attrs"
+    v-bind="{ ...$attrs, ...focusRing }"
     :model-value="model as never"
     :model-modifiers="modelModifiers"
     :items="props.items"
@@ -265,6 +315,7 @@ defineExpose({
     @update:open="onOpen"
     @keydown="onTriggerKeydown"
     @focusin="onTriggerFocusin"
+    @focusout="onTriggerFocusout"
   >
     <template v-for="(_, name) in slots" :key="name" #[name]="slotProps">
       <slot :name="name" v-bind="slotProps ?? {}" />
