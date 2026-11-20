@@ -3,4 +3,9 @@ type: feat
 "@zooui/nuxt"
 ---
 
-New `ZOptionalDate`: a checkbox in front of a `ZDateField`, for a day a record may or may not have ("Has an end date", "Follow-up booked"). Unticking the box disables and greys out the date but leaves the day in `v-model`; `v-model:enabled` binds the box, and the form reads it to know whether the day counts. A day the parent sets doesn't tick the box. With `clear-when-off`, the model is `null` while the box is off and the day comes back on a tick, and a day the parent sets ticks the box. Nothing is written at mount in either mode, so loading a record never marks a form changed, and an `enabled` bound to `undefined` stays `undefined` until the user toggles. `@enabled-change` fires with the new state when the user ticks or unticks the box, never when the parent sets it or the day: the moment to fetch a default date. A tick by the user moves focus into the date. In a `UFormField` the label, help and error belong to the date input, and in a `UForm` a tick or untick revalidates the field. The size comes from an explicit `size` prop, then a surrounding `UFieldGroup`, then the `UFormField`, as Nuxt UI's own inputs read it. Every `ZDateField` model type, limit prop and event passes through.
+New `ZOptionalDate`: a checkbox in front of a date field, for a day a record may or may not have, such as "Has an end date".
+
+- `v-model:enabled` binds the checkbox
+- Unticking greys out the date and keeps it; `clear-when-off` sets it to `null` instead
+- `@enabled-change` fires when the user ticks or unticks the box
+- Ticking the box moves focus into the date

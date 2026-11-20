@@ -3,4 +3,9 @@ type: feat
 "@zooui/nuxt"
 ---
 
-New ZSelectMenu: Nuxt UI's USelectMenu with the keyboard of a data-entry form, and every USelectMenu prop, slot, event and v-model passes through unchanged. Typing on the closed menu picks the first item, from the top of the list, whose label starts with what was typed, and announces it; pressing one letter again and again cycles through the items that start with it. A typeahead pick sets v-model with its modifiers, fires @change and tells a surrounding UForm, so validate-on-change and dirty tracking see it. Tab closes the open menu and moves to the next field, taking the highlighted item in a single-select menu once you have moved the highlight (by arrow keys, typing or hover), and leaving the value as it was for an untouched menu or with multiple. The menu opens on the selected item, and open-on-focus opens it on keyboard focus, for fast data entry. Each of these is a prop that can be switched off (typeahead, close-on-tab, highlight-selected-on-open; open-on-focus is off by default). The trigger shows its focus ring on any focus, a click's included, and keeps it while the menu is open, drawn with Nuxt UI's own focus style, so a focused menu looks like a focused UInput.
+New `ZSelectMenu`: Nuxt UI's `USelectMenu` with a keyboard built for fast data entry. Every `USelectMenu` prop, slot and event still works.
+
+- Type on the closed menu to pick an item (`typeahead`)
+- Tab takes the highlighted item and moves to the next field (`close-on-tab`)
+- `open-on-focus` opens the menu when you Tab into it
+- Shows its focus ring after a click too, like a text input

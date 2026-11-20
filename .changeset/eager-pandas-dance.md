@@ -3,8 +3,16 @@ type: feat
 "@zooui/nuxt"
 ---
 
-New ZFileDropOverlay: a page takes files dropped anywhere in the window, not only on a drop box like Nuxt UI's UFileUpload. While files are dragged over the window, an overlay on Nuxt UI's tokens says what dropping does ("Drop your files" unless label says otherwise, with description and icon props, no icon by default, or the default slot), announced by a polite live region and taking no focus. It fades in and out, with no motion under reduced motion; it hides when the drag leaves the window or on Escape, and doesn't flicker over the page's children. Only drags carrying files bring it up, never text or links dragged within the page. accept (the native input's MIME types, image/* and .ext), multiple and filter (a rule of your own, such as a size limit: false, or a message saying why, refuses the file) decide which files @drop gets; the rest come in @rejected with the reason (accept, filter or multiple) and filter's message. Files are read from dataTransfer.files, or from dataTransfer.items when a browser leaves that empty. With target, it takes drops in one element only, a dialog say, and is drawn inside it, in the dialog's own stacking context. Overlays nest: a page can keep its own while a dialog or region has another. While an overlay sits in an open modal dialog (a showModal() <dialog>, an aria-modal dialog, or a reka-ui modal such as UModal), every overlay outside it stands down: nothing shows or is emitted over the backdrop or the page behind it, a file dropped there still doesn't open in the tab, and the page's overlay works again once the dialog closes. In a region that isn't modal, the innermost overlay under the pointer shows and takes the drop. Either way there's no disabling the page's by hand. A drop that a drop zone under the overlay takes itself, such as a UFileUpload, isn't emitted again. disabled shows and emits nothing but still keeps a dropped file from opening in the tab.
+New `ZFileDropOverlay`: drop files anywhere on the page, or in one dialog, and an overlay says what the drop will do.
 
-New ZFileList: the files a form holds, one row each with a file-type icon, the name, the size and a Remove button in the error color. It lists Files and files already stored ({ id, name, size, type }) together, for an edit form; remove may return a promise, shown as the row's spinner, and a rejection goes to @remove-error. Sizes count in 1024s by default (1.2 KB, 239.3 KB), in the locale's words; :binary="false" gives decimal units. preview shows thumbnails in place of the icon: object URLs for image Files, released when the row goes or the list unmounts, or a stored file's thumbnail URL. #leading and #trailing row slots get { item, index, removing }, for a checkbox or a badge.
+- Choose which files it takes with `accept`, `multiple` and your own `filter`
+- Refused files come in `@rejected`, with the reason
+- `target` limits it to one dialog or region; an open dialog's overlay takes over from the page's
+- `label`, `description` and `icon` set the message
 
-fileMatchesAccept, sortDroppedFiles, droppedFiles, dragCarriesFiles and formatFileSize are auto-imported, so a dialog's dropped and browsed files can go through one rule. sortDroppedFiles takes accept, multiple and filter as the overlay does, and existing (the names already held) or dedupe: 'name' to refuse a repeated name with reason duplicate. formatFileSize(bytes, locale, { binary: false }) gives decimal units.
+New `ZFileList`: the files a form holds, one row each with an icon, the name, the size and Remove.
+
+- Lists new files and already-uploaded ones together
+- `remove` can return a promise, shown as a spinner on the row
+- `preview` shows image thumbnails
+- `#leading` and `#trailing` slots for a checkbox or badge on each row
