@@ -60,18 +60,8 @@ The trigger shows its focus ring whenever it has focus, from a click as much as 
 `USelectMenu` shows it on keyboard focus only (`focus-visible`: a 1px ring and a translucent outline), so after a mouse
 pick, with focus back on the trigger, nothing shows where focus is. While the trigger has focus, `ZSelectMenu` passes
 `USelectMenu` its own `highlight` (the ring in the menu's `color`, `error` in a field with an error) and adds `ring-2`
-to `ui.base`, as Buoy does, so the ring is 2px; keyboard focus adds stock's outline around it. It is Nuxt UI's own ring on Nuxt UI's tokens, so a product's palette and dark mode
+to `ui.base`, so the ring is 2px; keyboard focus adds stock's outline around it. It is Nuxt UI's own ring on Nuxt UI's tokens, so a product's palette and dark mode
 carry through; a `highlight` or `ui.base` you pass is kept.
-
-## Coming from Buoy
-
-Buoy's `USelectMenu` is where this came from. The typeahead (from the top of the list, a repeated letter cycling)
-and the focus ring on any focus are Buoy's, kept on purpose. Three things differ:
-
-- **`close-on-tab` defaults to `true`.** Tab closes the open menu and moves on to the next field. For Buoy's old
-  Tab, pass `:close-on-tab="false"`.
-- **`:highlight-selected-on-open="false"` really opens on the first item**, whatever is selected.
-- **The typeahead's search resets after 1 s** of no typing, not Buoy's half second.
 
 ## API
 

@@ -39,11 +39,3 @@ Use it on forms filled in quickly from the keyboard, like an entry row or a grid
 ## With `multiple`
 
 Typing on a closed `multiple` menu never replaces the selection. It opens the menu on the match instead, with the letter in the search input when there is one, so typing goes on filtering there; Enter or a click adds or removes items as usual.
-
-## Coming from Buoy
-
-The typeahead from the top of the list, with a repeated letter cycling, and the ring on any focus are Buoy's, kept on purpose. Three things differ from Buoy's `USelectMenu`:
-
-- **`close-on-tab` defaults to `true`**: Tab closes the open menu and moves on to the next field. Pass `:close-on-tab="false"` for Buoy's old Tab.
-- **`:highlight-selected-on-open="false"` really opens on the first item**, whatever is selected.
-- **The typeahead's search resets after 1 s** of no typing.

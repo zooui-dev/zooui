@@ -204,7 +204,7 @@ test.describe('the focus ring shows on any focus', () => {
   const ringNative = (page: Page) => section(page, 'ring').locator('[data-ring-native]')
   const ringWrapped = (page: Page) => section(page, 'ring').locator('[data-ring-wrapped]')
   const ring = (l: Locator) => l.evaluate((el) => getComputedStyle(el).boxShadow)
-  // An inset ring in the primary color: 2px is ZSelectMenu's (Buoy's), 1px stock's on keyboard focus.
+  // An inset ring in the primary color: 2px is ZSelectMenu's, 1px stock's on keyboard focus.
   const primaryRing = (page: Page, width = 2) => page.evaluate((w) => {
     const probe = document.createElement('div')
     probe.className = w === 2 ? 'ring-2 ring-inset ring-primary' : 'ring ring-inset ring-primary'

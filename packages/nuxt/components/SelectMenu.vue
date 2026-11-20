@@ -224,7 +224,7 @@ function withModifiers(value: unknown): unknown {
 
 // ── Focus ring on any focus ────────────────────────────────────────────────────────────────────────────────────
 const focused = ref(false)
-// While the trigger has focus: USelectMenu's highlight, with its ring widened to 2px (Buoy's ring; stock's keyboard ring is 1px).
+// While the trigger has focus: USelectMenu's highlight, with its ring widened to 2px (stock's keyboard ring is 1px).
 const focusRing = computed(() => {
   if (!focused.value) return {}
   const ui = (attrs.ui ?? {}) as NonNullable<SelectMenuProps['ui']>
