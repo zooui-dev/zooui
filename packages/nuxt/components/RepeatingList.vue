@@ -12,6 +12,12 @@
 // line with an Edit button (new rows, and any row with an error, are open); without one every row is open.
 // `rowKey` keeps a row's identity while it is renamed (rows that carry history); rows it has no key for are told
 // apart by object identity, hence `T extends object`.
+//
+// `reorderable` adds move buttons to each row, and Alt+ArrowUp / Alt+ArrowDown (Alt+Home / Alt+End to the ends) on
+// anything focused in it. A move hands v-model a new array of the same row objects, so a row's key, its error and
+// whether it is folded go with it; focus stays with the moved row, and the move is announced.
+import { MOVE_ICONS, MOVES, moved, moveForKey, moveTarget, type Move } from './reorder'
+
 const props = withDefaults(
   defineProps<{
     /** One row, singular and lower case: "referral source". */
@@ -44,6 +50,14 @@ const props = withDefaults(
     announce?: (change: { type: 'added' | 'removed'; title: string; count: number }) => string
     /** Where focus lands in a row that is added or opened: the first match in the row. */
     focusSelector?: string
+    /** Rows can be moved: Up and Down on each row, and Alt+ArrowUp / Alt+ArrowDown (Alt+Home / Alt+End to the ends). */
+    reorderable?: boolean
+    /** With `reorderable`, Move to top and Move to bottom buttons as well (the keys work without them). */
+    moveToEnds?: boolean
+    /** A move button's accessible name; "Move Part 3 up", "Move Part 3 to the top" unless given. */
+    moveLabel?: (change: { move: Move; title: string }) => string
+    /** What a screen reader hears when a row is moved; "Moved Part 3 to position 1 of 5." unless given. */
+    announceMove?: (change: { title: string; position: number; count: number }) => string
   }>(),
   {
     rowKey: undefined,
@@ -59,6 +73,10 @@ const props = withDefaults(
     maxLabel: undefined,
     announce: undefined,
     focusSelector: 'input, select, textarea, button[role="radio"]',
+    reorderable: false,
+    moveToEnds: false,
+    moveLabel: undefined,
+    announceMove: undefined,
   },
 )
 const rows = defineModel<T[]>({ required: true })
@@ -123,7 +141,9 @@ const maxText = computed(() => props.maxLabel ?? `That's the most you can add he
 const announcement = ref('')
 let announceTimer: ReturnType<typeof setTimeout> | undefined
 function say(type: 'added' | 'removed', title: string, count: number) {
-  const text = props.announce?.({ type, title, count }) ?? `${title} ${type}. ${count} in the list.`
+  speak(props.announce?.({ type, title, count }) ?? `${title} ${type}. ${count} in the list.`)
+}
+function speak(text: string) {
   announcement.value = ''
   clearTimeout(announceTimer)
   announceTimer = setTimeout(() => { announcement.value = text }, 100)
@@ -178,6 +198,60 @@ function edit(row: T, i: number) {
   focusRow(i)
 }
 
+// Moving. The buttons show only when there is somewhere to move to; a move at an edge is disabled there.
+const showMoves = computed(() => props.reorderable && rows.value.length > 1)
+const shownMoves = computed(() => (props.moveToEnds ? MOVES : MOVES.filter((m) => m === 'up' || m === 'down')))
+const MOVE_WORDS: Record<Move, string> = { up: 'up', down: 'down', top: 'to the top', bottom: 'to the bottom' }
+const moveText = (move: Move, row: T, i: number) => {
+  const title = titleOf(row, i)
+  return props.moveLabel?.({ move, title }) ?? `Move ${title} ${MOVE_WORDS[move]}`
+}
+const canMove = (move: Move, i: number) => moveTarget(move, i, rows.value.length) !== null
+
+// Focus to put back once the moved row is drawn at its new place: the element that had it (the move button, or a
+// field in the row), or, when that is now disabled at the edge, the row's first move button still enabled. Vue moves
+// the row's DOM node, which can drop focus, and with v-model the new order only arrives back through the parent.
+const refocus = shallowRef<{ key: string; to: number; el: HTMLElement | null } | null>(null)
+watch(
+  [refocus, () => rows.value],
+  () => {
+    const r = refocus.value
+    if (!r) return
+    const at = rows.value[r.to]
+    if (!at || keyOf(at) !== r.key) return
+    const rowEl = root.value?.querySelector<HTMLElement>(`:scope > [data-row="${r.to}"]`)
+    if (!rowEl) return
+    refocus.value = null
+    const el = r.el
+    if (el && el.isConnected && rowEl.contains(el) && !(el as HTMLButtonElement).disabled) el.focus()
+    else (rowEl.querySelector<HTMLElement>('[data-move]:not(:disabled)') ?? rowEl.querySelector<HTMLElement>(props.focusSelector))?.focus()
+  },
+  { flush: 'post' },
+)
+
+function move(i: number, how: Move, from: HTMLElement | null) {
+  const to = moveTarget(how, i, rows.value.length)
+  if (to === null) return
+  const row = rows.value[i]!
+  const title = titleOf(row, i)
+  const next = moved(rows.value, i, to)
+  rows.value = next
+  refocus.value = { key: keyOf(row), to, el: from }
+  speak(props.announceMove?.({ title, position: to + 1, count: next.length }) ?? `Moved ${title} to position ${to + 1} of ${next.length}.`)
+}
+
+// The keys work on anything focused in the row. A select or a combobox keeps Alt+ArrowDown, which opens its list; a
+// row of a list nested in this one has already taken the keys (defaultPrevented).
+function onRowKeydown(e: KeyboardEvent, i: number) {
+  if (!props.reorderable || e.defaultPrevented) return
+  const how = moveForKey(e)
+  if (!how) return
+  const target = e.target as HTMLElement
+  if (target.matches('select, [role="combobox"], [role="listbox"]')) return
+  e.preventDefault()
+  move(i, how, target)
+}
+
 /** Back up to `min` rows, whenever there are fewer (on mount, the list was emptied from outside, or `min` rose). */
 function fillToMin() {
   if (rows.value.length < props.min) {
@@ -201,9 +275,25 @@ onMounted(() => {
         :data-row="i"
         data-folded
         class="flex items-center gap-3 rounded-md border border-default bg-muted px-3 py-2"
+        @keydown="onRowKeydown($event, i)"
       >
         <UIcon name="i-lucide-circle-check" class="size-4 shrink-0 text-success" aria-hidden="true" />
         <span class="min-w-0 flex-1 truncate text-sm text-toned"><slot name="summary" :row="row" :index="i" /></span>
+        <span v-if="showMoves" class="inline-flex gap-1" data-moves>
+          <UButton
+            v-for="m in shownMoves"
+            :key="m"
+            type="button"
+            size="xs"
+            variant="ghost"
+            color="neutral"
+            :icon="MOVE_ICONS[m]"
+            :aria-label="moveText(m, row, i)"
+            :disabled="!canMove(m, i)"
+            :data-move="m"
+            @click="move(i, m, $event.currentTarget as HTMLElement)"
+          />
+        </span>
         <UButton type="button" size="xs" variant="ghost" color="neutral" icon="i-lucide-pencil" :aria-label="`${editLabel} ${titleOf(row, i)}`" @click="edit(row, i)">
           {{ editLabel }}
         </UButton>
@@ -223,14 +313,31 @@ onMounted(() => {
         v-else
         :data-row="i"
         :class="compact ? 'flex items-start gap-2' : 'rounded-md border border-default p-3 sm:p-4'"
+        @keydown="onRowKeydown($event, i)"
       >
         <legend :class="compact ? 'sr-only' : 'px-1 text-sm font-semibold text-highlighted'">{{ titleOf(row, i) }}</legend>
         <div :class="compact ? 'min-w-0 flex-1' : 'space-y-4'">
           <slot name="row" :row="row" :index="i" :key="keyOf(row)" :error="errorOf(row)" :errorId="errorIdOf(row)" />
           <p v-if="errorOf(row)" :id="errorIdOf(row)" role="alert" class="mt-1 text-sm text-(--ui-color-error-700) dark:text-(--ui-color-error-300)">{{ errorOf(row) }}</p>
         </div>
-        <div v-if="canRemove(row)" :class="compact ? 'pt-1' : 'mt-3 flex justify-end'">
+        <div v-if="canRemove(row) || showMoves" :class="[compact ? 'pt-1' : 'mt-3 flex justify-end', showMoves && (compact ? 'flex gap-1' : 'gap-3')]">
+          <span v-if="showMoves" class="inline-flex gap-1" data-moves>
+            <UButton
+              v-for="m in shownMoves"
+              :key="m"
+              type="button"
+              size="xs"
+              variant="ghost"
+              color="neutral"
+              :icon="MOVE_ICONS[m]"
+              :aria-label="moveText(m, row, i)"
+              :disabled="!canMove(m, i)"
+              :data-move="m"
+              @click="move(i, m, $event.currentTarget as HTMLElement)"
+            />
+          </span>
           <UButton
+            v-if="canRemove(row)"
             type="button"
             size="xs"
             variant="ghost"

@@ -27,6 +27,23 @@ function check() {
   sourceErrors.value = Object.fromEntries(sources.value.filter((s) => s.id && !s.name.trim()).map((s) => [s.id!, 'Enter name.']))
 }
 watch(sources, () => { if (checked.value) check() }, { deep: true })
+
+// Reorderable: steps folded to a summary, with keys, errors and Move to top / bottom; and compact ranked choices with
+// a minimum and maximum and no row key (told apart by object identity). Each echoes its order, and the ranked one,
+// by which of the starting objects each row is, that a move hands back the same objects.
+interface Step { id?: string; name: string }
+const steps = ref<Step[]>([{ id: 'step a', name: 'Draft' }, { id: 'step b', name: '' }, { id: 'step c', name: 'Review' }])
+const stepErrors = ref<Record<string, string>>({})
+const newStep = (): Step => ({ name: '' })
+const stepKey = (s: Step) => s.id
+const stepTitle = (s: Step, i: number) => s.name || `Step ${i + 1}`
+function checkSteps() {
+  stepErrors.value = Object.fromEntries(steps.value.filter((s) => s.id && !s.name.trim()).map((s) => [s.id!, 'Name this step.']))
+}
+const firstChoices: Category[] = [{ name: 'Email' }, { name: 'Phone' }, { name: 'Text' }]
+const choices = ref<Category[]>([...firstChoices])
+// The ref hands out reactive proxies of the rows: compared as the objects they wrap.
+const choiceIdentity = computed(() => choices.value.map((c) => firstChoices.indexOf(toRaw(c))).join(', '))
 </script>
 
 <template>
@@ -88,6 +105,51 @@ watch(sources, () => { if (checked.value) check() }, { deep: true })
           <UInput v-model="row.name" :aria-label="`Category ${index + 1}`" class="w-full" />
         </template>
       </ZRepeatingList>
+    </div>
+
+    <div data-specimen="repeating-list-steps" class="flex flex-col gap-2">
+      <h3 class="text-sm font-semibold text-highlighted">Steps, in order</h3>
+      <ZRepeatingList
+        v-model="steps"
+        item-label="step"
+        reorderable
+        move-to-ends
+        :new-row="newStep"
+        :row-key="stepKey"
+        :row-title="stepTitle"
+        :errors="stepErrors"
+      >
+        <template #row="{ row, errorId }">
+          <UFormField label="Step name">
+            <UInput v-model="row.name" :aria-describedby="errorId" />
+          </UFormField>
+        </template>
+        <template #summary="{ row }">{{ row.name }}</template>
+      </ZRepeatingList>
+      <div>
+        <UButton data-check-steps label="Check steps" color="neutral" variant="outline" @click="checkSteps" />
+      </div>
+      <p class="text-sm text-muted" data-order>{{ steps.map((s) => s.id ?? 'new').join(', ') }}</p>
+    </div>
+
+    <div data-specimen="repeating-list-choices" class="flex flex-col gap-2">
+      <h3 class="text-sm font-semibold text-highlighted">Contact preference, best first</h3>
+      <ZRepeatingList
+        v-model="choices"
+        item-label="choice"
+        reorderable
+        compact
+        :min="2"
+        :max="4"
+        :row-title="(r, i) => r.name || `Choice ${i + 1}`"
+        :new-row="() => ({ name: '' })"
+        :announce-move="({ title, position }) => `${title} is now choice ${position}.`"
+      >
+        <template #row="{ row, index }">
+          <UInput v-model="row.name" :aria-label="`Choice ${index + 1}`" class="w-full" />
+        </template>
+      </ZRepeatingList>
+      <p class="text-sm text-muted" data-identity>{{ choiceIdentity }}</p>
     </div>
   </section>
 </template>
