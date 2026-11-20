@@ -5,7 +5,7 @@ const fruit = ref('Cherry')
 
 <template>
   <div class="w-full max-w-xs">
-    <UFormField label="Fruit" help="Focus it and type b, b again, or bl; or open it, arrow down and press Tab">
+    <UFormField label="Fruit" help="Focus it and type b, b again, or bl (the search starts from the top); or open it, arrow down and press Tab">
       <ZSelectMenu v-model="fruit" :items="fruits" class="w-full" />
     </UFormField>
   </div>

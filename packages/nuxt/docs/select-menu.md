@@ -22,17 +22,22 @@ and paint alike in light and dark, on the base and on every Forest scheme.
 | Prop | Default | |
 | --- | --- | --- |
 | `highlight-selected-on-open` | `true` | The menu opens on the selected item, so arrow keys go on from it; with `multiple`, the first selected one. reka-ui already does this, and it is kept (and tested); off, the menu opens on the first item. |
-| `typeahead` | `true` | Printable keys on the closed trigger pick the first item whose label starts with what was typed. |
+| `typeahead` | `true` | Printable keys on the closed trigger pick the first item, from the top of the list, whose label starts with what was typed. |
 | `close-on-tab` | `true` | Tab and Shift+Tab close the open menu and move to the next or previous field. |
 | `open-on-focus` | `false` | Keyboard focus opens the menu. |
 
-- **Typeahead** follows a native `<select>`: a search matches the first item whose label (by `label-key`, dotted
-  paths included) starts with it, ignoring case, after the current one; one letter pressed again and again cycles
-  through the items that start with it (`b`, `b`, `b`: Banana, Blueberry, Banana); a longer search stays on the
-  current item while it still matches. The search resets after a second. Group labels, separators and disabled items
-  are skipped. Space opens the menu, unless a search is under way ("new y"). The pick sets `v-model` (the item's
-  `value-key` field, or the item), fires `@change`, and is announced in a polite live region beside the trigger,
-  because the trigger's accessible name is its label, not its value. **With `multiple`** typing never replaces the
+- **Typeahead** searches from the top of the list, whatever is selected (unlike a native `<select>`, which searches
+  on from the current item): a search matches the first item whose label (by `label-key`, dotted paths included)
+  starts with it, ignoring case. One letter pressed again and again cycles through the items that start with it,
+  onward from the current one and round to the first: with Colorado selected, `c` picks California, `c` again
+  Colorado, then Connecticut, then California. The current item (compared by `by`, as `USelectMenu` compares values)
+  stays when it is the match. The search resets after a second. Group labels, separators and disabled items are
+  skipped. Space opens the menu, unless a search is under way ("new y"). Keys a handler has already
+  `preventDefault`ed and keys typed during IME composition are left alone. The pick sets `v-model` (the item's
+  `value-key` field, or the item, with `v-model`'s modifiers applied as `USelectMenu` applies them: `number`, `trim`,
+  `nullable`, `optional`), fires `@change`, **tells a surrounding `UForm`** (its change and input events, so
+  `validate-on` and dirty tracking see the pick, as they see one made in the open menu), and is announced in a polite
+  live region beside the trigger, because the trigger's accessible name is its label, not its value. **With `multiple`** typing never replaces the
   selection: it opens the menu, with the letter in the search input (which filters and highlights the first match,
   and keeps the typing) or, without one, on the match by reka-ui's own typeahead.
 - **Close on Tab.** reka-ui otherwise loops focus inside the open menu. **A single-select menu commits the
@@ -49,12 +54,21 @@ and paint alike in light and dark, on the base and on every Forest scheme.
   anyway, and focus coming back from the menu (Escape, a pick) does not reopen it. Leave it off where people mostly
   Tab past a field or read the form first: a menu opening on every field passed over is in the way.
 
+## Focus ring
+
+The trigger shows its focus ring whenever it has focus, from a click as much as from the keyboard. Stock
+`USelectMenu` shows it on keyboard focus only (`focus-visible`: a 1px ring and a translucent outline), so after a mouse
+pick, with focus back on the trigger, nothing shows where focus is. While the trigger has focus, `ZSelectMenu` passes
+`USelectMenu` its own `highlight` (the ring in the menu's `color`, `error` in a field with an error) and adds `ring-2`
+to `ui.base`, so the ring is 2px; keyboard focus adds stock's outline around it. It is Nuxt UI's own ring on Nuxt UI's tokens, so a product's palette and dark mode
+carry through; a `highlight` or `ui.base` you pass is kept.
+
 ## API
 
 - **Props**: the four above, and `USelectMenu`'s own. `items`, `label-key`, `value-key`, `multiple` and
   `search-input` are declared (typed, and read for typeahead and Tab) and passed on as given.
-- **Emits**: `update:modelValue` and `change` (also fired by a typeahead pick); every other `USelectMenu` event
-  passes through.
+- **Emits**: `update:modelValue` and `change` (also fired by a typeahead pick, with a surrounding `UForm` told too);
+  every other `USelectMenu` event passes through.
 - **Slots**: all of `USelectMenu`'s, passed through.
 - **Exposed**: `triggerRef` (the trigger button) and `viewportRef` (the open menu's list), as `USelectMenu` exposes
   them.
@@ -65,6 +79,7 @@ and paint alike in light and dark, on the base and on every Forest scheme.
 ## Tests
 
 `scripts/select-typeahead.test.mjs` (the matching rules), `apps/base/tests/select-menu.spec.ts` (each behavior with
-a search input, without one, with `multiple` and with grouped items, each switched off, and the pass-through and
-paint against a plain `USelectMenu`) and `apps/forest/tests/select-menu.spec.ts` (a data-entry row from the keyboard,
+a search input, without one, with `multiple` and with grouped items, each switched off; typeahead from the top of the
+list; a `UForm` validating on change after a typeahead pick; the focus ring on mouse and keyboard focus beside a plain
+`USelectMenu`; and the pass-through and paint against a plain `USelectMenu`) and `apps/forest/tests/select-menu.spec.ts` (a data-entry row from the keyboard,
 and the paint on every scheme in light and dark).

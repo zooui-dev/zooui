@@ -1,5 +1,5 @@
 // ZSelectMenu's typeahead (packages/nuxt/components/select-typeahead.ts): the items a search can land on, labels and
-// values read by labelKey and valueKey, and a native select's matching rules. The wiring is tested in Playwright
+// values read by labelKey and valueKey, and the matching rules (from the top of the list; a repeated letter cycles). The wiring is tested in Playwright
 // (apps/base/tests/select-menu.spec.ts).
 // Node strips the TypeScript itself (Node 22.18+, 23.6+), so the layer's source is what runs.
 // Run: node --test 'scripts/*.test.mjs'
@@ -56,14 +56,28 @@ describe('typeaheadMatch', () => {
     assert.equal(typeaheadMatch(FRUIT, 'c', undefined), 'Cherry')
     assert.equal(typeaheadMatch(FRUIT, 'BL', undefined), 'Blueberry')
   })
-  it('moves past the current item on one letter, so pressing it again cycles', () => {
-    assert.equal(typeaheadMatch(FRUIT, 'b', 'Banana'), 'Blueberry')
-    assert.equal(typeaheadMatch(FRUIT, 'b', 'Blueberry'), 'Banana')
-    assert.equal(typeaheadMatch(FRUIT, 'bb', 'Banana'), 'Blueberry')
+  it('searches from the top of the list, not from the current item', () => {
+    const states = ['Alabama', 'California', 'Colorado', 'Connecticut', 'Delaware']
+    assert.equal(typeaheadMatch(states, 'c', 'Colorado'), 'California')
+    assert.equal(typeaheadMatch(states, 'c', 'Delaware'), 'California')
+    assert.equal(typeaheadMatch(states, 'con', 'Colorado'), 'Connecticut')
   })
-  it('stays on the current item while a longer search still matches it', () => {
+  it('a repeated letter cycles through the items that start with it, onward from the current one', () => {
+    const states = ['Alabama', 'California', 'Colorado', 'Connecticut', 'Delaware']
+    assert.equal(typeaheadMatch(states, 'cc', 'California'), 'Colorado')
+    assert.equal(typeaheadMatch(states, 'ccc', 'Colorado'), 'Connecticut')
+    assert.equal(typeaheadMatch(states, 'cccc', 'Connecticut'), 'California')
+    assert.equal(typeaheadMatch(states, 'cc', 'Delaware'), 'California')
+  })
+  it('stays on the current item when it is the match', () => {
+    assert.equal(typeaheadMatch(FRUIT, 'b', 'Banana'), undefined)
     assert.equal(typeaheadMatch(FRUIT, 'ba', 'Banana'), undefined)
     assert.equal(typeaheadMatch(FRUIT, 'bl', 'Banana'), 'Blueberry')
+    assert.equal(typeaheadMatch(FRUIT, 'b', 'Blueberry'), 'Banana')
+  })
+  it('finds the current item by `by` when cycling', () => {
+    const people = [{ id: 1, name: 'Ada' }, { id: 2, name: 'Alan' }, { id: 3, name: 'Grace' }]
+    assert.equal(typeaheadMatch(people, 'aa', { id: 1, name: 'Ada (renamed)' }, { labelKey: 'name', by: 'id' }), people[1])
   })
   it('finds nothing for a search nothing starts with, or an empty one', () => {
     assert.equal(typeaheadMatch(FRUIT, 'z', 'Apple'), undefined)
@@ -72,7 +86,8 @@ describe('typeaheadMatch', () => {
   it('matches objects by labelKey and finds the current one by valueKey', () => {
     const people = [{ id: 1, name: 'Ada' }, { id: 2, name: 'Alan' }, { id: 3, name: 'Grace' }]
     const keys = { labelKey: 'name', valueKey: 'id' }
-    assert.equal(typeaheadMatch(people, 'a', 1, keys), people[1])
+    assert.equal(typeaheadMatch(people, 'a', 3, keys), people[0])
+    assert.equal(typeaheadMatch(people, 'aa', 1, keys), people[1])
     assert.equal(typeaheadMatch(people, 'g', 1, keys), people[2])
   })
 })
