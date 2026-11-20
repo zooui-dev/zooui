@@ -4,8 +4,8 @@
  *
  *   <UApp><NuxtPage /><ZConfirmDialog /></UApp>
  *
- * A ZModal announced as an `alertdialog`, titled by the question and described by its description. As in Buoy's dialog,
- * the description sits in the body with the icon's badge beside it, and the details beneath it. Each question is
+ * A ZModal announced as an `alertdialog`, titled by the question and described by its description. The description
+ * sits in the body with the icon's badge beside it, and the details beneath it. Each question is
  * shown in turn: a call made while one is open waits until it is answered (utils/confirm-queue.ts). Escape, the close
  * button and a click outside are a cancel: `confirm` resolves `false`, `choose` `null`. A question asked with
  * `dismissible: false` ignores Escape and a click outside; Cancel and the close button still cancel it.
@@ -119,7 +119,7 @@ const content = computed(() => ({
   'onOpenAutoFocus': placeFocus,
 }))
 
-/** The dialog's width for each `size`: the widths Buoy's confirm dialog had. */
+/** The dialog's width for each `size`. */
 const WIDTH = { sm: 'sm:max-w-md', md: 'sm:max-w-xl', lg: 'sm:max-w-3xl' } as const
 const ui = computed(() => ({ content: WIDTH[options.value?.size ?? 'sm'] ?? WIDTH.sm, footer: 'justify-between gap-2' }))
 </script>
@@ -135,7 +135,7 @@ const ui = computed(() => ({ content: WIDTH[options.value?.size ?? 'sm'] ?? WIDT
     @update:open="(value: boolean) => { if (!value) dismiss() }"
     @after:leave="afterLeave"
   >
-    <!-- Buoy's layout: the badge beside the description, and the details beneath, indented to the description's column
+    <!-- The badge beside the description, and the details beneath, indented to the description's column
          (40px badge + 12px gap) whenever there is an icon. The badge shows only beside a description: with none, or
          with neither a description nor details (no body at all), there is no badge. -->
     <template v-if="options?.description || details.length" #body>

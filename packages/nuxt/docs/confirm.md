@@ -63,7 +63,7 @@ The types are exported from `composables/useConfirm.ts`.
 ## ZConfirmDialog
 
 The one place the questions render: a `ZModal` (with the question's `color` as its edge) whose content has
-`role="alertdialog"`, named by the title and described by the description. As in Buoy's dialog, the description
+`role="alertdialog"`, named by the title and described by the description. The description
 sits in the body with the icon's badge beside it and the details beneath it, indented to its column. The badge shows
 only beside a description, so a question with only a title, or with details but no description, has no icon. Props: `cancel-label` and
 `confirm-label`, the defaults for questions that don't give their own (Cancel, Confirm). Escape, the close button and a
@@ -98,39 +98,6 @@ false. Focus starts on No and goes back to the button. The popover is a `dialog`
 popover after its trigger) and described by the question and its description; the question icon is `aria-hidden`.
 Hooks: `data-confirm-popover`, `data-confirm-question`, `data-confirm-description`, `data-confirm-question-icon` (its value is the icon's name),
 `data-confirm-cancel`, `data-confirm-action`.
-
-## Coming from Buoy
-
-`useBuoyConfirm`, `BConfirmDialog` and `UConfirmButton` map onto these one for one. Mind the first row: Buoy's
-`confirmLabel` on `UConfirmButton` was the question, and Zoo UI's `confirm-label` is the Yes button.
-
-| Buoy `UConfirmButton` | Zoo UI `ZConfirmButton` |
-| --- | --- |
-| `confirmLabel` (the question) | `question` |
-| `confirmSublabel` | `description` |
-| `confirmYes` | `confirm-label` |
-| `confirmNo` | `cancel-label` |
-| `confirmIcon` | `question-icon` (same default, the alert circle; `false` hides it) |
-| `confirmEnabled` | `confirm-enabled` |
-| `align` | `content.align`, e.g. `:content="{ side: 'bottom', align: 'end' }"` |
-| `icon`, `label` and the other `UButton` props | unchanged: they pass through to the button |
-| `@confirm` | `@confirm` |
-| `@decline` | `@cancel`, which also fires on Escape and a click outside |
-| The outline red Yes, the arrow | the defaults: `confirm-variant="outline"`, `confirm-color="error"`, `arrow` |
-
-| `useBuoyConfirm` / `BConfirmDialog` | Zoo UI `useConfirm` / `ZConfirmDialog` |
-| --- | --- |
-| `useBuoyConfirm()` | `useConfirm()`, with `dismissAll()` added |
-| `<BConfirmDialog />` | `<ZConfirmDialog />`, inside `<UApp>` |
-| `message` | `description` |
-| `iconColor` | `color` (it also colors the edge, and the confirming button unless `confirmColor` is given) |
-| `confirmColor`, `confirmVariant` | `confirmColor`, `confirmVariant` |
-| `icon` | `icon`; left out, it comes from `color` as before, and `false` hides it |
-| `details` with `\n` | works as before: a heading over its text; `{ title, text }` also works |
-| `dismissible`, `size` | `dismissible`, `size` |
-| `confirmLabel`, `cancelLabel` | `confirmLabel`, `cancelLabel` |
-| action `key` | action `value`, of any type: `choose()` is typed by it |
-| `confirmDelete`, `confirmDiscard` | the same names, words and colors; focus starts on Cancel / Keep Editing |
 
 Tested by `scripts/confirm-queue.test.mjs` (the queue), `apps/base/tests/confirm.spec.ts` (every helper for every way
 out, focus, the role and name, queuing, the server, the button's events, `confirmColor`, the icon from the color,

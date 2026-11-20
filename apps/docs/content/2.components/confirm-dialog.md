@@ -90,18 +90,3 @@ A question asked while another is open waits in line. It opens once the first is
 ## On the server
 
 Each Nuxt app keeps its own queue, which on the server means one per request, so a question never crosses from one visitor's page to another's. During server rendering no one can answer, so every call resolves at once as a cancel (`false` or `null`).
-
-## Coming from Buoy
-
-`useBuoyConfirm()` and `BConfirmDialog` map onto `useConfirm()` and `ZConfirmDialog` almost name for name:
-
-| Buoy | Zoo UI |
-| --- | --- |
-| `message` | `description` |
-| `iconColor` | `color`, which also colors the edge, and the confirming button unless `confirmColor` is given |
-| `confirmColor`, `confirmVariant`, `icon`, `dismissible`, `size` | the same names |
-| `details` with `\n` | works as before |
-| action `key` | action `value`, of any type, so `choose()` is typed |
-| `confirmDelete`, `confirmDiscard` | the same names, words and colors |
-
-`UConfirmButton` is now the [confirm button](/components/confirm-button), and its props were renamed: see the table there.

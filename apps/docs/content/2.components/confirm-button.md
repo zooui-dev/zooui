@@ -34,20 +34,3 @@ Every `UButton` prop, attribute and slot passes straight through to the button: 
 When the question opens, focus starts on the declining button, so pressing Enter doesn't confirm by accident. When it closes, focus goes back to the button. The popover is a `dialog` named by the button and described by the question.
 
 For a question that needs more than a line, use `useConfirm()` and the [confirm dialog](/components/confirm-dialog).
-
-## Coming from Buoy
-
-`UConfirmButton`'s props were renamed. Mind `confirmLabel`: in Buoy it was the question, and here `confirm-label` is the Yes button.
-
-| Buoy `UConfirmButton` | `ZConfirmButton` |
-| --- | --- |
-| `confirmLabel` | `question` |
-| `confirmSublabel` | `description` |
-| `confirmYes` | `confirm-label` |
-| `confirmNo` | `cancel-label` |
-| `confirmIcon` | `question-icon` |
-| `confirmEnabled` | `confirm-enabled` |
-| `align` | `content.align`, as in `:content="{ side: 'bottom', align: 'end' }"` |
-| `@decline` | `@cancel`, which also fires on Escape and a click outside |
-
-The look is Buoy's by default: an outlined red Yes, the alert icon and the arrow.

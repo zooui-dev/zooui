@@ -81,7 +81,7 @@ test('announced as an alertdialog named by its question and described by its des
   await expect(d.locator('[data-confirm-icon] svg')).toBeVisible()
 })
 
-test("Buoy's layout: the badge beside the description in the body, the details beneath it in its column", async ({ page }) => {
+test("the layout: the badge beside the description in the body, the details beneath it in its column", async ({ page }) => {
   await open(page)
   await ask(page, 'delete')
   const d = dialog(page)
@@ -364,7 +364,7 @@ test('two-part details: a line break or { title, text } is a heading over its te
   }
   await expect(items.nth(2).locator('[data-confirm-detail-title], [data-confirm-detail-text]')).toHaveCount(0)
   await expect(items.nth(2)).toHaveText('12 transactions will be imported')
-  // details but no description: as in Buoy, no badge, the details still indented to the description's column
+  // details but no description: no badge, the details still indented to the description's column
   await expect(dialog(page).locator('[data-confirm-icon]')).toHaveCount(0)
   await expect(dialog(page).locator('[data-confirm-details]')).toHaveCSS('padding-left', '52px')
 })
@@ -486,7 +486,7 @@ test.describe('ZConfirmButton options', () => {
     return question
   }
 
-  test("Buoy's look by default: an outline Yes, the alert icon before the question, an arrow", async ({ page }) => {
+  test("the look by default: an outline Yes, the alert icon before the question, an arrow", async ({ page }) => {
     await open(page)
     const question = await openPopover(page, 'Remove row')
 

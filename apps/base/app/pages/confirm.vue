@@ -86,7 +86,7 @@ async function askSticky() {
     confirmLabel: 'Sign',
   }))
 }
-/** `size: 'lg'`: Buoy's widest confirm. */
+/** `size: 'lg'`: the widest confirm. */
 async function askWide() {
   record('wide', await confirm({ title: 'Apply the mapping to every client?', description: 'Each client’s chart of accounts is remapped.', size: 'lg', confirmLabel: 'Apply' }))
 }
