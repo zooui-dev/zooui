@@ -28,13 +28,22 @@ function check() {
 }
 watch(sources, () => { if (checked.value) check() }, { deep: true })
 
-// Reorderable: steps folded to a summary, with keys, errors and Move to top / bottom; and compact ranked choices with
-// a minimum and maximum and no row key (told apart by object identity). Each echoes its order, and the ranked one,
-// by which of the starting objects each row is, that a move hands back the same objects.
-interface Step { id?: string; name: string }
-const steps = ref<Step[]>([{ id: 'step a', name: 'Draft' }, { id: 'step b', name: '' }, { id: 'step c', name: 'Review' }])
+// Reorderable: steps folded to a summary, with keys, errors, a nested field, at least two, and Move to top / bottom;
+// and compact ranked choices with a minimum and maximum and no row key (told apart by object identity). Each echoes
+// its order and, by which of the starting objects each row (and a step's nested details) is, that a move or a Cancel
+// hands back the same objects.
+interface Step { id?: string; name: string; details: { owner: string } }
+const firstSteps: Step[] = [
+  { id: 'step a', name: 'Draft', details: { owner: 'Ana' } },
+  { id: 'step b', name: '', details: { owner: 'Ben' } },
+  { id: 'step c', name: 'Review', details: { owner: 'Cy' } },
+]
+const firstDetails = firstSteps.map((s) => s.details)
+const steps = ref<Step[]>([...firstSteps])
+const stepIdentity = computed(() => steps.value.map((s) => firstSteps.indexOf(toRaw(s))).join(', '))
+const detailsIdentity = computed(() => steps.value.map((s) => firstDetails.indexOf(toRaw(s.details))).join(', '))
 const stepErrors = ref<Record<string, string>>({})
-const newStep = (): Step => ({ name: '' })
+const newStep = (): Step => ({ name: '', details: { owner: '' } })
 const stepKey = (s: Step) => s.id
 const stepTitle = (s: Step, i: number) => s.name || `Step ${i + 1}`
 function checkSteps() {
@@ -114,6 +123,7 @@ const choiceIdentity = computed(() => choices.value.map((c) => firstChoices.inde
         item-label="step"
         reorderable
         move-to-ends
+        :min="2"
         :new-row="newStep"
         :row-key="stepKey"
         :row-title="stepTitle"
@@ -123,13 +133,19 @@ const choiceIdentity = computed(() => choices.value.map((c) => firstChoices.inde
           <UFormField label="Step name">
             <UInput v-model="row.name" :aria-describedby="errorId" />
           </UFormField>
+          <UFormField label="Owner">
+            <UInput v-model="row.details.owner" />
+          </UFormField>
         </template>
-        <template #summary="{ row }">{{ row.name }}</template>
+        <template #summary="{ row }">{{ [row.name, row.details.owner].filter(Boolean).join(' · ') }}</template>
       </ZRepeatingList>
       <div>
         <UButton data-check-steps label="Check steps" color="neutral" variant="outline" @click="checkSteps" />
       </div>
       <p class="text-sm text-muted" data-order>{{ steps.map((s) => s.id ?? 'new').join(', ') }}</p>
+      <p class="text-sm text-muted" data-step-identity>{{ stepIdentity }}</p>
+      <p class="text-sm text-muted" data-details-identity>{{ detailsIdentity }}</p>
+      <p class="text-sm text-muted" data-owners>{{ steps.map((s) => s.details.owner || '-').join(', ') }}</p>
     </div>
 
     <div data-specimen="repeating-list-choices" class="flex flex-col gap-2">

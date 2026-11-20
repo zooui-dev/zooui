@@ -198,3 +198,47 @@ test.describe('reordering', () => {
     await expect(list.locator('[data-row="1"] input')).toHaveValue('Post')
   })
 })
+
+// The rows slide to their new places: Vue's TransitionGroup move (FLIP), the move class a 200ms transform transition.
+// Which rows carry it during the slide, by their new index, and how many still do once it is over. (Vue slides every
+// row whose box moved at all, so a row below the two swapped can slide by a fraction of a pixel too.)
+async function slide(list: Locator) {
+  return list.evaluate(async (root) => {
+    const wrappers = () => [...root.querySelectorAll(':scope > [data-rows] > *')]
+    const moving = () => wrappers().filter((w) => w.classList.contains('transition-transform'))
+      .map((w) => w.querySelector('[data-row]')!.getAttribute('data-row'))
+    root.querySelector<HTMLButtonElement>('[data-row="0"] [data-move="down"]')!.click()
+    for (let i = 0; i < 10; i++) await Promise.resolve()
+    await new Promise((r) => requestAnimationFrame(r))
+    const during = moving()
+    await new Promise((r) => setTimeout(r, 500))
+    return { during, after: moving().length }
+  })
+}
+
+test.describe('motion', () => {
+  test.beforeEach(async ({ page }) => open(page))
+
+  test('a move slides both rows, then they land: order, focus and the announcement right', async ({ page }) => {
+    const list = page.locator('[data-specimen="repeating-list-steps"]').getByTestId('repeating-list')
+    const { during, after } = await slide(list)
+    expect(during).toEqual(expect.arrayContaining(['0', '1']))
+    expect(after).toBe(0)
+    await expect(page.locator('[data-specimen="repeating-list-steps"] [data-order]')).toHaveText('step b, step a, step c')
+    await expect(list.getByRole('button', { name: 'Move Draft down', exact: true })).toBeFocused()
+    await expect(announced(list)).toHaveText('Moved Draft to position 2 of 3.')
+  })
+})
+
+test.describe('reduced motion', () => {
+  test.use({ reducedMotion: 'reduce' })
+  test.beforeEach(async ({ page }) => open(page))
+
+  test('nothing slides; the move, focus and the announcement are the same', async ({ page }) => {
+    const list = page.locator('[data-specimen="repeating-list-steps"]').getByTestId('repeating-list')
+    expect(await slide(list)).toEqual({ during: [], after: 0 })
+    await expect(page.locator('[data-specimen="repeating-list-steps"] [data-order]')).toHaveText('step b, step a, step c')
+    await expect(list.getByRole('button', { name: 'Move Draft down', exact: true })).toBeFocused()
+    await expect(announced(list)).toHaveText('Moved Draft to position 2 of 3.')
+  })
+})
