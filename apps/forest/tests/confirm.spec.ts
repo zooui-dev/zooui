@@ -5,11 +5,12 @@ import { findConflicts } from '@zooui/nuxt/testing/find-conflicts'
 // behavior is covered in full on the base (apps/base/tests/confirm.spec.ts); here, that it works on the theme, and
 // that on every scheme in light and dark the dialog's and the popover's text clears 4.5:1 (the description in the body
 // beside the badge, and two-part details, included)
-// and the dialog's and the popover's icons 3:1 (a title-only question's warning icon is inked as the body's warning
-// badge is, and clears 3:1 in dark); and that a warning dialog keeps its warning badge beside a primary or
+// and the dialog's and the popover's icons 3:1 (every color's badge, and a title-only question's warning icon, inked
+// as the body's warning badge is); and that a warning dialog keeps its warning badge beside a primary or
 // a red button.
 
 const SCHEMES = ['teal', 'slate-cobalt', 'graphite-violet', 'paper-olive', 'ink-indigo', 'ember']
+const BADGE_COLORS = ['primary', 'success', 'info', 'warning', 'error']
 
 async function open(page: Page, baseURL: string, scheme = 'teal', mode: 'light' | 'dark' = 'light') {
   await page.context().addCookies([{ name: 'zooui-scheme', value: scheme, url: baseURL }])
@@ -115,15 +116,26 @@ for (const mode of ['light', 'dark'] as const) {
         })
         expect(Object.entries(details).filter(([, r]) => r < 4.5)).toEqual([])
         expect(await page.evaluate(findConflicts)).toEqual([])
-        // no description: the warning icon beside the title, inked as the warning badge beside a description is. That
-        // ink clears 3:1 in dark; in light, Forest's warning token is under it (about 2.6:1) in the body and title alike.
+        // no description: the warning icon beside the title, inked as the warning badge beside a description is
         const titleIcon = await contrasts(page, { icon: `${d} [data-slot="title"] [data-confirm-icon]` })
         await page.keyboard.press('Escape')
         await expect(page.getByRole('alertdialog')).toBeHidden()
         await until(page, () => page.locator('[data-ask="mixed"]').click(), () => expect(page.getByRole('alertdialog')).toBeVisible({ timeout: 1000 }))
         const bodyIcon = await contrasts(page, { icon: `${d} [data-slot="body"] [data-confirm-icon]` })
         expect(titleIcon.icon).toBeCloseTo(bodyIcon.icon!, 2)
-        if (mode === 'dark') expect(titleIcon.icon).toBeGreaterThanOrEqual(3)
+        expect(titleIcon.icon).toBeGreaterThanOrEqual(3)
+        await page.keyboard.press('Escape')
+        await expect(page.getByRole('alertdialog')).toBeHidden()
+
+        // every color's badge: its icon on its own tint clears 3:1
+        const badges: Record<string, number> = {}
+        for (const color of BADGE_COLORS) {
+          await until(page, () => page.locator(`[data-ask="color-${color}"]`).click(), () => expect(page.getByRole('alertdialog')).toBeVisible({ timeout: 1000 }))
+          badges[color] = (await contrasts(page, { icon: `${d} [data-slot="body"] [data-confirm-icon]` })).icon!
+          await page.keyboard.press('Escape')
+          await expect(page.getByRole('alertdialog')).toBeHidden()
+        }
+        expect(Object.entries(badges).filter(([, r]) => r < 3)).toEqual([])
       })
     }
   })
@@ -137,18 +149,23 @@ for (const mode of ['light', 'dark'] as const) {
         const p = document.createElement('div'); p.style.color = `var(--ui-${name})`; root.append(p)
         const c = getComputedStyle(p).color; p.remove(); return c
       }
+      // Forest's warning INK: the 700 in light, Nuxt UI's warning in dark (theme.css, "Status INK apart from status FILL")
+      const ink = (name: string) => {
+        const p = document.createElement('div'); p.className = `text-${name}`; root.append(p)
+        const c = getComputedStyle(p).color; p.remove(); return c
+      }
       return {
         edge: getComputedStyle(root).borderTopColor,
         badge: getComputedStyle(root.querySelector('[data-confirm-icon]')!).color,
         action: getComputedStyle(root.querySelector('[data-confirm-action]')!).backgroundColor,
-        warning: token('warning'), primary: token('primary'), error: token('error'),
+        warning: token('warning'), primary: token('primary'), error: token('error'), warningInk: ink('warning'),
       }
     })
     for (const [which, button] of [['mixed', 'primary'], ['warn-red', 'error']] as const) {
       await until(page, () => page.locator(`[data-ask="${which}"]`).click(), () => expect(page.getByRole('alertdialog')).toBeVisible({ timeout: 1000 }))
       const got = await colors()
       expect(got.edge).toBe(got.warning)
-      expect(got.badge).toBe(got.warning)
+      expect(got.badge).toBe(got.warningInk)
       expect(got.action).toBe(got[button])
       expect(got.warning).not.toBe(got[button])
       await page.keyboard.press('Escape')

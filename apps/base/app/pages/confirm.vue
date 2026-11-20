@@ -64,6 +64,17 @@ async function askErrorIcon() {
 async function askNoIcon() {
   record('no-icon', await confirm({ title: 'Remove the member?', description: 'Their projects stay on file.', color: 'error', icon: false, confirmLabel: 'Remove' }))
 }
+/** One question per color, each with an icon, so the badge's ink can be read in every color. */
+const BADGE_COLORS = ['primary', 'success', 'info', 'warning', 'error'] as const
+async function askColor(color: (typeof BADGE_COLORS)[number]) {
+  record(`color-${color}`, await confirm({
+    title: `A ${color} question?`,
+    description: `The badge beside this text is inked in ${color}.`,
+    color,
+    icon: 'i-lucide-circle-alert',
+    confirmLabel: 'OK',
+  }))
+}
 /** A title and nothing else: the warning icon sits beside the title. */
 async function askTitleOnly() {
   record('title-only', await confirm({ title: 'Archive the March sprint?', color: 'warning', confirmLabel: 'Archive' }))
@@ -165,6 +176,25 @@ const revokeEvents = ref<string[]>([])
       <div class="flex flex-wrap gap-2">
         <UButton label="Error, no icon given" color="error" variant="outline" data-ask="error-icon" @click="askErrorIcon" />
         <UButton label="Error, icon: false" color="error" variant="outline" data-ask="no-icon" @click="askNoIcon" />
+      </div>
+    </section>
+
+    <section class="flex flex-col gap-2">
+      <h3 class="font-semibold text-highlighted">Every color's badge</h3>
+      <p class="text-sm text-muted">
+        Try: open each one and look at the round badge beside the description. Its icon is drawn in the dialog's color
+        on a faint tint of that color, and should stand out clearly in light and dark mode on every scheme.
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <UButton
+          v-for="color in BADGE_COLORS"
+          :key="color"
+          :label="`Badge: ${color}`"
+          :color="color"
+          variant="outline"
+          :data-ask="`color-${color}`"
+          @click="askColor(color)"
+        />
       </div>
     </section>
 
