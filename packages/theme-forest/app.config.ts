@@ -66,6 +66,8 @@ export default defineAppConfig({
         // the grid's z-10 header cells and z-50 group labels compete with the page's own chrome, and paint over a
         // sticky page header (`z-10`) as the page scrolls the grid under it. Inside, nothing changes: the grid is
         // still its own scroll container, and its sticky rows keep their order among themselves.
+        // nu-grid 0.4.5+ puts `isolate` on the root itself; this line is for products on older nu-grid, and is a
+        // no-op on newer ones.
         root: 'isolate',
         groupHeader: 'bg-elevated/50 hover:bg-elevated dark:bg-elevated/50 dark:hover:bg-elevated',
         groupHeaderLeft: 'border-l-3',
