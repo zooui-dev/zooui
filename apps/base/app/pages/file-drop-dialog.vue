@@ -53,7 +53,8 @@ function remove(item: FileListItem) {
       <h1 class="text-xl font-semibold text-highlighted">ZFileDropOverlay in a dialog, with ZFileList</h1>
       <p class="text-sm text-muted">
         A transfer dialog's Files field. The whole dialog takes dropped files, with its own overlay drawn inside it, and
-        the page behind has a window-level overlay of its own: only the one under the pointer shows. The field lists the
+        the page behind has a window-level overlay of its own. While the dialog is open the page takes no drops at all, not even
+        on the backdrop; once it closes, the page's overlay works again. The field lists the
         files the transfer already holds (from the server) and the ones being added, with the drop zone under it to
         browse. Dropped and browsed files go through the same rule (PDFs, CSVs and images); a refused one is a toast.
         <strong>Dropped on the page</strong> shows what the page's own overlay took.
@@ -62,14 +63,14 @@ function remove(item: FileListItem) {
 
     <section class="flex flex-col gap-3">
       <h2 class="text-base font-semibold text-highlighted">The page</h2>
-      <p data-zone="page" class="text-sm text-muted">Try this: drag a file over the page with the dialog closed; the page's overlay takes it.</p>
+      <p data-zone="page" class="text-sm text-muted">Try this: drag a file over the page with the dialog closed; the page's overlay takes it. Open the dialog and drag over the backdrop: nothing shows, and the file doesn't open in the tab.</p>
       <p class="text-sm">Dropped on the page: <span data-testid="page-dropped">{{ pageDropped.join(', ') || 'none' }}</span></p>
       <ZFileDropOverlay label="Drop on the page" @drop="(f) => (pageDropped = f.map((x) => x.name))" />
     </section>
 
     <section class="flex flex-col items-start gap-3">
       <h2 class="text-base font-semibold text-highlighted">The dialog</h2>
-      <p class="text-sm text-muted">Try this: open the dialog and drop files anywhere on it; they join the list, and a Word file is refused.</p>
+      <p class="text-sm text-muted">Try this: open the dialog and drop files anywhere on it; they join the list, and a Word file is refused. Close it and drag over the page again: the page's overlay is back.</p>
     <ZModal v-model:open="open" title="Edit transfer" description="Send files to a client">
       <UButton label="Open the dialog: Edit transfer" data-open-dialog />
       <template #content="{ close }">

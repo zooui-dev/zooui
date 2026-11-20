@@ -37,7 +37,10 @@ function report(rejected: RejectedFile[]) {
 
 ## Nested overlays
 
-A page can keep its window-level overlay while a dialog or region inside it has its own. Only the innermost one under the pointer shows and takes the drop: drag over the dialog and the dialog's shows; drag back onto the page and the page's does. There is no need to set `disabled` on the page's while a dialog is open.
+A page can keep its window-level overlay while a dialog or region inside it has its own, with nothing to wire up.
+
+- **In a modal dialog,** the dialog holds the page. While an overlay is contained in an open modal (a `<dialog>` opened with `showModal()`, an `aria-modal` dialog, or a reka-ui modal such as Nuxt UI's `UModal` and `USlideover`), every overlay outside it stands down, as if disabled: nothing shows over the backdrop or the page behind it, nothing is emitted there, and a file dropped there is still kept from opening in the tab. When the dialog closes, the page's overlay works again.
+- **In a region on the page,** not modal, the innermost overlay under the pointer wins: drag over the region and the region's shows; drag back onto the page and the page's does.
 
 ## What it takes
 

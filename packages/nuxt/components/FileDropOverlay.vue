@@ -11,6 +11,39 @@ function claim(e: Event) {
   claimed.add(e)
   return true
 }
+
+/** The targets of every contained overlay attached now, for the modal check below. */
+const containedTargets = new Set<HTMLElement>()
+
+/**
+ * The open modal dialog `el` is in, if any: a `<dialog>` opened with showModal(), an `aria-modal` dialog, or one that
+ * hides the rest of the page from assistive tech, which is how reka-ui marks its modals (Nuxt UI's UModal, USlideover):
+ * it sets `data-aria-hidden` on everything outside them rather than `aria-modal` on them.
+ */
+function modalOf(el: HTMLElement): HTMLElement | null {
+  const dialog = el.closest<HTMLElement>('dialog, [role="dialog"], [role="alertdialog"]')
+  if (!dialog?.isConnected) return null
+  if (dialog instanceof HTMLDialogElement) {
+    try { return dialog.matches(':modal') ? dialog : null } catch { return null }
+  }
+  if (dialog.getAttribute('aria-modal') === 'true') return dialog
+  for (let n: HTMLElement | null = dialog; n?.parentElement && n !== document.body; n = n.parentElement) {
+    for (const sibling of n.parentElement.children) {
+      if (sibling !== n && sibling.getAttribute('data-aria-hidden') === 'true') return dialog
+    }
+  }
+  return null
+}
+
+/** Whether an overlay contained in an open modal that `container` is outside holds the page: this one stands down. */
+function outrankedByModal(container: HTMLElement) {
+  for (const target of containedTargets) {
+    if (target === container) continue
+    const modal = modalOf(target)
+    if (modal && !modal.contains(container)) return true
+  }
+  return false
+}
 </script>
 
 <script setup lang="ts">
@@ -75,13 +108,17 @@ defineSlots<{
 const dragging = ref(false)
 /** Escape was pressed during this drag: the overlay stays hidden until the drag ends. */
 const dismissed = ref(false)
-const visible = computed(() => dragging.value && !dismissed.value && !props.disabled)
+/** An overlay contained in an open modal this one is outside holds the page: this one shows and takes nothing, as if
+ *  disabled. Read again on every drag event, so it lifts by itself when the modal closes. */
+const standingDown = ref(false)
+const visible = computed(() => dragging.value && !dismissed.value && !props.disabled && !standingDown.value)
 
 let depth = 0
 function reset() {
   depth = 0
   dragging.value = false
   dismissed.value = false
+  standingDown.value = false
 }
 
 /** The element the overlay is contained in, when `target` names one; null for the window. */
@@ -100,6 +137,7 @@ const scoped = shallowRef<HTMLElement | null>(null)
 function onEnter(e: DragEvent) {
   if (!dragCarriesFiles(e.dataTransfer) || !claim(e)) return
   depth += 1
+  standingDown.value = !!bound && outrankedByModal(bound)
   dragging.value = true
 }
 function onLeave(e: DragEvent) {
@@ -113,6 +151,7 @@ function onOver(e: DragEvent) {
   // A drop zone under the pointer that took the event (a UFileUpload) keeps its own dropEffect: 'none' here would
   // cancel its drop, and 'copy' would let through one it refused.
   if (e.defaultPrevented) return
+  standingDown.value = !!bound && outrankedByModal(bound)
   // Without this the drop never fires and the browser opens the file in the tab.
   e.preventDefault()
   if (e.dataTransfer) e.dataTransfer.dropEffect = visible.value ? 'copy' : 'none'
@@ -124,7 +163,7 @@ function onDrop(e: DragEvent) {
   // A drop zone under the pointer took these files itself: handing them out again would add them twice.
   const takenByZone = e.defaultPrevented
   e.preventDefault()
-  const take = visible.value && !takenByZone
+  const take = visible.value && !takenByZone && !(bound && outrankedByModal(bound))
   reset()
   if (!take || !e.dataTransfer) return
   const { accepted, rejected } = sortDroppedFiles(e.dataTransfer.files, { accept: props.accept, multiple: props.multiple })
@@ -143,6 +182,7 @@ function bind(el: HTMLElement) {
   el.addEventListener('dragleave', onLeave)
   el.addEventListener('dragover', onOver)
   el.addEventListener('drop', onDrop)
+  if (el !== document.documentElement) containedTargets.add(el)
   if (el !== document.documentElement && getComputedStyle(el).position === 'static') {
     ownPosition = el.style.position
     el.style.position = 'relative'
@@ -155,6 +195,7 @@ function unbind() {
   bound.removeEventListener('dragleave', onLeave)
   bound.removeEventListener('dragover', onOver)
   bound.removeEventListener('drop', onDrop)
+  containedTargets.delete(bound)
   if (ownPosition !== null) bound.style.position = ownPosition
   ownPosition = null
   bound = null

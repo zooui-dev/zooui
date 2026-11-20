@@ -26,6 +26,8 @@ const DIALOG = '[data-zone="dialog"]'
 const FIELD = '[data-zone="field"]'
 const UPLOAD = '[data-zone="upload"] [data-slot="base"]'
 const PAGE = '[data-zone="page"]'
+/** The modal's backdrop: outside the dialog, over the page. */
+const BACKDROP = '[data-slot="overlay"]'
 const dialogOverlay = (page: Page) => page.locator(`${DIALOG} [data-file-drop-overlay]`)
 const pageOverlay = (page: Page) => page.locator('body > [data-file-drop-overlay]')
 const rows = (page: Page) => page.locator('[data-file-row]')
@@ -70,30 +72,46 @@ test('dragging over the dialog shows only its own overlay, drawn over the dialog
   await expect(page.getByRole('dialog')).toBeVisible()
 })
 
-test('from the page into the dialog and back, only the overlay under the pointer shows, and the page\'s takes a drop on the page', async ({ page }) => {
-  await fire(page, 'dragenter', PAGE)
-  await expect(pageOverlay(page)).toBeVisible()
+test('while the dialog is open the page takes no drops: over the backdrop nothing shows, nothing is emitted, and the file stays out of the tab', async ({ page }) => {
+  await fire(page, 'dragenter', BACKDROP)
+  await expect(pageOverlay(page)).toHaveCount(0)
   await expect(dialogOverlay(page)).toHaveCount(0)
+  expect(await fire(page, 'dragover', BACKDROP)).toEqual({ prevented: true, dropEffect: 'none' })
 
-  // Into the dialog: entered there, then the page left.
+  // Into the dialog: entered there, then the backdrop left. The dialog's shows.
   await fire(page, 'dragenter', FIELD)
-  await fire(page, 'dragleave', PAGE)
+  await fire(page, 'dragleave', BACKDROP)
   await expect(dialogOverlay(page)).toBeVisible()
   await expect(pageOverlay(page)).toHaveCount(0)
-  // Across the dialog's own children, the page's stays down.
+  // Across the dialog's own children, it holds.
   await fire(page, 'dragenter', UPLOAD)
   await fire(page, 'dragleave', FIELD)
   await expect(dialogOverlay(page)).toBeVisible()
-  await expect(pageOverlay(page)).toHaveCount(0)
 
-  // Back out onto the page.
-  await fire(page, 'dragenter', PAGE)
+  // Back out over the backdrop: neither shows, and a drop there is refused rather than opened.
+  await fire(page, 'dragenter', BACKDROP)
   await fire(page, 'dragleave', UPLOAD)
-  await expect(pageOverlay(page)).toBeVisible()
   await expect(dialogOverlay(page)).toHaveCount(0)
+  await expect(pageOverlay(page)).toHaveCount(0)
+  // Over the page's own content too (aria-hidden behind the modal, but still in the document).
+  await fire(page, 'dragenter', PAGE)
+  await fire(page, 'dragleave', BACKDROP)
+  await expect(pageOverlay(page)).toHaveCount(0)
+  expect((await fire(page, 'drop', PAGE)).prevented).toBe(true)
+  await expect(page.getByTestId('page-dropped')).toHaveText('none')
+  expect(await names(page)).toEqual(STORED)
+  await expect(page.getByRole('dialog')).toBeVisible()
+})
+
+test('once the dialog closes, the page takes drops again with nothing wired up', async ({ page }) => {
+  await page.locator('[data-close-dialog]').click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await fire(page, 'dragenter', PAGE)
+  await expect(pageOverlay(page).getByText('Drop on the page')).toBeVisible()
+  expect(await fire(page, 'dragover', PAGE)).toEqual({ prevented: true, dropEffect: 'copy' })
   await fire(page, 'drop', PAGE)
   await expect(page.getByTestId('page-dropped')).toHaveText('report.pdf')
-  expect(await names(page)).toEqual(STORED)
+  await expect(pageOverlay(page)).toHaveCount(0)
 })
 
 test('a file the rule refuses is reported in a toast, and the rest is added', async ({ page }) => {

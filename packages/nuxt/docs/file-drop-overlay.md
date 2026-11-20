@@ -55,6 +55,16 @@ overlay counts the drag over the dialog, the page's the drag over the rest, and 
 over its own; the drop goes to the one under it. A disabled overlay still claims, so the count stays whole when
 `disabled` changes mid-drag, and a dialog's disabled overlay keeps the page's from taking drops over the dialog.
 
+**A modal holds the page.** Innermost-wins is for regions. While an overlay is contained in an open modal, every
+overlay outside that modal stands down, as if disabled: nothing shows over the backdrop or the page behind it,
+nothing is emitted, and `dragover` there still gets `dropEffect = 'none'`, so a dropped file doesn't open in the tab.
+A container is in an open modal when its nearest `dialog` / `[role="dialog"]` / `[role="alertdialog"]` is a
+`<dialog>` matching `:modal` (opened with `showModal()`), has `aria-modal="true"`, or has the rest of the page hidden
+from assistive tech with `data-aria-hidden`, which is how reka-ui marks its modals (Nuxt UI's `UModal`, `USlideover`):
+it sets that on everything outside them rather than `aria-modal` on them. Every contained overlay's target is in one
+shared set, and an overlay checks it on each drag event rather than at mount, so it lifts by itself when the modal
+closes (its overlay unmounts, or its dialog stops matching), with nothing for the page to wire up.
+
 **Drop zones under it.** When a drop zone under the pointer (a `UFileUpload`) has taken the `dragover`, its
 `dropEffect` is left alone, and a drop it takes (`defaultPrevented`) isn't emitted again. One it refuses is the
 overlay's.
@@ -70,7 +80,8 @@ focusable, so focus stays where it was and isn't trapped.
 **The rule, on its own.** `fileMatchesAccept(file, accept)`, `sortDroppedFiles(files, { accept, multiple })` and
 `dragCarriesFiles(dataTransfer)` are auto-imported (`utils/file-drop.ts`), so a product's own inputs can take the same
 files. Tested by `scripts/file-drop.test.mjs`; the component by `apps/base/tests/file-drop.spec.ts`,
-`apps/base/tests/file-drop-dialog.spec.ts` (contained in a `ZModal`, nested, with `ZFileList`) and
+`apps/base/tests/file-drop-dialog.spec.ts` (contained in a `ZModal`, the page standing down behind it, with
+`ZFileList`) and
 `apps/forest/tests/file-drop.spec.ts`.
 
 ## In a dialog, with a file list
