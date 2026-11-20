@@ -64,8 +64,8 @@ The types are exported from `composables/useConfirm.ts`.
 
 The one place the questions render: a `ZModal` (with the question's `color` as its edge) whose content has
 `role="alertdialog"`, named by the title and described by the description. As in Buoy's dialog, the description
-sits in the body with the icon's badge beside it and the details beneath it, in its column; a question with neither a
-description nor details has no body, and so no icon. Props: `cancel-label` and
+sits in the body with the icon's badge beside it and the details beneath it, indented to its column. The badge shows
+only beside a description, so a question with only a title, or with details but no description, has no icon. Props: `cancel-label` and
 `confirm-label`, the defaults for questions that don't give their own (Cancel, Confirm). Escape, the close button and a
 click outside resolve as a cancel, unless the question is `dismissible: false`. The footer has Cancel on the left and
 the answers together on the right. **Focus** starts on Cancel for a destructive question and on the last

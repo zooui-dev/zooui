@@ -135,34 +135,29 @@ const ui = computed(() => ({ content: WIDTH[options.value?.size ?? 'sm'] ?? WIDT
     @update:open="(value: boolean) => { if (!value) dismiss() }"
     @after:leave="afterLeave"
   >
-    <!-- Buoy's layout: the badge beside the description, the details beneath it in the description's column. With
-         neither a description nor details there is no body, and no icon. -->
+    <!-- Buoy's layout: the badge beside the description, and the details beneath, indented to the description's column
+         (40px badge + 12px gap) whenever there is an icon. The badge shows only beside a description: with none, or
+         with neither a description nor details (no body at all), there is no badge. -->
     <template v-if="options?.description || details.length" #body>
-      <div class="flex items-start gap-3">
-        <span v-if="icon" class="grid size-10 shrink-0 place-items-center rounded-full" :class="badge" :data-confirm-icon="icon">
-          <UIcon :name="icon" class="size-5" aria-hidden="true" />
-        </span>
-        <div class="flex min-w-0 flex-1 flex-col gap-3">
-          <p
-            v-if="options?.description"
-            :id="descriptionId"
-            class="text-sm text-toned"
-            :class="{ 'pt-2': icon }"
-            data-confirm-description
-          >
+      <div class="flex flex-col gap-3">
+        <div v-if="options?.description" class="flex items-start gap-3">
+          <span v-if="icon" class="grid size-10 shrink-0 place-items-center rounded-full" :class="badge" :data-confirm-icon="icon">
+            <UIcon :name="icon" class="size-5" aria-hidden="true" />
+          </span>
+          <p :id="descriptionId" class="text-sm text-toned" :class="{ 'pt-2': icon }" data-confirm-description>
             {{ options.description }}
           </p>
-          <!-- toned, not muted: muted on the elevated ground falls under 4.5:1 on some Forest schemes in light mode -->
-          <ul v-if="details.length" class="flex flex-col gap-1.5 text-sm text-toned" data-confirm-details>
-            <li v-for="(detail, i) in details" :key="i" class="rounded-md bg-elevated px-3 py-2">
-              <template v-if="detail.title">
-                <span class="block font-medium text-highlighted" data-confirm-detail-title>{{ detail.title }}</span>
-                <span v-if="detail.text" class="block whitespace-pre-line text-toned" data-confirm-detail-text>{{ detail.text }}</span>
-              </template>
-              <template v-else>{{ detail.text }}</template>
-            </li>
-          </ul>
         </div>
+        <!-- toned, not muted: muted on the elevated ground falls under 4.5:1 on some Forest schemes in light mode -->
+        <ul v-if="details.length" class="flex flex-col gap-1.5 text-sm text-toned" :class="{ 'pl-13': icon }" data-confirm-details>
+          <li v-for="(detail, i) in details" :key="i" class="rounded-md bg-elevated px-3 py-2">
+            <template v-if="detail.title">
+              <span class="block font-medium text-highlighted" data-confirm-detail-title>{{ detail.title }}</span>
+              <span v-if="detail.text" class="block whitespace-pre-line text-toned" data-confirm-detail-text>{{ detail.text }}</span>
+            </template>
+            <template v-else>{{ detail.text }}</template>
+          </li>
+        </ul>
       </div>
     </template>
 

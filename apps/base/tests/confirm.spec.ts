@@ -364,6 +364,9 @@ test('two-part details: a line break or { title, text } is a heading over its te
   }
   await expect(items.nth(2).locator('[data-confirm-detail-title], [data-confirm-detail-text]')).toHaveCount(0)
   await expect(items.nth(2)).toHaveText('12 transactions will be imported')
+  // details but no description: as in Buoy, no badge, the details still indented to the description's column
+  await expect(dialog(page).locator('[data-confirm-icon]')).toHaveCount(0)
+  await expect(dialog(page).locator('[data-confirm-details]')).toHaveCSS('padding-left', '52px')
 })
 
 test.describe('dismissible: false', () => {
