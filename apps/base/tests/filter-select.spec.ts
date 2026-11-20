@@ -70,7 +70,7 @@ test('the product\'s selectors and behavior hold in a production build: pick, an
   await panel(page).getByRole('option', { name: /^Open/ }).click()
   await panel(page).getByRole('option', { name: /^Done/ }).click()
   await expect(page.locator('[data-model="status"]')).toHaveText('["open","done"]')
-  await expect(button).toHaveAccessibleName('Status, 2 selected')
+  await expect(button).toHaveAccessibleName('Status, Open, Done')
   await expect(filter(page, 'status').locator('[data-announce]')).toHaveText('Status: 2 selected.')
   await page.keyboard.press('Escape')
   await expect(button).toBeFocused()

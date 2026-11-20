@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="T extends object, VK extends (keyof T & string) | undefined = undefined">
-// A faceted filter for a list or table toolbar: a button naming the filter, with a badge for what is chosen (the
-// value when it is one, the number when it is more), that opens a searchable list of options to check, each with an
+// A faceted filter for a list or table toolbar: a button naming the filter, with a chip per chosen value (up to
+// `maxShown`, then one chip saying how many), that opens a searchable list of options to check, each with an
 // optional count of the records it matches and an optional icon, and All and Clear under them.
 //
 //   <ZFilterSelect v-model="statuses" label="Status" :options="statusOptions" value-key="value" />
@@ -12,18 +12,27 @@
 //
 // SEARCH is literal and case-insensitive (utils/filter-match.ts): what is typed is text, never a pattern, so `(` or
 // `.` match themselves. The options keep their order, and each label is drawn as segments with the matches in <mark>,
-// never through v-html. All checks every option on screen (the matches, while searching); Clear empties the filter.
+// never through v-html. Checking or unchecking an option clears the search, as Buoy's control does, so the next pick
+// starts from the whole list. All checks every option on screen (the matches, while searching) and leaves the search
+// as it is; Clear empties the filter.
 //
 // KEYBOARD. Focus opens in the search box. The arrow keys, Home and End move through the options; Enter checks one.
 // Space checks one too, from the search box, while the box is empty or once the arrows have moved since the last
 // character typed; otherwise it is a space in the search. Escape closes the panel, and focus goes back to the
 // button. Without `searchable`, focus opens in the list itself and Space is reka-ui's own. Each change is
-// announced politely ("Status: 2 selected."), and the button's name carries it ("Status, 2 selected").
+// announced politely ("Status: 2 selected."), and the button's name carries the chips ("Status, Open, Blocked" or
+// "Status, 3 selected").
+//
+// `ui` takes classes for the parts, as Nuxt UI's components do, merged over the defaults with tailwind-merge (the
+// same merge Nuxt UI's own `ui` goes through), so an override replaces the default it conflicts with rather than
+// sitting beside it. A root `class` lands on the wrapper.
 import type { ListboxItem } from '@nuxt/ui'
 import { useLocale } from '@nuxt/ui/composables'
+import { twMerge } from 'tailwind-merge'
 import { filterSelectMatches, filterSelectSegments } from '../utils/filter-match'
 
 type Value = VK extends keyof T ? T[VK] : T
+type Part = 'trigger' | 'badge' | 'content' | 'search' | 'list' | 'item' | 'itemIcon' | 'itemLabel' | 'itemCount' | 'footer'
 
 defineOptions({ inheritAttrs: false })
 
@@ -41,6 +50,14 @@ const props = withDefaults(
     countKey?: keyof T & string
     /** The option field holding its icon. Unset: `icon`. A product's own icons are the product's to bundle. */
     iconKey?: keyof T & string
+    /** The option field holding classes for its icon ("text-success"). Unset: `iconClass`. Without any, `text-dimmed`. */
+    iconClassKey?: keyof T & string
+    /** How many chosen values the button names, a chip each, before it shows one "N selected" chip. 0: always a count. */
+    maxShown?: number
+    /** Whether the panel has an All button. Without it, the footer shows only while something is chosen. */
+    showSelectAll?: boolean
+    /** Classes for the parts, merged over the defaults. */
+    ui?: Partial<Record<Part, string>>
     /** The button's leading icon; '' for none. */
     icon?: string
     /** Whether the panel has a search box. */
@@ -64,6 +81,10 @@ const props = withDefaults(
     labelKey: undefined,
     countKey: undefined,
     iconKey: undefined,
+    iconClassKey: undefined,
+    maxShown: 2,
+    showSelectAll: true,
+    ui: undefined,
     icon: 'i-lucide-list-filter',
     searchable: true,
     searchPlaceholder: 'Search',
@@ -99,7 +120,18 @@ const iconOf = (option: T) => {
   const name = field(option, props.iconKey ?? 'icon')
   return typeof name === 'string' && name ? name : undefined
 }
+const iconClassOf = (option: T) => {
+  const value = field(option, props.iconClassKey ?? 'iconClass')
+  return typeof value === 'string' && value ? value : undefined
+}
 const isDisabled = (option: T) => field(option, 'disabled') === true
+/** A part's classes: the defaults, then the caller's `ui` for it, conflicts going to the caller. */
+const cls = (part: Part, ...defaults: (string | undefined)[]) => twMerge(...defaults, props.ui?.[part])
+/** An option's icon: the default color only when the option brings none; the option's own over `ui.itemIcon`. */
+const iconClasses = (option: T) => {
+  const own = iconClassOf(option)
+  return twMerge('size-4 shrink-0', own ? undefined : 'text-dimmed', props.ui?.itemIcon, own)
+}
 // Values are compared the same way here and in reka-ui (given as UListbox's `by`): a field's value by ===, an option
 // by identity — of the raw object, since a model held in ref() hands back reactive proxies of the options.
 const same = (a: unknown, b: unknown) => Object.is(toRaw(a), toRaw(b))
@@ -113,19 +145,29 @@ const allSelected = computed(() => checkable.value.every(isSelected))
 const countFormat = computed(() => new Intl.NumberFormat(localeCode.value))
 const formatCount = (n: number) => countFormat.value.format(n)
 
-/** The badge: the one value's label, or how many. */
-const badge = computed(() => {
-  if (model.value.length !== 1) return String(model.value.length)
-  const v = model.value[0] as Value
-  const option = props.options.find((o) => same(valueOf(o), v))
-  return option ? labelOf(option) : String(v)
+/** The chosen values' labels in the options' order; values no option holds follow, as written. */
+const chosenLabels = computed(() => [
+  ...props.options.filter(isSelected).map(labelOf),
+  ...model.value.filter((v) => !props.options.some((o) => same(valueOf(o), v))).map((v) => String(v)),
+])
+/** The button's chips: one per value up to `maxShown`, otherwise one saying how many. */
+const chips = computed(() => {
+  const n = model.value.length
+  if (!n) return []
+  return n <= props.maxShown ? chosenLabels.value : [`${n} selected`]
 })
-// The button's name, with the badge said in words: "Status, Open" or "Status, 2 selected". It starts with the visible
-// label, so speech input still finds the button by what it shows.
-const buttonName = computed(() => {
-  if (!model.value.length) return undefined
-  return `${props.label}, ${model.value.length === 1 ? badge.value : `${badge.value} selected`}`
-})
+// The button's name, the chips said in words: "Status, Open, Blocked" or "Status, 3 selected". It starts with the
+// visible label, so speech input still finds the button by what it shows.
+const buttonName = computed(() => (chips.value.length ? `${props.label}, ${chips.value.join(', ')}` : undefined))
+
+// A chip cut short by the cap carries its whole text as a title. Measured once drawn, and again as the pointer or
+// focus reaches the button, since a web font arriving late can change what fits.
+const chipBox = ref<HTMLElement | null>(null)
+const cutShort = ref<boolean[]>([])
+function measureChips() {
+  cutShort.value = [...(chipBox.value?.children ?? [])].map((el) => el.scrollWidth > el.clientWidth)
+}
+watch([chips, chipBox], measureChips, { flush: 'post' })
 
 function selectAll() {
   model.value = [...model.value, ...checkable.value.map(valueOf).filter((v) => !has(v))]
@@ -171,6 +213,13 @@ watch(
   { flush: 'post' },
 )
 
+/** A check from the list (click, Enter or Space): the new selection, and the search cleared for the next pick. */
+function onPick(values: Value[]) {
+  model.value = values
+  query.value = ''
+  navigated = false
+}
+
 // A closed panel forgets its search.
 watch(open, (isOpen) => {
   if (!isOpen) query.value = ''
@@ -191,19 +240,41 @@ watch(model, (values) => {
 onBeforeUnmount(() => clearTimeout(announceTimer))
 
 const searchInput = computed(() => props.searchable
-  ? { placeholder: props.searchPlaceholder, icon: 'i-lucide-search', autocomplete: 'off', 'aria-label': `Search ${props.label}`, 'data-search': '' }
+  ? { placeholder: props.searchPlaceholder, icon: 'i-lucide-search', autocomplete: 'off', 'aria-label': `Search ${props.label}`, 'data-search': '', class: props.ui?.search }
   : false)
 </script>
 
 <template>
   <div class="inline-flex" data-filter-select v-bind="$attrs">
-    <UPopover v-model:open="open" :portal="portal" :content="{ side: 'bottom', align: 'start', sideOffset: 6 }" :ui="{ content: 'w-64' }">
-      <UButton type="button" variant="outline" color="neutral" :size="size" :icon="icon || undefined" :disabled="disabled" :aria-label="buttonName" data-trigger>
+    <UPopover v-model:open="open" :portal="portal" :content="{ side: 'bottom', align: 'start', sideOffset: 6 }" :ui="{ content: cls('content', 'w-64') }">
+      <UButton
+        type="button"
+        variant="outline"
+        color="neutral"
+        :size="size"
+        :icon="icon || undefined"
+        :disabled="disabled"
+        :aria-label="buttonName"
+        :class="ui?.trigger"
+        data-trigger
+        @pointerenter="measureChips"
+        @focus="measureChips"
+      >
         <span>{{ label }}</span>
-        <!-- Not a UBadge: its block padding and line height would make a button with a badge taller than one without,
-             and a theme may restyle badges (Forest sets them in the mono face). This takes the button's own line
-             height and font, so the button is the same height whatever it holds and the value reads as words. -->
-        <span v-if="model.length" class="min-w-0 max-w-32 truncate rounded-sm bg-elevated px-1.5 text-[0.875em] text-default tabular-nums" data-badge>{{ badge }}</span>
+        <!-- Not UBadges: their block padding and line height would make a button with chips taller than one without,
+             and a theme may restyle badges (Forest sets them in the mono face). These take the button's own line
+             height and font, so the button is the same height whatever it holds and the values read as words. The
+             row is capped, and a grid rather than a flex row: its tracks grow each chip toward its whole width and give
+             what is left to the longer ones, so a short chip ("Low") stays whole and only a long one truncates. -->
+        <span v-if="chips.length" ref="chipBox" class="grid min-w-0 max-w-40 auto-cols-[minmax(0,max-content)] grid-flow-col gap-1" data-badges>
+          <span
+            v-for="(chip, i) in chips"
+            :key="i"
+            :class="cls('badge', 'min-w-0 truncate rounded-sm bg-elevated px-1.5 text-[0.875em] text-default tabular-nums')"
+            :title="cutShort[i] ? chip : undefined"
+            data-badge
+          >{{ chip }}</span>
+        </span>
       </UButton>
 
       <template #content>
@@ -218,8 +289,8 @@ const searchInput = computed(() => props.searchable
             :filter="searchInput"
             ignore-filter
             :autofocus="searchable"
-            :ui="{ root: 'rounded-none ring-0', content: 'max-h-72' }"
-            @update:model-value="model = $event as Value[]"
+            :ui="{ root: 'rounded-none ring-0', content: cls('list', 'max-h-72'), item: ui?.item }"
+            @update:model-value="onPick($event as Value[])"
             @update:search-term="query = $event"
           >
             <template #item="{ item }">
@@ -233,8 +304,8 @@ const searchInput = computed(() => props.searchable
               >
                 <UIcon v-if="isSelected(item as T)" name="i-lucide-check" class="size-3" />
               </span>
-              <UIcon v-if="iconOf(item as T)" :name="iconOf(item as T)!" class="size-4 shrink-0 text-dimmed" aria-hidden="true" />
-              <span class="min-w-0 flex-1 truncate" data-label>
+              <UIcon v-if="iconOf(item as T)" :name="iconOf(item as T)!" :class="iconClasses(item as T)" aria-hidden="true" data-icon />
+              <span :class="cls('itemLabel', 'min-w-0 flex-1 truncate')" data-label>
                 <slot name="option-label" :option="(item as T)" :segments="filterSelectSegments(labelOf(item as T), query)" :selected="isSelected(item as T)">
                   <template v-for="(segment, i) in filterSelectSegments(labelOf(item as T), query)" :key="i">
                     <mark v-if="segment.match" class="rounded-xs bg-primary/15 font-semibold text-highlighted">{{ segment.text }}</mark>
@@ -242,15 +313,16 @@ const searchInput = computed(() => props.searchable
                   </template>
                 </slot>
               </span>
-              <span v-if="countOf(item as T) !== undefined" class="ms-auto shrink-0 text-xs tabular-nums text-muted" data-count>
+              <span v-if="countOf(item as T) !== undefined" :class="cls('itemCount', 'ms-auto shrink-0 text-xs tabular-nums text-muted')" data-count>
                 {{ formatCount(countOf(item as T)!) }}
               </span>
             </template>
             <template #empty>{{ emptyLabel }}</template>
           </UListbox>
 
-          <div class="flex gap-1 border-t border-default p-1">
-            <UButton type="button" size="xs" variant="ghost" color="neutral" icon="i-lucide-check-check" class="flex-1 justify-center" :disabled="!checkable.length || allSelected" data-all @click="selectAll">
+          <!-- Without All, the footer is there only while Clear has something to clear. -->
+          <div v-if="showSelectAll || model.length" :class="cls('footer', 'flex gap-1 border-t border-default p-1')" data-footer>
+            <UButton v-if="showSelectAll" type="button" size="xs" variant="ghost" color="neutral" icon="i-lucide-check-check" class="flex-1 justify-center" :disabled="!checkable.length || allSelected" data-all @click="selectAll">
               {{ allLabel }}
             </UButton>
             <UButton type="button" size="xs" variant="ghost" color="neutral" icon="i-lucide-x" class="flex-1 justify-center" :disabled="!model.length" data-clear @click="clear">

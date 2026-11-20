@@ -41,10 +41,17 @@ test.describe('selection', () => {
     await expect(button.locator('[data-badge]')).toHaveText('Open')
     await expect(button).toHaveAccessibleName('Status, Open')
 
+    // Two names by default (max-shown 2): a chip each, in the options' order.
     await option(page, /^In progress/).click()
     await expect(model(page, 'status')).toHaveText('["open","progress"]')
-    await expect(button.locator('[data-badge]')).toHaveText('2')
-    await expect(button).toHaveAccessibleName('Status, 2 selected')
+    await expect(button.locator('[data-badge]')).toHaveText(['Open', 'In progress'])
+    await expect(button).toHaveAccessibleName('Status, Open, In progress')
+
+    // A third: one chip with the count.
+    await option(page, /^Done/).click()
+    await expect(button.locator('[data-badge]')).toHaveText(['3 selected'])
+    await expect(button).toHaveAccessibleName('Status, 3 selected')
+    await option(page, /^Done/).click()
 
     await option(page, /^Open/).click()
     await expect(option(page, /^Open/)).toHaveAttribute('aria-selected', 'false')
@@ -62,7 +69,7 @@ test.describe('selection', () => {
     await expect(model(page, 'status')).toHaveText('["open","progress","waiting","review","done"]')
     await expect(option(page, /^Archived/)).toHaveAttribute('aria-selected', 'false')
     await expect(all).toBeDisabled()
-    await expect(trigger(page, 'status').locator('[data-badge]')).toHaveText('5')
+    await expect(trigger(page, 'status').locator('[data-badge]')).toHaveText(['5 selected'])
     // Focus goes back to the search, not to the button that just went disabled.
     await expect(search(page)).toBeFocused()
 
@@ -230,10 +237,12 @@ test.describe('keyboard and focus', () => {
     await expect(highlighted(page)).toContainText('Waiting')
     await page.keyboard.press(' ')
     await expect(model(page, 'status')).toHaveText('["waiting"]')
-    await expect(search(page)).toHaveValue('in')
+    // The check cleared the search (filter-select-options.spec.ts), so the whole list is back.
+    await expect(search(page)).toHaveValue('')
+    await expect(list(page).getByRole('option')).toHaveCount(6)
     // Typing again puts Space back in the search.
     await page.keyboard.type('g ')
-    await expect(search(page)).toHaveValue('ing ')
+    await expect(search(page)).toHaveValue('g ')
   })
 
   test('focus returns to the button after a mouse pick and Escape, and Tab reaches All and Clear', async ({ page }) => {

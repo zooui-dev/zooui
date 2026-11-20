@@ -5,10 +5,10 @@
 <ZFilterSelect v-model="owners" label="Owner" :options="people" value-key="id" label-key="name" count-key="open" />
 ```
 
-A faceted filter for a list or table toolbar: a `UButton` naming the filter, with a badge for what is chosen (the
-value's label when it is one, the number when it is more; drawn in the button's own font and line height, not as a
-`UBadge`, so the button keeps Nuxt UI's height for its `size` and a theme's badge face doesn't reach it), opening a `UPopover` with Nuxt UI's `UListbox` (`multiple`,
-its search box) and All and Clear under it. Generic over the option type (`T extends object`); `v-model` is an array of
+A faceted filter for a list or table toolbar: a `UButton` naming the filter, with a chip per chosen value (up to
+`maxShown`, then one "3 selected" chip; drawn in the button's own font and line height, not as `UBadge`s, so the
+button keeps Nuxt UI's height for its `size` and a theme's badge face doesn't reach them), opening a `UPopover` with
+Nuxt UI's `UListbox` (`multiple`, its search box) and All and Clear under it. Generic over the option type (`T extends object`); `v-model` is an array of
 `T[valueKey]`, or of `T` itself without `value-key` (then compared by identity, through `toRaw`, so a model held in
 `ref()` still matches). Values the options no longer hold are kept. Written on Nuxt UI's tokens: the checkbox
 `border-accented` / `bg-primary text-inverted`, counts `text-muted`, matches `bg-primary/15 text-highlighted`.
@@ -20,6 +20,10 @@ its search box) and All and Clear under it. Generic over the option type (`T ext
 | `options` | `T[]` | Required, listed in this order. An option with `disabled: true` can't be checked, and All passes over it |
 | `valueKey` | `keyof T` | The field that is an option's value. Unset: the option itself |
 | `labelKey`, `countKey`, `iconKey` | `keyof T` | The fields shown as its label, its count (a number, grouped for Nuxt UI's locale) and its icon. Unset: `label`, `count`, `icon`. An option's own icons are the product's to bundle |
+| `iconClassKey` | `keyof T` | The field holding classes for an option's icon (`text-success`), added to its defaults and winning over `ui.itemIcon`. Unset: `iconClass`. An option without one gets `text-dimmed` |
+| `maxShown` | `number` | `2`. How many chosen values the button names, a chip each in the options' order, before it shows one `N selected` chip; `0` is always a count. The chips' row is capped (`max-w-40`) and each truncates, with its whole text as a `title` when cut short. The button's name follows: `Status, Open, Blocked` / `Status, 3 selected` |
+| `showSelectAll` | `boolean` | `true`. `false`: no All button, and the footer shows only while there is something for Clear to clear |
+| `ui` | `{ trigger?, badge?, content?, search?, list?, item?, itemIcon?, itemLabel?, itemCount?, footer? }` | Classes for the parts, merged over the defaults with tailwind-merge (as Nuxt UI's own `ui` is), so an override replaces the default it conflicts with. `trigger` is the `UButton`, `badge` each chip, `content` the popover, `search` the `UInput`, `list` and `item` the `UListbox`'s, `footer` the All/Clear row. A root `class` lands on the wrapper |
 | `icon` | `string` | The button's leading icon, `i-lucide-list-filter`; `''` for none |
 | `searchable` | `boolean` | `true`. `false`: no search box; focus opens in the list |
 | `searchPlaceholder` | `string` | `Search`. The box is named `Search <label>` |
@@ -31,9 +35,9 @@ its search box) and All and Clear under it. Generic over the option type (`T ext
 
 Emits `update:modelValue`. Slot `#option-label="{ option, segments, selected }"` replaces an option's highlighted
 label (`segments` are the matched and unmatched runs). Nothing is exposed. Other attributes go to the wrapper, which
-carries `data-filter-select`; the button is `data-trigger`, the badge `data-badge`, the portaled panel
-`data-filter-panel`, the search `data-search`, the live region `data-announce`, All `data-all` and Clear `data-clear`,
-for e2e selectors.
+carries `data-filter-select`; the button is `data-trigger`, the chips' row `data-badges` and each chip `data-badge`, the
+portaled panel `data-filter-panel`, the search `data-search`, an option's icon `data-icon`, the live region
+`data-announce`, the footer `data-footer`, All `data-all` and Clear `data-clear`, for e2e selectors.
 
 **Search** is literal and case-insensitive (`utils/filter-match.ts`, auto-imported as `filterSelectMatches` and
 `filterSelectSegments`): the text is never a regular expression, so `(`, `.` or `\` match themselves. Case is folded a
@@ -41,7 +45,8 @@ character at a time, so a match maps back onto whole characters even where lower
 options keep their order (Nuxt UI's own filter reorders by score and ignores accents, so `UListbox` gets
 `ignore-filter`), and each label is drawn as segments with the matches in `<mark>`, never `v-html`. All checks every
 option on screen (the matches, while searching), added to the model; Clear empties it. After either, focus goes back to
-the search box. A closed panel forgets its search. Tested by `scripts/filter-match.test.mjs`.
+the search box. Checking or unchecking an option clears the search, as Buoy's control does, so the next pick starts
+from the whole list; All leaves it as it is. A closed panel forgets its search. Tested by `scripts/filter-match.test.mjs`.
 
 **Keyboard.** Focus opens in the search box, which carries `aria-activedescendant` (reka-ui's Listbox) and
 `aria-controls` to the list. Arrows, Home and End move the highlight; Enter checks. Space checks too while the box is

@@ -16,7 +16,7 @@ async function open(page: Page, mode: 'light' | 'dark') {
 // its icon — so a toolbar of filters lines up. Each row of the sizes specimen has a plain UButton of that size beside
 // the five states. And the value reads in the button's own face, not a theme's badge face.
 const SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const
-const STATES = ['empty', 'empty-no-icon', 'count', 'value', 'value-no-icon'] as const
+const STATES = ['empty', 'empty-no-icon', 'values', 'count', 'value', 'value-no-icon'] as const
 
 const heights = (page: Page) => page.locator('[data-specimen="filter-sizes"]').evaluate((root) =>
   Object.fromEntries([...root.querySelectorAll<HTMLElement>('[data-size]')].map((row) => [row.dataset.size, {
@@ -38,7 +38,8 @@ async function sameHeights(page: Page) {
   const row = (size: string) => page.locator(`[data-specimen="filter-sizes"] [data-size="${size}"]`)
   for (const size of SIZES) {
     // The badges are drawn: a height that matched without them would prove nothing.
-    await expect(row(size).locator('[data-state="count"] [data-badge]')).toHaveText('2')
+    await expect(row(size).locator('[data-state="values"] [data-badge]')).toHaveText(['Open', 'Done'])
+    await expect(row(size).locator('[data-state="count"] [data-badge]')).toHaveText(['3 selected'])
     await expect(row(size).locator('[data-state="value"] [data-badge]')).toHaveText('In progress')
     await expect(row(size).locator('[data-state="value-no-icon"] [data-badge]')).toHaveText('Q&A [review]')
     await expect(row(size).locator('[data-state="empty"] [data-badge]')).toHaveCount(0)
