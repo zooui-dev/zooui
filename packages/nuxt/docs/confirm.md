@@ -28,15 +28,28 @@ const next = await choose({ title: 'Save before leaving?', actions: [
 | --- | --- |
 | `confirm(options: ConfirmOptions)` | `true` when confirmed; `false` for Cancel, Escape, the close button or a click outside |
 | `choose<V>(options: ChooseOptions<V>)` | the picked action's `value` (typed `V`); `null` when dismissed |
-| `confirmDelete(what?, overrides?)` | `confirm` with "Delete {what}?", "This can't be undone.", `i-lucide-trash-2`, `color: 'error'`, Delete |
-| `confirmDiscard(overrides?)` | `confirm` with "Discard your changes?", `i-lucide-triangle-alert`, `color: 'warning'`, `destructive`, Discard and Keep editing |
+| `confirmDelete(what?, overrides?)` | `confirm` with "Delete {what}", "Are you sure you want to delete {what}? This action cannot be undone.", `i-lucide-trash-2`, `color: 'error'`, Delete |
+| `confirmDiscard(overrides?)` | `confirm` with "Unsaved Changes", "You have unsaved changes. Discard them?", `i-lucide-triangle-alert`, `color: 'warning'`, a red Discard (`confirmColor: 'error'`) and Keep Editing |
 | `dismissAll()` | cancels the open question and every one waiting, each with its own dismissed value |
 
-Options (`ConfirmOptions`; `ChooseOptions<V>` has `actions` in place of `confirmLabel`): `title` (names the dialog),
-`description` (describes it), `details` (lines listed under it), `icon`, `color` (the edge, the icon's badge and the
-confirming button; any `ButtonProps['color']`, so a product's own `ui.colors` too), `destructive` (default
-`color === 'error'`), `confirmLabel`, `cancelLabel`. A `ConfirmAction<V>` is `{ label, value, color?, variant?, icon? }`;
-its color defaults to the dialog's, else `primary`. The types are exported from `composables/useConfirm.ts`.
+Options (`ConfirmOptions`; `ChooseOptions<V>` has `actions` in place of the three `confirm*` options):
+
+| Option | |
+| --- | --- |
+| `title` | The question. It names the dialog. |
+| `description` | A sentence under the title. It describes the dialog. |
+| `details` | Lines listed under the description. A `ConfirmDetail` is a string, or `{ title, text? }`. A string with a `\n` is two-part too: its first line is a heading (`font-medium text-highlighted`) and the rest is the text beneath it (`text-toned`). |
+| `icon` | An icon beside the title, in `color`. Left out, `color: 'error'` brings `i-lucide-circle-alert` and `color: 'warning'` `i-lucide-triangle-alert` (`CONFIRM_COLOR_ICONS`); other colors bring none. `false` shows none. |
+| `color` | The edge, the icon's badge, and the confirming button unless `confirmColor` says otherwise. Any `ButtonProps['color']`, so a product's own `ui.colors` too. |
+| `confirmColor` | `confirm()` only: the confirming button's color, where it differs from the dialog's. A warning badge with a primary button, or with a red one. Default: `color`, else `primary`. |
+| `confirmVariant` | `confirm()` only: the confirming button's variant. Default: `solid`. |
+| `destructive` | Focus starts on Cancel. Defaults to `color` or `confirmColor` being `error`. |
+| `dismissible` | Default `true`. `false`: Escape and a click outside do nothing; Cancel and the close button still cancel. |
+| `size` | The width: `sm` (default, `sm:max-w-md`), `md` (`sm:max-w-xl`) or `lg` (`sm:max-w-3xl`). |
+| `confirmLabel`, `cancelLabel` | The buttons' labels. Default: Confirm and Cancel. |
+
+A `ConfirmAction<V>` is `{ label, value, color?, variant?, icon? }`; its color defaults to the dialog's, else `primary`.
+The types are exported from `composables/useConfirm.ts`.
 
 - **One at a time; a second call queues.** A call made while a question is open waits until it is answered, then
   opens. Each promise settles exactly once, with its own answer. Replacing the open question instead would answer
@@ -52,20 +65,73 @@ its color defaults to the dialog's, else `primary`. The types are exported from 
 The one place the questions render: a `ZModal` (with the question's `color` as its edge) whose content has
 `role="alertdialog"`, named by the title and described by the description. Props: `cancel-label` and
 `confirm-label`, the defaults for questions that don't give their own (Cancel, Confirm). Escape, the close button and a
-click outside resolve as a cancel. **Focus** starts on Cancel for a destructive question and on the last (confirming)
-action otherwise, so Enter is safe on a delete and quick on everything else. The icon is decoration (`aria-hidden`);
-its badge is the color at 10% under the color itself. Hooks for tests: `data-confirm-dialog` on the content,
-`data-confirm-cancel`, `data-confirm-action`, `data-confirm-icon`, `data-confirm-details`.
+click outside resolve as a cancel, unless the question is `dismissible: false`. The footer has Cancel on the left and
+the answers together on the right. **Focus** starts on Cancel for a destructive question and on the last
+(confirming) action otherwise, so Enter is safe on a delete and quick on everything else. The icon is decoration
+(`aria-hidden`); its badge is the color at 10% under the color itself. Hooks for tests: `data-confirm-dialog` on the
+content, `data-confirm-cancel`, `data-confirm-actions`, `data-confirm-action`, `data-confirm-icon` (its value is the
+icon's name), `data-confirm-details`, `data-confirm-detail-title`, `data-confirm-detail-text`.
 
 ## ZConfirmButton
 
 A `UButton` in a `UPopover`. Every `UButton` prop, attribute and slot passes through (`inheritAttrs: false`, bound to
-the button). Props: `question` ("Are you sure?"), `description`, `confirm-label` ("Yes"), `cancel-label` ("No"),
-`confirm-color` (`error`), `content` (UPopover's placement, default `{ side: 'bottom', align: 'start' }`) and
-`v-model:open`. Emits `confirm` on yes, and `cancel` for every other way it closes: No, Escape, a click outside,
-`open` set to false. Focus starts on No and goes back to the button. The popover is a `dialog` named by the button
-(reka names a popover after its trigger) and described by the question and its description.
+the button).
+
+| Prop | Default | |
+| --- | --- | --- |
+| `question` | "Are you sure?" | The question. |
+| `description` | | A line under it. |
+| `confirm-label` | "Yes" | The confirming button. |
+| `cancel-label` | "No" | The declining button. |
+| `confirm-color` | `error` | The confirming button's color. |
+| `confirm-variant` | `outline` | The confirming button's variant. |
+| `question-icon` | `i-lucide-circle-alert` | An icon before the question; `false` for none. |
+| `confirm-enabled` | `true` | `false`: no popover; the plain `UButton`, whose click emits `confirm` at once. |
+| `content` | `{ side: 'bottom', align: 'start' }` | UPopover's placement. |
+| `arrow` | `{ width: 16, height: 8 }` | UPopover's arrow; `false` for none. |
+| `v-model:open` | `false` | Whether the question is showing. |
+
+Emits `confirm` on yes, and `cancel` for every other way it closes: No, Escape, a click outside, `open` set to
+false. Focus starts on No and goes back to the button. The popover is a `dialog` named by the button (reka names a
+popover after its trigger) and described by the question and its description; the question icon is `aria-hidden`.
+Hooks: `data-confirm-popover`, `data-confirm-question`, `data-confirm-description`, `data-confirm-question-icon` (its value is the icon's name),
+`data-confirm-cancel`, `data-confirm-action`.
+
+## Coming from Buoy
+
+`useBuoyConfirm`, `BConfirmDialog` and `UConfirmButton` map onto these one for one. Mind the first row: Buoy's
+`confirmLabel` on `UConfirmButton` was the question, and Zoo UI's `confirm-label` is the Yes button.
+
+| Buoy `UConfirmButton` | Zoo UI `ZConfirmButton` |
+| --- | --- |
+| `confirmLabel` (the question) | `question` |
+| `confirmSublabel` | `description` |
+| `confirmYes` | `confirm-label` |
+| `confirmNo` | `cancel-label` |
+| `confirmIcon` | `question-icon` (same default, the alert circle; `false` hides it) |
+| `confirmEnabled` | `confirm-enabled` |
+| `align` | `content.align`, e.g. `:content="{ side: 'bottom', align: 'end' }"` |
+| `icon`, `label` and the other `UButton` props | unchanged: they pass through to the button |
+| `@confirm` | `@confirm` |
+| `@decline` | `@cancel`, which also fires on Escape and a click outside |
+| The outline red Yes, the arrow | the defaults: `confirm-variant="outline"`, `confirm-color="error"`, `arrow` |
+
+| `useBuoyConfirm` / `BConfirmDialog` | Zoo UI `useConfirm` / `ZConfirmDialog` |
+| --- | --- |
+| `useBuoyConfirm()` | `useConfirm()`, with `dismissAll()` added |
+| `<BConfirmDialog />` | `<ZConfirmDialog />`, inside `<UApp>` |
+| `message` | `description` |
+| `iconColor` | `color` (it also colors the edge, and the confirming button unless `confirmColor` is given) |
+| `confirmColor`, `confirmVariant` | `confirmColor`, `confirmVariant` |
+| `icon` | `icon`; left out, it comes from `color` as before, and `false` hides it |
+| `details` with `\n` | works as before: a heading over its text; `{ title, text }` also works |
+| `dismissible`, `size` | `dismissible`, `size` |
+| `confirmLabel`, `cancelLabel` | `confirmLabel`, `cancelLabel` |
+| action `key` | action `value`, of any type: `choose()` is typed by it |
+| `confirmDelete`, `confirmDiscard` | the same names, words and colors; focus starts on Cancel / Keep Editing |
 
 Tested by `scripts/confirm-queue.test.mjs` (the queue), `apps/base/tests/confirm.spec.ts` (every helper for every way
-out, focus, the role and name, queuing, the server, the button's events, the product's error color in light and
-dark) and `apps/forest/tests/confirm.spec.ts` (the inks on every Forest scheme in light and dark).
+out, focus, the role and name, queuing, the server, the button's events, `confirmColor`, the icon from the color,
+two-part details, `dismissible`, `size`, the footer, `confirm-enabled`, `confirm-variant`, `question-icon` and `arrow`,
+the product's error color in light and dark) and `apps/forest/tests/confirm.spec.ts` (the inks on every Forest scheme
+in light and dark, details and the popover's icon included, and `confirmColor` on the theme).

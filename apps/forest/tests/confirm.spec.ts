@@ -3,7 +3,9 @@ import { findConflicts } from '@zooui/nuxt/testing/find-conflicts'
 
 // useConfirm(), <ZConfirmDialog> and <ZConfirmButton> on Forest (page: app/pages/confirm.vue, host in app.vue). The
 // behavior is covered in full on the base (apps/base/tests/confirm.spec.ts); here, that it works on the theme, and
-// that on every scheme in light and dark the dialog's and the popover's text clears 4.5:1 and the dialog's icon 3:1.
+// that on every scheme in light and dark the dialog's and the popover's text clears 4.5:1 (two-part details included)
+// and the dialog's and the popover's icons 3:1; and that a warning dialog keeps its warning badge beside a primary or
+// a red button.
 
 const SCHEMES = ['teal', 'slate-cobalt', 'graphite-violet', 'paper-olive', 'ink-indigo', 'ember']
 
@@ -53,7 +55,7 @@ const contrasts = (page: Page, selectors: Record<string, string>) => page.evalua
 test('works on the theme: confirmDelete resolves on Delete and on Escape; ZConfirmButton emits only on yes', async ({ page, baseURL }) => {
   await open(page, baseURL!)
   await askDelete(page)
-  await expect(page.getByRole('alertdialog', { name: 'Delete the Hartwell invoice?' }).getByRole('button', { name: 'Cancel' })).toBeFocused()
+  await expect(page.getByRole('alertdialog', { name: 'Delete the Hartwell invoice', exact: true }).getByRole('button', { name: 'Cancel' })).toBeFocused()
   await page.getByRole('alertdialog').getByRole('button', { name: 'Delete' }).click()
   await expect(page.locator('[data-answers] li')).toHaveText(['delete: true'])
   await askDelete(page)
@@ -92,13 +94,54 @@ for (const mode of ['light', 'dark'] as const) {
         const question = page.getByRole('dialog', { name: 'Remove row' })
         await until(page, () => page.getByRole('button', { name: 'Remove row' }).click(), () => expect(question).toBeVisible({ timeout: 1000 }))
         const popover = await contrasts(page, {
-          question: '[data-confirm-popover] p.font-semibold',
-          description: '[data-confirm-popover] p.text-muted',
+          question: '[data-confirm-popover] [data-confirm-question]',
+          description: '[data-confirm-popover] [data-confirm-description]',
           keep: '[data-confirm-popover] [data-confirm-cancel]',
           remove: '[data-confirm-popover] [data-confirm-action]',
         })
         expect(Object.entries(popover).filter(([, r]) => r < 4.5)).toEqual([])
+        const popoverIcon = await contrasts(page, { icon: '[data-confirm-popover] [data-confirm-question-icon]' })
+        expect(Object.entries(popoverIcon).filter(([, r]) => r < 3)).toEqual([])
+        await expect(page.locator('[data-slot="arrow"]')).toBeVisible()
+        await page.keyboard.press('Escape')
+        await expect(question).toBeHidden()
+
+        await until(page, () => page.locator('[data-ask="details"]').click(), () => expect(page.getByRole('alertdialog')).toBeVisible({ timeout: 1000 }))
+        const details = await contrasts(page, {
+          heading: `${d} [data-confirm-detail-title]`,
+          text: `${d} [data-confirm-detail-text]`,
+        })
+        expect(Object.entries(details).filter(([, r]) => r < 4.5)).toEqual([])
+        expect(await page.evaluate(findConflicts)).toEqual([])
       })
+    }
+  })
+}
+
+for (const mode of ['light', 'dark'] as const) {
+  test(`confirmColor on the theme (${mode}): a warning badge beside a primary, then a red, button`, async ({ page, baseURL }) => {
+    await open(page, baseURL!, 'teal', mode)
+    const colors = () => page.getByRole('alertdialog').evaluate((root) => {
+      const token = (name: string) => {
+        const p = document.createElement('div'); p.style.color = `var(--ui-${name})`; root.append(p)
+        const c = getComputedStyle(p).color; p.remove(); return c
+      }
+      return {
+        edge: getComputedStyle(root).borderTopColor,
+        badge: getComputedStyle(root.querySelector('[data-confirm-icon]')!).color,
+        action: getComputedStyle(root.querySelector('[data-confirm-action]')!).backgroundColor,
+        warning: token('warning'), primary: token('primary'), error: token('error'),
+      }
+    })
+    for (const [which, button] of [['mixed', 'primary'], ['warn-red', 'error']] as const) {
+      await until(page, () => page.locator(`[data-ask="${which}"]`).click(), () => expect(page.getByRole('alertdialog')).toBeVisible({ timeout: 1000 }))
+      const got = await colors()
+      expect(got.edge).toBe(got.warning)
+      expect(got.badge).toBe(got.warning)
+      expect(got.action).toBe(got[button])
+      expect(got.warning).not.toBe(got[button])
+      await page.keyboard.press('Escape')
+      await expect(page.getByRole('alertdialog')).toBeHidden()
     }
   })
 }

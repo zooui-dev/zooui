@@ -26,7 +26,7 @@ import {
   type ConfirmOptions,
 } from '../components/confirm'
 
-export type { ChooseOptions, ConfirmAction, ConfirmBaseOptions, ConfirmColor, ConfirmOptions } from '../components/confirm'
+export type { ChooseOptions, ConfirmAction, ConfirmBaseOptions, ConfirmColor, ConfirmDetail, ConfirmOptions, ConfirmSize, ConfirmVariant } from '../components/confirm'
 
 export function useConfirm() {
   const controller = confirmController(useNuxtApp())
@@ -49,12 +49,12 @@ export function useConfirm() {
     return ask<V | null>({ kind: 'choose', options }, null)
   }
 
-  /** "Delete {what}?", error-colored, with Delete and Cancel; focus starts on Cancel. */
+  /** "Delete {what}", error-colored, with Delete and Cancel; focus starts on Cancel. */
   function confirmDelete(what?: string, overrides?: Partial<ConfirmOptions>): Promise<boolean> {
     return confirm(deleteOptions(what, overrides))
   }
 
-  /** "Discard your changes?", with Discard and Keep editing; focus starts on Keep editing. */
+  /** "Unsaved Changes", with a red Discard and Keep Editing; focus starts on Keep Editing. */
   function confirmDiscard(overrides?: Partial<ConfirmOptions>): Promise<boolean> {
     return confirm(discardOptions(overrides))
   }
