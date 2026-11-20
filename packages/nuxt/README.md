@@ -63,6 +63,8 @@ plain Nuxt UI. Three rules:
 | `ZRepeatingList` | A generic list editor |
 | `ZNumberInput` | One number input for money, percent, count and hours, with a calc mode |
 | `ZDateField` | A calendar-day field on `Temporal.PlainDate` or `CalendarDate`, with Nuxt UI's limit props |
+| `ZFileDropOverlay` | Files dropped anywhere in the window, or contained in a dialog or region; nested overlays defer to the innermost |
+| `ZFileList` | A form's files, stored and newly added, with an async remove and locale sizes |
 | `ZConfirmDialog`, `ZConfirmButton` | `useConfirm()`'s promise-based questions, and a button that asks in a popover |
 | `ZOptionalDate` | A checkbox in front of a `ZDateField`: the date counts only while it's ticked |
 | `ZSelectMenu` | Nuxt UI's `USelectMenu` with typeahead, Tab that moves on, and optional open on focus |
