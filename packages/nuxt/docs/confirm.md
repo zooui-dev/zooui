@@ -39,7 +39,7 @@ Options (`ConfirmOptions`; `ChooseOptions<V>` has `actions` in place of the thre
 | `title` | The question. It names the dialog. |
 | `description` | A sentence under the title. It describes the dialog. |
 | `details` | Lines listed under the description. A `ConfirmDetail` is a string, or `{ title, text? }`. A string with a `\n` is two-part too: its first line is a heading (`font-medium text-highlighted`) and the rest is the text beneath it (`text-toned`). |
-| `icon` | An icon in a 40px badge beside the description, in `color`. Left out, `color: 'error'` brings `i-lucide-circle-alert` and `color: 'warning'` `i-lucide-triangle-alert` (`CONFIRM_COLOR_ICONS`); other colors bring none. `false` shows none. |
+| `icon` | An icon in a 40px badge beside the description, in `color`; with no description, a 32px badge beside the title. Left out, `color: 'error'` brings `i-lucide-circle-alert` and `color: 'warning'` `i-lucide-triangle-alert` (`CONFIRM_COLOR_ICONS`); other colors bring none. `false` shows none. |
 | `color` | The edge, the icon's badge, and the confirming button unless `confirmColor` says otherwise. Any `ButtonProps['color']`, so a product's own `ui.colors` too. |
 | `confirmColor` | `confirm()` only: the confirming button's color, where it differs from the dialog's. A warning badge with a primary button, or with a red one. Default: `color`, else `primary`. |
 | `confirmVariant` | `confirm()` only: the confirming button's variant. Default: `solid`. |
@@ -64,8 +64,9 @@ The types are exported from `composables/useConfirm.ts`.
 
 The one place the questions render: a `ZModal` (with the question's `color` as its edge) whose content has
 `role="alertdialog"`, named by the title and described by the description. The description
-sits in the body with the icon's badge beside it and the details beneath it, indented to its column. The badge shows
-only beside a description, so a question with only a title, or with details but no description, has no icon. Props: `cancel-label` and
+sits in the body with the icon's 40px badge beside it and the details beneath it, indented to its column. A question
+with no description (a title only, or a title and details) shows its icon in a 32px badge beside the title instead,
+and any details stay in the body, indented to the title text. `icon: false` shows none anywhere. Props: `cancel-label` and
 `confirm-label`, the defaults for questions that don't give their own (Cancel, Confirm). Escape, the close button and a
 click outside resolve as a cancel, unless the question is `dismissible: false`. The footer has Cancel on the left and
 the answers together on the right. **Focus** starts on Cancel for a destructive question and on the last
@@ -101,6 +102,6 @@ Hooks: `data-confirm-popover`, `data-confirm-question`, `data-confirm-descriptio
 
 Tested by `scripts/confirm-queue.test.mjs` (the queue), `apps/base/tests/confirm.spec.ts` (every helper for every way
 out, focus, the role and name, queuing, the server, the button's events, `confirmColor`, the icon from the color,
-two-part details, `dismissible`, `size`, the footer, `confirm-enabled`, `confirm-variant`, `question-icon` and `arrow`,
-the product's error color in light and dark) and `apps/forest/tests/confirm.spec.ts` (the inks on every Forest scheme
-in light and dark, details and the popover's icon included, and `confirmColor` on the theme).
+the icon beside the title when there is no description, two-part details, `dismissible`, `size`, the footer,
+`confirm-enabled`, `confirm-variant`, `question-icon` and `arrow`, the product's error color in light and dark) and `apps/forest/tests/confirm.spec.ts` (the inks on every Forest scheme
+in light and dark, details, the popover's icon and the title-row icon included, and `confirmColor` on the theme).

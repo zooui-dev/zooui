@@ -43,7 +43,7 @@ With none mounted, a question is never shown and its promise never settles. In d
 | `title` | The question. It names the dialog. |
 | `description` | A sentence under the title. It describes the dialog. |
 | `details` | Lines listed under the description, such as the records affected. A line with a `\n` in it, or a `{ title, text }`, shows a heading over its text. |
-| `icon` | An icon beside the description, in `color`. Left out, `error` shows a circle-alert and `warning` a triangle. `false` shows none. |
+| `icon` | An icon in `color`, beside the description; with no description, a smaller one beside the title. Left out, `error` shows a circle-alert and `warning` a triangle. `false` shows none. |
 | `color` | The dialog's edge, its icon and its confirming button. Any color Nuxt UI's buttons take. |
 | `confirmColor` | The confirming button's color, where it differs: a warning dialog with a primary button, or with a red one. |
 | `confirmVariant` | The confirming button's variant. Default: `solid`. |
@@ -64,6 +64,8 @@ await confirm({
   ],
 })
 ```
+
+With a description, the icon sits in a badge beside it in the body. With no description (a title only, or a title and details, as above), the icon sits in a smaller badge beside the title, and the details stay in the body.
 
 ## Choose
 

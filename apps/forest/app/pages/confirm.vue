@@ -64,6 +64,14 @@ async function askErrorIcon() {
 async function askNoIcon() {
   record('no-icon', await confirm({ title: 'Remove the member?', description: 'Their projects stay on file.', color: 'error', icon: false, confirmLabel: 'Remove' }))
 }
+/** A title and nothing else: the warning icon sits beside the title. */
+async function askTitleOnly() {
+  record('title-only', await confirm({ title: 'Archive the March sprint?', color: 'warning', confirmLabel: 'Archive' }))
+}
+/** A title only, with `icon: false`: no icon beside the title either. */
+async function askTitleOnlyNoIcon() {
+  record('title-only-no-icon', await confirm({ title: 'Archive the April sprint?', color: 'warning', icon: false, confirmLabel: 'Archive' }))
+}
 /** Two-part details: a `\n` in a string, a `{ title, text }`, and a plain one-line detail beside them. */
 async function askDetails() {
   record('details', await confirm({
@@ -161,10 +169,23 @@ const revokeEvents = ref<string[]>([])
     </section>
 
     <section class="flex flex-col gap-2">
+      <h3 class="font-semibold text-highlighted">A title only</h3>
+      <p class="text-sm text-muted">
+        Try: "Title only (warning)" has no description, so its warning icon sits in a smaller badge beside the title
+        instead of in the body. "Title only, icon: false" shows none. "Import with details" below has a title and
+        details but no description: its icon is beside the title too, with the details in the body.
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <UButton label="Title only (warning)" color="warning" variant="outline" data-ask="title-only" @click="askTitleOnly" />
+        <UButton label="Title only, icon: false" color="warning" variant="outline" data-ask="title-only-no-icon" @click="askTitleOnlyNoIcon" />
+      </div>
+    </section>
+
+    <section class="flex flex-col gap-2">
       <h3 class="font-semibold text-highlighted">Two-part details</h3>
       <p class="text-sm text-muted">
         Try: open it. The first detail is one string with a line break, the second a { title, text } object; both show
-        a heading over their text. The third is a plain line.
+        a heading over their text. The third is a plain line. With no description, the warning icon is beside the title.
       </p>
       <div class="flex flex-wrap gap-2">
         <UButton label="Import with details" color="neutral" variant="outline" data-ask="details" @click="askDetails" />

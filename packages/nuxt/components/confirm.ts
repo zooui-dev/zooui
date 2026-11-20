@@ -26,8 +26,9 @@ export interface ConfirmBaseOptions {
   /** Lines listed under the description: the records affected, say. A line with a `\n` in it, or a `{ title, text }`,
    *  is two-part: a heading, and the text beneath it. */
   details?: ConfirmDetail[]
-  /** An icon beside the description, in `color`. Left out, `error` and `warning` bring their own (CONFIRM_COLOR_ICONS);
-   *  `false` shows none. `confirmDelete` and `confirmDiscard` set their own. */
+  /** An icon in `color`, beside the description; with no description, a smaller one beside the title.
+   *  Left out, `error` and `warning` bring their own (CONFIRM_COLOR_ICONS); `false` shows none.
+   *  `confirmDelete` and `confirmDiscard` set their own. */
   icon?: string | false
   /** The dialog's color: its edge, its icon and, unless `confirmColor` says otherwise, its confirming button.
    *  `error` makes it destructive. */

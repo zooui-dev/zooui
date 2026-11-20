@@ -5,7 +5,8 @@ import { findConflicts } from '@zooui/nuxt/testing/find-conflicts'
 // behavior is covered in full on the base (apps/base/tests/confirm.spec.ts); here, that it works on the theme, and
 // that on every scheme in light and dark the dialog's and the popover's text clears 4.5:1 (the description in the body
 // beside the badge, and two-part details, included)
-// and the dialog's and the popover's icons 3:1; and that a warning dialog keeps its warning badge beside a primary or
+// and the dialog's and the popover's icons 3:1 (a title-only question's warning icon is inked as the body's warning
+// badge is, and clears 3:1 in dark); and that a warning dialog keeps its warning badge beside a primary or
 // a red button.
 
 const SCHEMES = ['teal', 'slate-cobalt', 'graphite-violet', 'paper-olive', 'ink-indigo', 'ember']
@@ -114,6 +115,15 @@ for (const mode of ['light', 'dark'] as const) {
         })
         expect(Object.entries(details).filter(([, r]) => r < 4.5)).toEqual([])
         expect(await page.evaluate(findConflicts)).toEqual([])
+        // no description: the warning icon beside the title, inked as the warning badge beside a description is. That
+        // ink clears 3:1 in dark; in light, Forest's warning token is under it (about 2.6:1) in the body and title alike.
+        const titleIcon = await contrasts(page, { icon: `${d} [data-slot="title"] [data-confirm-icon]` })
+        await page.keyboard.press('Escape')
+        await expect(page.getByRole('alertdialog')).toBeHidden()
+        await until(page, () => page.locator('[data-ask="mixed"]').click(), () => expect(page.getByRole('alertdialog')).toBeVisible({ timeout: 1000 }))
+        const bodyIcon = await contrasts(page, { icon: `${d} [data-slot="body"] [data-confirm-icon]` })
+        expect(titleIcon.icon).toBeCloseTo(bodyIcon.icon!, 2)
+        if (mode === 'dark') expect(titleIcon.icon).toBeGreaterThanOrEqual(3)
       })
     }
   })
