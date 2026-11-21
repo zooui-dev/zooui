@@ -53,7 +53,7 @@ plain Nuxt UI. Three rules:
 | `ZCard`, `ZModal`, `ZSlideover`, `ZDrawer` | Nuxt UI's surfaces with a `color` that draws a 3px colored edge |
 | `ZKicker` | The mono label over a section: `[ DEPLOYMENTS ]` |
 | `ZIdentifier` | A package, version or hash in the mono face |
-| `ZStatus` | Status by shape, so it survives grayscale |
+| `ZStatus` | Status by shape, so it survives grayscale; takes a product's own statuses from app.config |
 | `ZSlots` | One named chip per slot of capacity |
 | `ZQuotaMeter` | Usage against a limit |
 | `ZCodeBlock` | The near-black code surface, with copy |

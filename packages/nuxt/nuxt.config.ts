@@ -37,7 +37,8 @@ const Z_ICONS = ['lucide:sun', 'lucide:moon', 'lucide:monitor', 'lucide:triangle
   'lucide:file', 'lucide:file-image', 'lucide:file-video', 'lucide:file-audio', 'lucide:file-spreadsheet',
   'lucide:file-archive', 'lucide:file-text',
   'lucide:list-filter', 'lucide:search', 'lucide:check-check', 'lucide:arrow-up-to-line', 'lucide:arrow-down-to-line',
-  'lucide:circle-alert']
+  'lucide:circle-alert',
+  'lucide:circle-help']
 
 export default defineNuxtConfig({
   modules: [

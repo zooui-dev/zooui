@@ -2,7 +2,19 @@
 // the product's own tokens (main.css) — so the test app shows app.config and CSS additions meeting.
 export default defineAppConfig({
   // The product's own number-input steps: dollars move by $5,000 (Zoo UI's neutral default is 1).
-  zooui: { numberInput: { steps: { money: 5000 } } },
+  zooui: {
+    numberInput: { steps: { money: 5000 } },
+    // The product's own statuses, for every ZStatus and status select (pages/status.vue).
+    status: {
+      states: {
+        draft: { label: 'Draft', icon: 'i-lucide-pencil-line', color: 'neutral' },
+        review: { label: 'In review', icon: 'i-lucide-eye', color: 'info' },
+        scheduled: { label: 'Scheduled', icon: 'i-lucide-calendar-clock', color: 'warning' },
+        shipped: { label: 'Shipped', icon: 'i-lucide-rocket', color: 'success' },
+        archived: { label: 'Archived', color: 'neutral' },
+      },
+    },
+  },
   ui: {
     colors: {
       primary: 'sky',
