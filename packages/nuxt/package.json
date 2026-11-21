@@ -36,6 +36,14 @@
       "types": "./utils/masked-input.ts",
       "default": "./utils/masked-input.ts"
     },
+    "./month-entry": {
+      "types": "./utils/month-entry.ts",
+      "default": "./utils/month-entry.ts"
+    },
+    "./year-entry": {
+      "types": "./utils/year-entry.ts",
+      "default": "./utils/year-entry.ts"
+    },
     "./testing/find-conflicts": {
       "types": "./testing/find-conflicts.d.ts",
       "default": "./testing/find-conflicts.js"

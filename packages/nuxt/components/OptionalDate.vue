@@ -76,7 +76,7 @@ const ownId = useId()
 // Inside a UFormField the date input takes the field's id (so its label names it); outside, one of ours.
 const inputId = computed(() => (formField?.value ? formInputId?.value : undefined) ?? ownId)
 const fieldGroup = inject(fieldGroupInjectionKey, undefined)
-const size = computed<Size>(() => props.size ?? fieldGroup?.value?.size ?? (formField?.value?.size as Size | undefined) ?? 'md')
+const size = computed<Size>(() => props.size ?? (fieldGroup?.value?.size as Size | undefined) ?? (formField?.value?.size as Size | undefined) ?? 'md')
 
 // The checkbox outside the form field: no shared id, no field error color, no form events on its own.
 const OutsideFormField = defineComponent({

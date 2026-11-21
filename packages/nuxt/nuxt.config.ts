@@ -71,8 +71,9 @@ export default defineNuxtConfig({
     },
   ],
 
-  // Z* components, prefixed: <ZCard>, <ZStatus> … — .vue only: edge.ts and recipes.ts are their shared helpers.
-  components: [{ path: resolve('./components'), prefix: 'Z', extensions: ['.vue'] }],
+  // Z* components, prefixed: <ZCard>, <ZStatus> … — .vue only: edge.ts and recipes.ts are their shared helpers. Not
+  // internal/: the pieces Z* components are built from (the field under ZDateField, ZMonthField and ZYearField).
+  components: [{ path: resolve('./components'), prefix: 'Z', extensions: ['.vue'], ignore: ['internal/**'] }],
 
   /**
    * Exactly ONE @tailwindcss/vite, and it is Nuxt UI's (its module registers it). If anything else also registers

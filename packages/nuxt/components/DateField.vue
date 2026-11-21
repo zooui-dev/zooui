@@ -46,10 +46,15 @@
 //
 // Also: a leading `icon` whose click emits `iconClick` (or a `#leading` slot in its place), a `calendarIcon` in place
 // of the calendar, and one-letter weekday headers (the locale's narrow weekday).
+//
+// The box, the commit rules, the invalid mark and `dateUpdate` are the field under it (internal/EntryField.vue), the
+// same one ZMonthField and ZYearField use; what is a day's here is the reading and writing (date-entry.ts), the types
+// and the calendar.
 import { CalendarDate } from '@internationalized/date'
-import { formFieldInjectionKey, useLocale } from '@nuxt/ui/composables'
+import { useLocale } from '@nuxt/ui/composables'
 import type { Temporal } from 'temporal-polyfill/implementation'
-import { useToday } from '../composables/useToday'
+import EntryField from './internal/EntryField.vue'
+import type { EntryEngine, EntryProblem, InputSlotUi } from './internal/entry-field'
 import {
   applyDateShortcut, checkDateLimits, commitDateEntry, dateEntryFormat, dateEntryFormatFor, dateLimitMessage, dateModelTypeOf, formatDateEntry,
   fromPlainDate, isDateShortcut, parseDateEntry, toPlainDate,
@@ -108,13 +113,12 @@ const emit = defineEmits<{
 const model = defineModel<T | null>({ default: null })
 defineSlots<{
   /** UInput's leading slot, in place of the `icon` when given; `ui` is the input's, for its `leadingIcon` class. */
-  leading?(props: { ui: Record<string, (options?: { class?: unknown }) => string> }): unknown
+  leading?(props: { ui: InputSlotUi }): unknown
 }>()
 
 const { locale: uiLocale } = useLocale()
 const localeCode = computed(() => props.locale ?? uiLocale.value.code)
 const entryFormat = computed(() => (props.format ? dateEntryFormat(props.format) : dateEntryFormatFor(localeCode.value)))
-const show = (d: Temporal.PlainDate | null) => formatDateEntry(d, entryFormat.value)
 
 // The caller's type, kept through an empty spell, and the CalendarDate it last held (whose class builds the next).
 let remembered: DateModelType | undefined
@@ -125,14 +129,14 @@ function remember(v: unknown) {
   if (type === 'calendar-date') like = v as CalendarDateLike
 }
 remember(model.value)
+watch(model, remember)
 const kind = () => dateModelTypeOf(model.value) ?? remembered ?? props.modelType
 /** A day as the caller's type. */
 const out = (d: Temporal.PlainDate | null) => fromPlainDate(d, kind(), like) as T | null
 const outDay = (d: Temporal.PlainDate) => fromPlainDate(d, kind(), like) as Day
 
-const open = ref(false)
-const text = ref(show(toPlainDate(model.value)))
-
+// The field holds a PlainDate. A computed, so the field sees a new day only when the model changes, never on a render.
+const day = computed(() => toPlainDate(model.value))
 const sameDay = (a: Temporal.PlainDate | null, b: Temporal.PlainDate | null) => a === b || (!!a && !!b && a.equals(b))
 
 const limits = computed<DateLimits>(() => {
@@ -144,181 +148,34 @@ const limits = computed<DateLimits>(() => {
   }
 })
 
-// ── Invalid ───────────────────────────────────────────────────────────────────────────────────────────────────
-const problem = ref<DateLimitProblem | null>(null)
-const problemMessage = computed(() => (problem.value ? dateLimitMessage(problem.value, entryFormat.value) : ''))
-function flag(p: DateLimitProblem | null) {
-  if (!p && !problem.value) return
-  problem.value = p
-  emit('invalid', p && { reason: p.reason, date: outDay(p.date), limit: p.limit && outDay(p.limit), message: problemMessage.value })
-}
-// In a UFormField, Nuxt UI's UInput takes aria-invalid, its error color and aria-describedby from the field, over
-// anything passed to it: so while a day is refused the field the UInput sees carries the message as its error (unless
-// it has one of its own, which the product may have set from `invalid`), and the message below takes the id that
-// aria-describedby names. Outside one, they are passed to the UInput directly.
-const formField = inject(formFieldInjectionKey, undefined)
-if (formField) {
-  provide(formFieldInjectionKey, computed(() => {
-    const f = formField.value
-    return problem.value && f && !f.error ? { ...f, error: problemMessage.value } : f
-  }))
-}
-const panelId = useId()
-const messageId = computed(() => {
-  if (!problem.value) return undefined
-  if (!formField?.value) return `${panelId}-invalid`
-  return formField.value.error ? undefined : `${formField.value.ariaId}-error`
-})
-const attrs = useAttrs()
-const invalidAttrs = computed(() => {
-  if (!problem.value || formField?.value) return {}
-  const describedBy = [attrs['aria-describedby'], messageId.value].filter(Boolean).join(' ')
-  return { 'color': 'error', 'aria-invalid': true, 'aria-describedby': describedBy }
+const engine = computed<EntryEngine<Temporal.PlainDate>>(() => {
+  const format = entryFormat.value
+  const within = limits.value
+  return {
+    pattern: format.pattern,
+    show: (d) => formatDateEntry(d, format),
+    parse: (text, today) => parseDateEntry(text, today, format),
+    commit: (text, current, today) => commitDateEntry(text, current, today, format),
+    same: sameDay,
+    check: (d) => checkDateLimits(d, within),
+    message: (p) => dateLimitMessage(p as DateLimitProblem, format),
+    isShortcut: (key) => isDateShortcut(key, format),
+    shortcut: (key, current, today) => applyDateShortcut(key, current, today, format, within),
+    today: (today) => today,
+  }
 })
 
-// The date this field last settled on, which is what `dateUpdate` reports. NEVER re-read `model.value` for
-// that: when the parent owns the v-model, writing it only emits `update:modelValue`, and the prop comes back
-// on the parent's next render — so in the same tick `model.value` is still the OLD date, and a blur that just
-// committed "5/12" would announce null.
-let settled = toPlainDate(model.value)
-// The date `dateUpdate` last carried, boxed so an announced null is told apart from nothing announced yet.
-let announced: { date: Temporal.PlainDate | null } | undefined
-watch(model, (v) => {
-  remember(v)
-  const d = toPlainDate(v)
-  // The parent set a different date, so whatever we announced before is no longer what's in the field.
-  if (!sameDay(d, settled)) {
-    announced = undefined
-    flag(null)
-  }
-  settled = d
-  text.value = show(d)
-})
-// A new format redraws the date it holds.
-watch(entryFormat, () => { text.value = show(settled) })
-
-const inputCmp = useTemplateRef<{ inputRef: HTMLInputElement | null, $el: HTMLElement }>('inputCmp')
-
-function set(d: Temporal.PlainDate | null) {
-  if (!sameDay(d, settled)) model.value = out(d)
-  settled = d
-  text.value = show(d)
-  return d
+// The field's problem is the engine's, which is DateLimitProblem's.
+function onInvalid(problem: (EntryProblem<Temporal.PlainDate> & { message: string }) | null) {
+  const p = problem as (DateLimitProblem & { message: string }) | null
+  emit('invalid', p && { reason: p.reason, date: outDay(p.date), limit: p.limit && outDay(p.limit), message: p.message })
 }
 
-// What's typed becomes the value — or nothing, when it isn't a date. Leaving "5/32" in the box would show one
-// thing while the form saved another. Untouched text keeps the date as it is, so passing through the field
-// can't blank a stored date it wouldn't read back (a year before 1000). A day the limits refuse keeps the date
-// there was, drawn back in the box, and marks the field invalid: undefined, for nothing settled.
-function commitText(): { date: Temporal.PlainDate | null } | undefined {
-  const next = commitDateEntry(text.value, settled, useToday(), entryFormat.value)
-  const refused = next && !sameDay(next, settled) ? checkDateLimits(next, limits.value) : null
-  if (refused) {
-    text.value = show(settled)
-    flag(refused)
-    return undefined
-  }
-  return { date: set(next) }
-}
-
-function onType(v: string | number | null | undefined) {
-  text.value = v == null ? '' : String(v)
-  flag(null)
-}
-
-function focusInput() {
-  nextTick(() => {
-    const el = inputCmp.value?.inputRef
-    if (!el) return
-    el.focus()
-    el.setSelectionRange(el.value.length, el.value.length)
-  })
-}
-
-// Focus is "still ours" on the input and anywhere in the calendar popover (which is teleported, so it isn't
-// inside the input's element).
-function isOurs(target: EventTarget | null) {
-  if (!(target instanceof Element)) return false
-  return !!inputCmp.value?.$el?.contains(target) || !!target.closest(`[data-date-field-panel="${panelId}"]`)
-}
-
-function announce(d: Temporal.PlainDate | null) {
-  announced = { date: d }
-  emit('dateUpdate', out(d))
-}
-
-// Leaving settles the field, but a date already announced (by Enter, say) isn't announced again: an inline
-// editor saving on dateUpdate would save it twice.
-function leave(e: FocusEvent) {
-  if (isOurs(e.relatedTarget)) return
-  if (announced && sameDay(announced.date, settled)) return
-  announce(settled)
-}
-
-function onBlur(e: FocusEvent) {
-  commitText()
-  leave(e)
-}
-
-function onKeydown(e: KeyboardEvent) {
-  if (e.isComposing || e.ctrlKey || e.metaKey) return
-  if (e.altKey) {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      open.value = true
-    }
-    return
-  }
-  if (e.key === 'Enter') {
-    open.value = false
-    const committed = commitText()
-    if (committed) announce(committed.date)
-    // Refused: the date it kept is selected, so typing another replaces it.
-    else nextTick(() => inputCmp.value?.inputRef?.select())
-    return
-  }
-  // Tab commits here, so the text is settled before focus moves; the blur that follows announces it, once.
-  if (e.key === 'Tab') {
-    commitText()
-    open.value = false
-    return
-  }
-  if (e.key.length !== 1 || !isDateShortcut(e.key, entryFormat.value)) return
-  e.preventDefault()
-  const today = useToday()
-  // Shortcuts step from the committed date, not from text typed since: the typed text is dropped. With no allowed day
-  // to go to, the key does nothing.
-  const next = applyDateShortcut(e.key, settled, today, entryFormat.value, limits.value)
-  if (!next) return
-  flag(null)
-  announce(set(next))
-  // Selected, so typing a date replaces the shortcut's rather than appending to it.
-  nextTick(() => inputCmp.value?.inputRef?.select())
-}
-
-function clear() {
-  const d = set(null)
-  flag(null)
-  emit('clear')
-  announce(d)
-  focusInput()
-}
+const fieldCmp = useTemplateRef<{ focus: () => void }>('fieldCmp')
 
 // ── Calendar ──────────────────────────────────────────────────────────────────────────────────────────────
 // UCalendar takes Nuxt UI's CalendarDate, a bare year/month/day, so the conversion is by fields both ways.
 const toCalendar = (d: Temporal.PlainDate) => new CalendarDate(d.year, d.month, d.day)
-
-// The selection follows text typed but not yet committed, as the month and the shortcuts do, so the picker and the
-// input never disagree; untouched or unreadable text falls back to the model.
-const calendarValue = computed(() => {
-  const day = parseDateEntry(text.value, useToday(), entryFormat.value) ?? toPlainDate(model.value)
-  return day ? toCalendar(day) : undefined
-})
-// The month the calendar shows: the date in the box (typed or committed), else this month. Only read while
-// the popover is open, which is only ever in the browser.
-const calendarMonth = computed(() =>
-  toCalendar(parseDateEntry(text.value, useToday(), entryFormat.value) ?? toPlainDate(model.value) ?? useToday()),
-)
 // The limits, for the calendar to disable those days.
 const calendarMin = computed(() => (limits.value.minValue ? toCalendar(limits.value.minValue as Temporal.PlainDate) : undefined))
 const calendarMax = computed(() => (limits.value.maxValue ? toCalendar(limits.value.maxValue as Temporal.PlainDate) : undefined))
@@ -327,13 +184,8 @@ const calendarUnavailable = computed(() => {
   return unavailable ? (v: CalendarDateLike) => unavailable(toPlainDate(v)!) : undefined
 })
 
-function onPick(v: unknown) {
-  const type = dateModelTypeOf(v)
-  if (type !== 'calendar-date') return
-  open.value = false
-  flag(null)
-  announce(set(toPlainDate(v as CalendarDateLike)))
-  focusInput()
+function onPick(v: unknown, pick: (d: Temporal.PlainDate) => void) {
+  if (dateModelTypeOf(v) === 'calendar-date') pick(toPlainDate(v as CalendarDateLike)!)
 }
 
 // The month heading is the one thing in the calendar whose width depends on what it says, and the popover
@@ -342,94 +194,39 @@ function onPick(v: unknown) {
 // month the same. In em, so it follows the button's own font at every `size`; plus room for its padding, which is rem.
 const headingButton = { class: 'w-[calc(8.5em+1.5rem)] flex-none' }
 
-const popoverContent = computed(() => ({
-  side: 'bottom' as const,
-  align: 'start' as const,
-  'data-date-field-panel': panelId,
-  // The input keeps focus while the calendar is open, so typing and shortcuts still work.
-  onOpenAutoFocus: (e: Event) => e.preventDefault(),
-  onCloseAutoFocus: (e: Event) => e.preventDefault(),
-  // A click on our own input or icon isn't "outside"; the icon toggles the calendar itself.
-  onInteractOutside: (e: CustomEvent<{ originalEvent?: Event }>) => {
-    if (isOurs(e.detail?.originalEvent?.target ?? e.target)) e.preventDefault()
-  },
-  onFocusout: leave,
-}))
-
-function toggle() {
-  if (props.disabled) return
-  open.value = !open.value
-  focusInput()
-}
-
-defineExpose({ focus: focusInput })
+defineExpose({ focus: () => fieldCmp.value?.focus() })
 </script>
 
 <template>
-  <UPopover v-model:open="open" :content="popoverContent" :portal="portal">
-    <template #anchor>
-      <!-- The placeholder keeps the input's own ink, the product's: a product may darken it (a date's shape must not read as
-           a date someone typed), through `ui.base` or its app.config's input. While the calendar is open the field
-           takes Nuxt UI's highlight ring, so it reads as the one being edited. -->
-      <UInput
-        ref="inputCmp"
-        :model-value="text"
-        type="text"
-        autocomplete="off"
-        v-bind="{ ...$attrs, ...invalidAttrs }"
-        :size="size"
-        :icon="icon"
-        :disabled="disabled"
-        :placeholder="placeholder ?? entryFormat.pattern"
-        :highlight="highlight || open || !!problem"
-        :ui="{ ...ui, root: `group ${ui?.root ?? ''}` }"
-        @update:model-value="onType"
-        @keydown="onKeydown"
-        @blur="onBlur"
-      >
-        <template v-if="$slots.leading" #leading="slotProps">
-          <slot name="leading" v-bind="slotProps as never" />
-        </template>
-        <template v-else-if="icon" #leading="{ ui: inputUi }">
-          <UIcon :name="icon" data-slot="leadingIcon" :class="inputUi.leadingIcon({ class: ui?.leadingIcon })" @click="emit('iconClick', $event)" />
-        </template>
-        <template #trailing="{ ui: inputUi }">
-          <!-- Why a typed day was refused, for screen readers: the input's aria-describedby names it. -->
-          <span v-if="messageId" :id="messageId" class="sr-only">{{ problemMessage }}</span>
-          <!-- Neither button takes focus (mousedown is prevented), so the input never blurs to them. Each icon is
-               `text-current`, over Nuxt UI's dimmed trailing icon, so the button's own color reaches it. -->
-          <button
-            v-if="clearable && model && !disabled"
-            type="button"
-            tabindex="-1"
-            :aria-label="clearLabel"
-            class="cursor-pointer items-center text-dimmed hover:text-primary"
-            :class="open ? 'flex' : 'hidden group-focus-within:flex'"
-            @mousedown.prevent
-            @click="clear"
-          >
-            <UIcon name="i-lucide-x" :class="inputUi.trailingIcon({ class: 'text-current' })" />
-          </button>
-          <button
-            type="button"
-            tabindex="-1"
-            :aria-label="chooseLabel"
-            :disabled="disabled"
-            class="flex cursor-pointer items-center hover:text-primary disabled:cursor-not-allowed"
-            :class="open ? 'text-primary' : 'text-dimmed group-focus-within:text-primary'"
-            @mousedown.prevent
-            @click="toggle"
-          >
-            <UIcon :name="calendarIcon" :class="inputUi.trailingIcon({ class: 'text-current' })" />
-          </button>
-        </template>
-      </UInput>
+  <EntryField
+    ref="fieldCmp"
+    v-bind="$attrs"
+    :model-value="day"
+    :engine="engine"
+    :clearable="clearable"
+    :disabled="disabled"
+    :placeholder="placeholder"
+    :size="size"
+    :icon="icon"
+    :calendar-icon="calendarIcon"
+    :highlight="highlight"
+    :ui="ui"
+    :portal="portal"
+    :clear-label="clearLabel"
+    :choose-label="chooseLabel"
+    @update:model-value="(d) => (model = out(d))"
+    @date-update="(d) => emit('dateUpdate', out(d))"
+    @invalid="onInvalid"
+    @clear="emit('clear')"
+    @icon-click="emit('iconClick', $event)"
+  >
+    <template v-if="$slots.leading" #leading="slotProps">
+      <slot name="leading" v-bind="slotProps" />
     </template>
-
-    <template #content>
+    <template #calendar="{ value, view, pick }">
       <UCalendar
-        :model-value="calendarValue"
-        :placeholder="calendarMonth"
+        :model-value="value ? toCalendar(value) : undefined"
+        :placeholder="toCalendar(view)"
         :locale="localeCode"
         :size="size"
         :view-control="headingButton"
@@ -439,8 +236,8 @@ defineExpose({ focus: focusInput })
         weekday-format="narrow"
         prevent-deselect
         class="p-2"
-        @update:model-value="onPick"
+        @update:model-value="(v) => onPick(v, pick)"
       />
     </template>
-  </UPopover>
+  </EntryField>
 </template>
