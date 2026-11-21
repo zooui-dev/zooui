@@ -4,6 +4,10 @@ export default defineAppConfig({
   // The product's own number-input steps: dollars move by $5,000 (Zoo UI's neutral default is 1).
   zooui: {
     numberInput: { steps: { money: 5000 } },
+    // Warning toasts stay longer than the rest (Zoo UI's default for every tone is 3000 ms).
+    notify: { tones: { warning: { duration: 6000 } } },
+    // The product's backend puts its message in `fault.reason`: read it before the shapes Zoo UI knows.
+    errorMessage: { extract: (err: unknown) => (err as { data?: { fault?: { reason?: string } } })?.data?.fault?.reason },
     // The product's own statuses, for every ZStatus and status select (pages/status.vue).
     status: {
       states: {
