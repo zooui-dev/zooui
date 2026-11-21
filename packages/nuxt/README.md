@@ -73,6 +73,7 @@ plain Nuxt UI. Three rules:
 | `ZSearchInput` | A search box for list and table toolbars: handed back once typing pauses, with a clear button and Escape |
 | `useNotify()`, `errorMessage()` | Toasts in one line per tone (success, info, warning, error, primary), and readable text for a caught fetch error |
 | `ZUrlInput` | A website address field: adds `https://` and checks for a real host when you leave it |
+| `ZMaskedInput` | A text input with a mask (`(###) ###-####`, or a list chosen as typed), with US phone and tax-ID presets |
 
 ## Docs
 
@@ -87,7 +88,8 @@ plain Nuxt UI. Three rules:
     [ZFilterSelect](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/filter-select.md),
     [ZSearchInput](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/search-input.md),
     [useNotify and errorMessage](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/notify.md),
-    [ZUrlInput](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/url-input.md)
+    [ZUrlInput](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/url-input.md),
+    [ZMaskedInput](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/masked-input.md)
 - [The base and a theme](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/base-and-theme.md): what each layer carries, and why they're two layers
 - [Accents and colored edges](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/accents-and-edges.md): `data-accent` sections and the `color` edge
 - [Mechanisms](https://github.com/zooui-dev/zooui/blob/main/packages/nuxt/docs/mechanisms.md): `light-dark()`, the hydration label fix, icon bundling, shipping as source
