@@ -30,14 +30,14 @@ interface LayerNuxt {
   hook(name: 'icon:clientBundleIcons', fn: (icons: Set<string>) => void): void
 }
 
-/** Icons the Z* components render, for the client bundle below. scripts/check-icons.test.mjs keeps it in step with
- *  components/. */
+/** Icons the Z* components and composables render, for the client bundle below. scripts/check-icons.test.mjs keeps it
+ *  in step with components/ and composables/. */
 const Z_ICONS = ['lucide:sun', 'lucide:moon', 'lucide:monitor', 'lucide:triangle-alert', 'lucide:check',
   'lucide:circle-check', 'lucide:pencil', 'lucide:x', 'lucide:trash-2', 'lucide:plus', 'lucide:chevron-up', 'lucide:chevron-down', 'lucide:calendar',
   'lucide:file', 'lucide:file-image', 'lucide:file-video', 'lucide:file-audio', 'lucide:file-spreadsheet',
   'lucide:file-archive', 'lucide:file-text',
   'lucide:list-filter', 'lucide:search', 'lucide:check-check', 'lucide:arrow-up-to-line', 'lucide:arrow-down-to-line',
-  'lucide:circle-alert']
+  'lucide:circle-alert', 'lucide:info', 'lucide:octagon-alert']
 
 export default defineNuxtConfig({
   modules: [
