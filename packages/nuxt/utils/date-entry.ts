@@ -93,10 +93,14 @@ function dayOf(year: number, month: number, day: number): PlainDate | null {
   return first.with({ day })
 }
 
-// A one- or two-digit year lands within the 100 years ending 20 years from now: in 2026, "46" is 2046 and "47"
-// is 1947. Far enough ahead for a loan's maturity date, near enough back for a building's year. A year of all
-// zeros ("0", "00", "0000") is no year at all: never 2000.
-function fullYear(digits: string, today: PlainDate): number | null {
+/**
+ * A typed year's digits as a full year, or null. A one- or two-digit year lands within the 100 years ending 20 years
+ * from now: in 2026, "46" is 2046 and "47" is 1947. Far enough ahead for a loan's maturity date, near enough back
+ * for a building's year. Four digits are that year from 1000 on; three digits are no year. A year of all zeros
+ * ("0", "00", "0000") is no year at all: never 2000. ZDateField, ZMonthField and ZYearField all read a year this way.
+ */
+export function entryYear(digits: string, today: PlainDate): number | null {
+  if (!/^\d+$/.test(digits)) return null
   if (/^0+$/.test(digits)) return null
   if (digits.length === 4) return Number(digits) >= 1000 ? Number(digits) : null
   if (digits.length > 2) return null
@@ -120,7 +124,7 @@ function dayFromParts(order: DateEntryOrder, parts: string[], today: PlainDate):
   if (!DIGITS.test(month) || !DIGITS.test(day)) return null
   if (parts.length === 2) return dayOf(today.year, Number(month), Number(day))
   if (!/^\d+$/.test(part('Y'))) return null
-  const year = fullYear(part('Y'), today)
+  const year = entryYear(part('Y'), today)
   return year === null ? null : dayOf(year, Number(month), Number(day))
 }
 

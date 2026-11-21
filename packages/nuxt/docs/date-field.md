@@ -83,7 +83,7 @@ instant, and every conversion to a day goes through a time zone. A `CalendarDate
 
 **The parser** is framework-free TypeScript, auto-imported in a product and importable anywhere as
 `@zooui/nuxt/date-entry` (a server route, a domain package): `parseDateEntry`, `formatDateEntry`, `commitDateEntry`,
-`applyDateShortcut`, `dateEntryFormat`, `dateEntryFormatFor`, `entryDay`, `US_DATE_ENTRY`, `FIRST_ENTRY_DATE`,
+`applyDateShortcut`, `dateEntryFormat`, `dateEntryFormatFor`, `entryDay`, `entryYear` (a typed year, as ZMonthField and ZYearField read one too), `US_DATE_ENTRY`, `FIRST_ENTRY_DATE`,
 `LAST_ENTRY_DATE`. Each takes "today" from its caller and the format last (default `MM/DD/YYYY`), so a call that
 relies on the default reads the same. For the two types and the limits: `toPlainDate` and `fromPlainDate` (by the
 fields, Gregorian only), `dateModelTypeOf`, `checkDateLimits` and `dateLimitMessage`, `isDateShortcut`, and
