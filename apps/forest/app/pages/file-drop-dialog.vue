@@ -79,51 +79,51 @@ function remove(item: FileListItem) {
       <h3 class="text-base font-semibold text-highlighted">The dialog</h3>
       <p class="text-sm text-muted">Try this: open the dialog and drop files anywhere on it; they join the list, and a Word file is refused. Drop the same file again: it's refused as already attached. Close it and drag over the page again: the page's overlay is back.</p>
       <p class="text-sm text-muted">Try this too: browse for a file, remove it from the list, and browse for the same file again; it's added again.</p>
-    <ZModal v-model:open="open" title="Edit share" description="Share files with the team">
-      <UButton label="Open the dialog: Edit share" data-open-dialog />
-      <template #content="{ close }">
-        <div ref="dialog" data-zone="dialog" class="flex flex-col gap-4 rounded-[inherit] p-6">
-          <div class="flex items-center justify-between">
-            <h4 class="text-base font-semibold text-highlighted">Edit share</h4>
-            <UButton icon="i-lucide-x" variant="ghost" color="neutral" aria-label="Close" data-close-dialog @click="close" />
-          </div>
-          <UFormField label="Files">
-            <div class="flex flex-col gap-2" data-zone="field">
-              <ZFileList :items="files" :remove="remove" @remove-error="(_, item) => toast.add({ title: `Couldn't remove ${item.name}`, color: 'error' })" />
-              <!-- Its own drop zone stays on: a drop it takes reaches add() once, and the dialog's overlay leaves it be. -->
-              <div data-zone="upload">
-                <UFileUpload
-                  :model-value="null"
-                  multiple
-                  :accept="ACCEPT"
-                  :preview="false"
-                  reset
-                  label="Drop files or browse"
-                  description="PDFs, CSVs and images"
-                  class="min-h-28 w-full"
-                  @update:model-value="(f) => f && add(f)"
-                />
-              </div>
+      <ZModal v-model:open="open" title="Edit share" description="Share files with the team">
+        <UButton label="Open the dialog: Edit share" data-open-dialog />
+        <template #content="{ close }">
+          <div ref="dialog" data-zone="dialog" class="flex flex-col gap-4 rounded-[inherit] p-6">
+            <div class="flex items-center justify-between">
+              <h4 class="text-base font-semibold text-highlighted">Edit share</h4>
+              <UButton icon="i-lucide-x" variant="ghost" color="neutral" aria-label="Close" data-close-dialog @click="close" />
             </div>
-          </UFormField>
-          <!-- The demo's stand-in for the server: removing a stored file waits for an answer here. -->
-          <div v-if="pending" class="flex items-center gap-2 text-sm" data-server>
-            <span>Server, deleting {{ pending.name }}: answer</span>
-            <UButton size="xs" label="Deleted" data-server-ok @click="pending.ok()" />
-            <UButton size="xs" color="error" variant="outline" label="Refuse" data-server-fail @click="pending.fail()" />
+            <UFormField label="Files">
+              <div class="flex flex-col gap-2" data-zone="field">
+                <ZFileList :items="files" :remove="remove" @remove-error="(_, item) => toast.add({ title: `Couldn't remove ${item.name}`, color: 'error' })" />
+                <!-- Its own drop zone stays on: a drop it takes reaches add() once, and the dialog's overlay leaves it be. -->
+                <div data-zone="upload">
+                  <UFileUpload
+                    :model-value="null"
+                    multiple
+                    :accept="ACCEPT"
+                    :preview="false"
+                    reset
+                    label="Drop files or browse"
+                    description="PDFs, CSVs and images"
+                    class="min-h-28 w-full"
+                    @update:model-value="(f) => f && add(f)"
+                  />
+                </div>
+              </div>
+            </UFormField>
+            <!-- The demo's stand-in for the server: removing a stored file waits for an answer here. -->
+            <div v-if="pending" class="flex items-center gap-2 text-sm" data-server>
+              <span>Server, deleting {{ pending.name }}: answer</span>
+              <UButton size="xs" label="Deleted" data-server-ok @click="pending.ok()" />
+              <UButton size="xs" color="error" variant="outline" label="Refuse" data-server-fail @click="pending.fail()" />
+            </div>
+            <ZFileDropOverlay
+              :target="dialog"
+              :accept="ACCEPT"
+              multiple
+              label="Drop files to attach them"
+              description="PDFs, CSVs and images"
+              @drop="add"
+              @rejected="report"
+            />
           </div>
-          <ZFileDropOverlay
-            :target="dialog"
-            :accept="ACCEPT"
-            multiple
-            label="Drop files to attach them"
-            description="PDFs, CSVs and images"
-            @drop="add"
-            @rejected="report"
-          />
-        </div>
-      </template>
-    </ZModal>
+        </template>
+      </ZModal>
     </section>
   </main>
 </template>

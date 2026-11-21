@@ -307,7 +307,7 @@ onMounted(() => {
       >
         <legend :class="compact ? 'sr-only' : 'px-1 text-sm font-semibold text-highlighted'">{{ titleOf(row, i) }}</legend>
         <div :class="compact ? 'min-w-0 flex-1' : 'space-y-4'">
-          <slot name="row" :row="row" :index="i" :key="keyOf(row)" :error="errorOf(row)" :errorId="errorIdOf(row)" />
+          <slot :key="keyOf(row)" name="row" :row="row" :index="i" :error="errorOf(row)" :error-id="errorIdOf(row)" />
           <p v-if="errorOf(row)" :id="errorIdOf(row)" role="alert" class="mt-1 text-sm text-(--ui-color-error-700) dark:text-(--ui-color-error-300)">{{ errorOf(row) }}</p>
         </div>
         <div

@@ -1,4 +1,6 @@
 <script lang="ts">
+import { dragCarriesFiles, droppedFiles, sortDroppedFiles, type FileFilter, type RejectedFile } from '../utils/file-drop'
+
 /**
  * Drag events an overlay nearer the event's target has already counted. Every instance shares it: listeners on an
  * inner target run before those on an outer one (or the window), so the innermost overlay under the pointer claims each
@@ -60,7 +62,6 @@ function outrankedByModal(container: HTMLElement) {
 // page are left alone. The overlay is only a picture (`pointer-events: none`): the drag's events stay on the page's
 // own elements, so showing or hiding it never moves the pointer off one, a drop zone under it still gets its drop, and
 // an overlay nested inside it can be reached.
-import { dragCarriesFiles, droppedFiles, sortDroppedFiles, type FileFilter, type RejectedFile } from '../utils/file-drop'
 
 defineOptions({ inheritAttrs: false })
 

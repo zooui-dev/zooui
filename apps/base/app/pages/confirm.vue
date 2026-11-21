@@ -289,12 +289,12 @@ const revokeEvents = ref<string[]>([])
       <div class="flex items-center gap-4">
         <UCheckbox v-model="askFirst" label="Ask before archiving" data-ask-first />
         <ZConfirmButton
+          v-model:open="archiveOpen"
           label="Archive"
           color="neutral"
           variant="outline"
           size="sm"
           data-button="archive"
-          v-model:open="archiveOpen"
           :confirm-enabled="askFirst"
           question="Archive the project?"
           question-icon="i-lucide-triangle-alert"

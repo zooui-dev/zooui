@@ -185,8 +185,8 @@ const canRemove = computed(() => !!selectedItem.value && (props.removable?.(sele
 const announcement = ref('')
 let announceTimer: ReturnType<typeof setTimeout> | undefined
 function say(type: 'moved' | 'removed', title: string, position: number, count: number) {
-  const text = props.announce?.({ type, title, position, count })
-    ?? (type === 'moved' ? `Moved ${title} to position ${position} of ${count}.` : `Removed ${title}. ${count} in the list.`)
+  const text = props.announce?.({ type, title, position, count }) ??
+    (type === 'moved' ? `Moved ${title} to position ${position} of ${count}.` : `Removed ${title}. ${count} in the list.`)
   announcement.value = ''
   clearTimeout(announceTimer)
   announceTimer = setTimeout(() => { announcement.value = text }, 100)
