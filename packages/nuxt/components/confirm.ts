@@ -78,9 +78,7 @@ export interface ChooseOptions<V> extends ConfirmBaseOptions {
 }
 
 /** What the queue holds: either kind of request, answered with `true`/`false` or an action's value/`null`. */
-export type ConfirmRequest =
-  | { kind: 'confirm', options: ConfirmOptions }
-  | { kind: 'choose', options: ChooseOptions<unknown> }
+export type ConfirmRequest = { kind: 'confirm', options: ConfirmOptions } | { kind: 'choose', options: ChooseOptions<unknown> }
 
 export type ConfirmEntry = ConfirmQueueEntry<ConfirmRequest, unknown>
 

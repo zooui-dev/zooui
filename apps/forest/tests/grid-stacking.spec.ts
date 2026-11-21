@@ -67,4 +67,3 @@ test('grid: one taller than its box scrolls inside, with its column header and g
   expect(r.seen[0], r.seen.join(' | ')).toBe('Package')
   expect(r.seen[1], r.seen.join(' | ')).toMatch(/^Owner: \w+ \(\d+ items\)/i)
 })
-

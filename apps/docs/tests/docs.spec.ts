@@ -45,7 +45,9 @@ for (const route of COMPONENT_ROUTES) {
     expect(await examples.count(), 'a component page has at least one live example').toBeGreaterThan(0)
     for (const example of await examples.all()) {
       await expect(example, `${await example.getAttribute('data-example')} mounted`).toHaveAttribute('data-mounted', 'true')
-      await expect(example.locator('[data-example-preview]')).not.toBeEmpty()
+      // Text, or a form control: a closed input menu shows only a placeholder, which has no text
+      await expect.poll(() => example.locator('[data-example-preview]').evaluate((el) =>
+        !!el.textContent?.trim() || !!el.querySelector('input, textarea, select')), `${await example.getAttribute('data-example')} rendered`).toBe(true)
       await expect(example.locator('[data-example-source] pre')).toContainText('<template>')
     }
 

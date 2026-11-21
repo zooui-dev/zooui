@@ -83,8 +83,8 @@ const describe = (r: RejectedFile) => `${r.file.name} ${r.reason}${r.message ? `
       label="Drop photos and PDFs to attach them"
       icon="i-lucide-upload"
       description="Images and PDFs"
-      @drop="(files) => (dropped = files.map((f) => f.name))"
       :filter="notEmpty"
+      @drop="(files) => (dropped = files.map((f) => f.name))"
       @rejected="(files) => (rejected = files.map(describe))"
     />
   </main>
