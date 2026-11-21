@@ -1,6 +1,7 @@
 // The base layer registers the icons its Z* components and composables render for the consumer's client bundle (Z_ICONS in
 // packages/nuxt/nuxt.config.ts), so they render without a request to the icon endpoint. A component that starts using an
-// icon the list lacks would fetch it at runtime, silently; this holds the list to what components/ and composables/ use.
+// icon the list lacks would fetch it at runtime, silently; this holds the list to what components/ and composables/ use,
+// and the utils/ they draw from.
 // Run: node --test 'scripts/*.test.mjs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -13,7 +14,7 @@ const layer = fileURLToPath(new URL('../packages/nuxt/', import.meta.url))
 function used() {
   const icons = new Set()
   // Subfolders too: components/internal holds the pieces the Z* components are built from.
-  for (const dir of ['components', 'composables']) {
+  for (const dir of ['components', 'composables', 'utils']) {
     for (const file of readdirSync(`${layer}${dir}`, { recursive: true }).filter((f) => /\.(vue|ts)$/.test(f))) {
       for (const [, collection, name] of readFileSync(`${layer}${dir}/${file}`, 'utf8').matchAll(/['"]i-([a-z0-9]+)-([a-z0-9-]+)['"]/g)) {
         icons.add(`${collection}:${name}`)

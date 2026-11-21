@@ -66,6 +66,19 @@ export const status = {
   /** `glow`: a soft light around the healthy dot, in its own color. Only healthy lights up — a glow
    *  says "live", and the other states are the ones that are not. */
   glow: 'shadow-[0_0_12px_var(--ui-success)]',
+  /** A product's own status: its label in the default ink, its icon (or a dot) in its color. */
+  custom: 'text-default',
+  icon: 'flex-none size-3.5',
+  dot: 'w-2.5 h-2.5 rounded-full',
+  /** Icon inks: graphics, so Nuxt UI's own color shades (3:1), not the 700/300 text inks. */
+  ink: {
+    primary: 'text-primary', secondary: 'text-secondary', success: 'text-success', info: 'text-info',
+    warning: 'text-warning', error: 'text-error', neutral: 'text-muted',
+  },
+  fill: {
+    primary: 'bg-primary', secondary: 'bg-secondary', success: 'bg-success', info: 'bg-info',
+    warning: 'bg-warning', error: 'bg-error', neutral: 'bg-(--ui-color-neutral-500)',
+  },
 } as const
 
 export const meter = {
