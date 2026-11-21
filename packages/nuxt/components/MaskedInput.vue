@@ -111,7 +111,7 @@ const maskKey = computed(() => JSON.stringify(masks.value.map((m) => m.slots.map
 watch(maskKey, () => {
   if (!live.value) return
   const el = input()
-  const r = reformat(text.value, el === document.activeElement ? el.selectionStart ?? text.value.length : text.value.length, masks.value)
+  const r = reformat(text.value, el && el === document.activeElement ? el.selectionStart ?? text.value.length : text.value.length, masks.value)
   chosen = r.chosen
   if (r.text === text.value) return
   put(r)

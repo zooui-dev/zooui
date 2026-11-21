@@ -16,7 +16,7 @@
  *
  * Toasts render in <UApp>'s toaster, so the app must be wrapped in one.
  */
-import type { Toast } from '@nuxt/ui'
+import type { Toast } from '@nuxt/ui/composables'
 import { errorMessage } from '../utils/error-message'
 
 export type NotifyTone = 'primary' | 'success' | 'info' | 'warning' | 'error'
